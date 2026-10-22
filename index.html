@@ -3,17 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PsychNexus // Minimalist Akademik Keşif & Q1 Dergi Terminali</title>
+  <title>VibePsych</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Newsreader"', 'Georgia', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            vibe: {
+              bg: '#050609',
+              surface: '#0a0d14',
+              crimson: '#D2042D',
+              cyan: '#00f0ff',
+              violet: '#6530ff',
+              emerald: '#2cdb4c'
+            }
           }
         }
       }
@@ -21,56 +35,118 @@
   </script>
   <style>
     :root {
-      --bg-deep: #05070b;
-      --neon-cyan: #06b6d4;
-      --neon-violet: #8b5cf6;
-      --neon-emerald: #10b981;
+      --bg-base: #050609;
+      --neon-crimson: #D2042D;
+      --neon-cyan: #00f0ff;
+      --neon-violet: #6530ff;
+      --neon-emerald: #2cdb4c;
     }
+
     body {
-      background-color: var(--bg-deep);
+      background-color: var(--bg-base);
       background-image: 
-        radial-gradient(at 15% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 45%),
-        radial-gradient(at 85% 0%, rgba(139, 92, 246, 0.07) 0px, transparent 45%);
+        radial-gradient(at 10% 0%, rgba(101, 48, 255, 0.08) 0px, transparent 45%),
+        radial-gradient(at 90% 0%, rgba(0, 240, 255, 0.06) 0px, transparent 45%),
+        radial-gradient(at 50% 100%, rgba(210, 4, 45, 0.04) 0px, transparent 50%);
       color: #e2e8f0;
       overflow-x: hidden;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     }
-    /* Lüks Füme Siyah Glassmorphism */
-    .glass-nav {
-      background: rgba(8, 11, 18, 0.85);
+
+    /* Luxury Smoked Black Glassmorphism & Specular Lighting */
+    .luxury-header {
+      background: rgba(5, 6, 9, 0.86);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .luxury-panel {
+      background: rgba(11, 14, 22, 0.76);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.7);
     }
-    .glass-panel {
-      background: rgba(13, 18, 29, 0.75);
+
+    .luxury-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(16, 20, 31, 0.72) 0%, rgba(10, 13, 20, 0.82) 100%);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.07);
-      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 4px 20px -6px rgba(0, 0, 0, 0.6);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .glass-card {
-      background: rgba(15, 21, 34, 0.62);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(148, 163, 184, 0.1);
-      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .glass-card:hover {
-      background: rgba(19, 27, 44, 0.82);
-      border-color: rgba(6, 182, 212, 0.4);
-      box-shadow: 0 12px 32px -12px rgba(6, 182, 212, 0.18), inset 0 1px 0 0 rgba(6, 182, 212, 0.2);
+
+    .luxury-card:hover {
+      background: linear-gradient(180deg, rgba(20, 26, 40, 0.85) 0%, rgba(12, 16, 26, 0.92) 100%);
+      border-color: rgba(0, 240, 255, 0.35);
+      box-shadow: inset 0 1px 0 0 rgba(0, 240, 255, 0.25), 0 14px 36px -12px rgba(0, 240, 255, 0.14);
       transform: translateY(-1px);
     }
-    /* Arama Kelimesi Vurgulama (Highlight) */
-    mark.search-hl {
-      background: rgba(6, 182, 212, 0.22);
-      color: #67e8f9;
-      border-bottom: 1.5px solid #06b6d4;
-      padding: 0 3px;
-      border-radius: 3px;
-      font-weight: 600;
+
+    /* Seen / Read Article State */
+    .luxury-card.seen-article {
+      opacity: 0.68;
+      border-color: rgba(255, 255, 255, 0.04);
     }
+    .luxury-card.seen-article:hover {
+      opacity: 1;
+    }
+
+    /* Smoked Glass Metric Pill */
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+    }
+
+    /* Neon Accents */
+    .neon-cyan-active {
+      background: rgba(0, 240, 255, 0.1);
+      border-color: rgba(0, 240, 255, 0.5);
+      color: #ffffff;
+      box-shadow: 0 0 16px -4px rgba(0, 240, 255, 0.35), inset 0 1px 0 0 rgba(0, 240, 255, 0.3);
+    }
+
+    .neon-crimson-active {
+      background: rgba(210, 4, 45, 0.15);
+      border-color: rgba(210, 4, 45, 0.65);
+      color: #ffffff;
+      box-shadow: 0 0 18px -4px rgba(210, 4, 45, 0.45), inset 0 1px 0 0 rgba(210, 4, 45, 0.35);
+    }
+
+    .neon-violet-active {
+      background: rgba(101, 48, 255, 0.18);
+      border-color: rgba(101, 48, 255, 0.6);
+      color: #ffffff;
+      box-shadow: 0 0 16px -4px rgba(101, 48, 255, 0.4);
+    }
+
+    .badge-q1-elite {
+      background: rgba(44, 219, 76, 0.1);
+      border: 1px solid rgba(44, 219, 76, 0.45);
+      color: #2cdb4c;
+      box-shadow: 0 0 12px -4px rgba(44, 219, 76, 0.3);
+    }
+
+    .badge-q1 {
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      color: #00f0ff;
+    }
+
+    /* Lexical Highlight */
+    mark.search-hl {
+      background: rgba(0, 240, 255, 0.18);
+      color: #00f0ff;
+      border-bottom: 1px solid #00f0ff;
+      padding: 0 3px;
+      border-radius: 2px;
+      font-weight: 500;
+    }
+
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -83,300 +159,360 @@
       height: 5px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-      background: #05070b;
+      background: #050609;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
       background: #1e293b;
       border-radius: 3px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #06b6d4;
+      background: #00f0ff;
+    }
+
+    /* Smart Scroll Header Collapse */
+    #collapsibleTaxonomy {
+      transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, margin 0.2s ease;
+      max-height: 280px;
+      opacity: 1;
+    }
+    #collapsibleTaxonomy.collapsed-nav {
+      max-height: 0px;
+      opacity: 0;
+      overflow: hidden;
+      margin-top: 0 !important;
+      pointer-events: none;
     }
   </style>
 </head>
-<body class="min-h-screen font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200 pb-20 md:pb-10">
+<body class="min-h-screen font-sans antialiased selection:bg-[#00f0ff]/20 selection:text-[#00f0ff] pb-20 md:pb-12">
 
-  <!-- 1. MİNİMALİST ÜST KOMUTA VE SCHOLAR ARAMA ÇUBUĞU -->
-  <header class="sticky top-0 z-30 glass-nav px-4 py-3">
-    <div class="max-w-5xl mx-auto flex flex-col gap-3">
+  <!-- ZERO-NOISE STICKY COMMAND HEADER -->
+  <header class="sticky top-0 z-30 luxury-header px-4 py-3">
+    <div class="max-w-5xl mx-auto space-y-2.5">
       
-      <!-- Üst Satır: Logo, Scholar Arama Kutusu ve Temel Modüller -->
+      <!-- Top Row: Brand, Hybrid Search & Core Modules -->
       <div class="flex items-center justify-between gap-3">
         
-        <!-- Logo -->
-        <div onclick="resetAllFilters()" class="flex items-center gap-2.5 cursor-pointer shrink-0 group">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-600/20 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10 font-mono font-bold text-base text-cyan-300 group-hover:border-cyan-400 transition">
-            Ψ
+        <!-- Brand Identity: VibePsych (Zero Noise) -->
+        <button onclick="resetToHome()" class="flex items-center gap-2.5 group focus:outline-none shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.1] group-hover:border-[#00f0ff]/60 flex items-center justify-center transition shadow-inner">
+            <svg class="w-4 h-4 text-[#00f0ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v18"/>
+              <path d="M5 7c0 5 3.5 7 7 7s7-2 7-7"/>
+            </svg>
           </div>
-          <div class="hidden sm:block">
-            <div class="flex items-center gap-1.5">
-              <span class="text-sm font-bold tracking-tight text-white">PsychNexus</span>
-              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v3.0</span>
-            </div>
-            <p class="text-[10px] text-slate-500 font-mono">Q1 Journal & Scholar Stream</p>
-          </div>
-        </div>
+          <span class="text-lg tracking-tight text-white">
+            <span class="font-light text-slate-300">Vibe</span><span class="font-semibold text-white">Psych</span>
+          </span>
+        </button>
 
-        <!-- Merkez: Scholar Küresel Arama Çubuğu + Canlı Autocomplete -->
+        <!-- Center: Default Global Scholar Search Bar + Live Autocomplete -->
         <div class="relative flex-1 max-w-2xl">
-          <div class="flex items-center bg-slate-900/90 border border-slate-700/80 focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400/30 rounded-xl transition overflow-hidden">
+          <div class="flex items-center bg-white/[0.03] border border-white/[0.09] focus-within:border-[#00f0ff]/60 focus-within:bg-white/[0.05] rounded-xl transition overflow-hidden">
             
-            <!-- Arama Kapsamı Seçici (Varsayılan: Scholar Küresel Mod) -->
+            <!-- Scope Switcher (Default: Küresel Scholar) -->
             <button 
-              id="searchScopeBtn"
+              id="scopeToggleBtn"
               onclick="toggleSearchScope()"
-              title="Arama kapsamını değiştirmek için dokunun"
-              class="px-3 py-2 text-[11px] font-mono border-r border-slate-800 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition shrink-0 flex items-center gap-1">
-              <span id="searchScopeIcon">🌐</span>
-              <span id="searchScopeText" class="hidden md:inline">Scholar Küresel</span>
+              title="Arama kapsamını değiştir (Küresel Scholar / Seçili Alan)"
+              class="px-3 py-2 text-[11px] font-mono border-r border-white/[0.07] text-[#00f0ff] bg-[#00f0ff]/[0.06] hover:bg-[#00f0ff]/[0.12] transition flex items-center gap-1.5 shrink-0">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+              <span id="scopeToggleText" class="hidden sm:inline">Küresel</span>
             </button>
 
-            <!-- Arama Girdisi -->
-            <input 
-              id="searchInput" 
-              type="text" 
-              autocomplete="off"
-              oninput="handleSearchTyping()"
-              placeholder="Makale, kavram veya yazar ara (Türkçe veya İngilizce)..." 
-              class="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-mono"
-            />
+            <!-- Search Input -->
+            <div class="relative flex-1 flex items-center">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 ml-3 shrink-0"></i>
+              <input 
+                id="searchInput" 
+                type="text" 
+                autocomplete="off"
+                oninput="handleSearchInput()"
+                placeholder="Kavram, makale veya yazar ara..." 
+                class="w-full bg-transparent px-2.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+              />
+              <button 
+                id="clearSearchBtn"
+                onclick="clearSearch()" 
+                class="hidden pr-2.5 text-slate-500 hover:text-white">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
 
-            <!-- Temizle Butonu -->
+            <!-- Submit Search -->
             <button 
-              id="clearSearchBtn"
-              onclick="clearSearchInput()" 
-              class="hidden px-2 text-slate-500 hover:text-slate-200 text-xs font-mono">
-              ✕
-            </button>
-
-            <!-- Ara Butonu -->
-            <button 
-              onclick="triggerNewSearch()" 
-              class="px-3.5 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 font-mono text-xs font-medium border-l border-slate-800 transition shrink-0">
+              onclick="executeSearch()" 
+              class="px-3.5 py-2 bg-white/[0.04] hover:bg-[#00f0ff]/15 text-slate-200 hover:text-[#00f0ff] border-l border-white/[0.07] font-mono text-xs transition shrink-0">
               Ara
             </button>
           </div>
 
-          <!-- Canlı Otomatik Tamamlama (Autocomplete) Açılır Menüsü -->
-          <div id="autocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 glass-panel rounded-xl border border-slate-700/90 shadow-2xl z-50 overflow-hidden divide-y divide-slate-800/80"></div>
+          <!-- Autocomplete Dropdown -->
+          <div id="autocompleteMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 luxury-panel rounded-xl z-50 overflow-hidden divide-y divide-white/[0.06]"></div>
         </div>
 
-        <!-- Sağ: Minimalist Aksiyon Butonları -->
+        <!-- Right: Favorite Journals Stream, Directory & Vault -->
         <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Favorite Journals Filter Button (#D2042D) -->
           <button 
-            onclick="toggleFilterPopover()" 
-            id="filterBtn"
-            class="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-mono text-slate-300 flex items-center gap-1.5 transition">
-            <span>⚙️</span>
-            <span class="hidden lg:inline">Filtreler</span>
+            onclick="toggleFavJournalsStream()" 
+            id="topFavStreamBtn"
+            title="Sadece Favori Dergilerimdeki Makaleleri Göster"
+            class="px-3 py-2 rounded-xl glass-pill hover:border-[#D2042D]/50 text-xs font-mono flex items-center gap-1.5 transition">
+            <i data-lucide="heart" id="topFavIcon" class="w-3.5 h-3.5 text-[#D2042D]"></i>
+            <span class="hidden lg:inline text-slate-200">Favori Dergiler</span>
+            <span id="favJournalsCount" class="text-[11px] font-semibold text-[#D2042D]">0</span>
           </button>
 
+          <!-- Journal Directory Modal -->
           <button 
-            onclick="openJournalCatalog()" 
-            class="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-mono text-emerald-300 flex items-center gap-1.5 transition">
-            <span>🏛️</span>
-            <span class="hidden lg:inline">Dergiler</span>
+            onclick="openDirectoryModal()" 
+            title="Tüm Q1 Dergiler Kataloğu"
+            class="px-3 py-2 rounded-xl glass-pill hover:border-[#00f0ff]/40 text-xs font-mono flex items-center gap-1.5 transition">
+            <i data-lucide="library" class="w-3.5 h-3.5 text-[#00f0ff]"></i>
+            <span class="hidden xl:inline text-slate-200">Dergiler</span>
           </button>
 
+          <!-- Saved Articles Vault -->
           <button 
             onclick="toggleVaultMode()" 
-            id="vaultBtn"
-            class="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-mono text-amber-300 flex items-center gap-1.5 transition">
-            <span>⭐</span>
-            <span id="vaultBadge" class="text-[11px] font-bold">0</span>
+            id="topVaultBtn"
+            title="Kaydedilen Makaleler Kasası"
+            class="px-3 py-2 rounded-xl glass-pill hover:border-[#6530ff]/50 text-xs font-mono flex items-center gap-1.5 transition">
+            <i data-lucide="bookmark" class="w-3.5 h-3.5 text-[#6530ff]"></i>
+            <span class="hidden xl:inline text-slate-200">Kasam</span>
+            <span id="vaultCountBadge" class="text-[11px] font-semibold text-[#a78bfa]">0</span>
           </button>
         </div>
 
       </div>
 
-      <!-- AÇILIR MİNİMALİST FİLTRE PANELİ (Sadece Butona Basınca Açılır - Gürültüyü Önler) -->
-      <div id="filterPopover" class="hidden pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-        <div>
-          <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Sıralama Ölçütü</label>
-          <select id="sortSelect" onchange="resetAndFetch()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500">
-            <option value="publication_date:desc">En Güncel Yayınlar (Tarih ↓)</option>
-            <option value="relevance_score:desc">Scholar Alaka Düzeyi (BM25 ↓)</option>
-            <option value="cited_by_count:desc">En Yüksek Atıf Sayısı (Atıf ↓)</option>
-          </select>
+      <!-- ALWAYS-VISIBLE SINGLE-LINE INLINE FILTER RIBBON -->
+      <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-1 border-t border-white/[0.05] text-[11px] font-mono">
+        
+        <!-- Left: One-Tap Year Presets (Strict Date Filtering) -->
+        <div class="flex items-center gap-1 shrink-0">
+          <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">Tümü</button>
+          <button onclick="setYearFilter('2026')" data-yr="2026" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">2026</button>
+          <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip px-2.5 py-1 rounded-lg neon-cyan-active transition">2024+</button>
+          <button onclick="setYearFilter('5yr')" data-yr="5yr" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">Son 5 Yıl</button>
         </div>
 
-        <div>
-          <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Yayın Yılı Aralığı</label>
-          <select id="yearSelect" onchange="resetAndFetch()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500">
-            <option value="2024-2027" selected>Son Dönem (2024 - Güncel)</option>
-            <option value="2026-2027">Sadece Bu Yıl (2026+)</option>
-            <option value="2021-2027">Son 5 Yıl (2021+)</option>
-            <option value="all">Tüm Zamanlar (Klasikler Dahil)</option>
-          </select>
+        <!-- Center/Right: Inline Sort, Methodology, OA & Compact Switches -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Sort Select -->
+          <div class="relative flex items-center">
+            <select id="sortSelect" onchange="resetAndFetch()" class="glass-pill rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-[#00f0ff] appearance-none cursor-pointer bg-[#0a0d14]">
+              <option value="publication_date:desc">Sırala: En Güncel ↓</option>
+              <option value="relevance_score:desc">Sırala: Alaka Düzeyi ↓</option>
+              <option value="cited_by_count:desc">Sırala: En Çok Atıf ↓</option>
+            </select>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-2 pointer-events-none"></i>
+          </div>
+
+          <!-- Methodology Select -->
+          <div class="relative flex items-center">
+            <select id="methodSelect" onchange="applyClientFilters()" class="glass-pill rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-[#6530ff] appearance-none cursor-pointer bg-[#0a0d14]">
+              <option value="ALL">Yöntem: Tümü</option>
+              <option value="Meta-Analiz / Derleme">Meta-Analiz & Derleme</option>
+              <option value="Deneysel / RKÇ">Deneysel / RKÇ</option>
+              <option value="Nörogörüntüleme">fMRI / EEG</option>
+              <option value="Boylamasına">Boylamasına</option>
+              <option value="Psikometri / Ölçek">Psikometri</option>
+            </select>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-2 pointer-events-none"></i>
+          </div>
+
+          <!-- Open Access PDF Pill Toggle -->
+          <button 
+            id="oaFilterBtn" 
+            onclick="toggleOAFilter()" 
+            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#2cdb4c]"></span>
+            <span>Tam Metin PDF</span>
+          </button>
+
+          <!-- Cap Future Dates Toggle -->
+          <button 
+            id="capDateBtn" 
+            onclick="toggleCapFuture()" 
+            title="İleri sayı tarihli Online First atamalarını bugüne sınırla"
+            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition">
+            <i data-lucide="calendar-check" class="w-3 h-3 text-slate-400"></i>
+            <span class="hidden sm:inline">≤ Bugün</span>
+          </button>
+
+          <!-- Compact View Toggle -->
+          <button 
+            id="compactModeBtn" 
+            onclick="toggleCompactView()" 
+            title="Kompakt Başlık Görünümü / Standart Kart Görünümü"
+            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition">
+            <i data-lucide="list" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
         </div>
 
-        <div>
-          <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Çalışma Metodolojisi</label>
-          <select id="methodSelect" onchange="applyClientFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500">
-            <option value="ALL">Tüm Metodolojiler</option>
-            <option value="Meta-Analiz / Derleme">Meta-Analiz & Sistematik Derleme</option>
-            <option value="Deneysel / RKÇ">Deneysel / Randomize Kontrollü</option>
-            <option value="Nörogörüntüleme">fMRI / EEG / Nörogörüntüleme</option>
-            <option value="Boylamasına">Boylamasına (Longitudinal)</option>
-            <option value="Psikometri / Ölçek">Psikometri & Ölçek Geliştirme</option>
-          </select>
-        </div>
+      </div>
 
-        <div class="flex flex-col justify-end gap-2">
-          <label class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-1.5 cursor-pointer">
-            <span class="text-[11px] font-mono text-slate-300">Sadece Açık Erişim (PDF)</span>
-            <input type="checkbox" id="oaToggle" onchange="resetAndFetch()" class="accent-cyan-400">
-          </label>
-          <label class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-1.5 cursor-pointer">
-            <span class="text-[11px] font-mono text-slate-300">İleri Tarihleri Gizle</span>
-            <input type="checkbox" id="hideFutureToggle" onchange="resetAndFetch()" class="accent-cyan-400">
-          </label>
+      <!-- COLLAPSIBLE DISCIPLINE & JOURNAL RAILS (Auto-collapses on downward scroll for clean reading) -->
+      <div id="collapsibleTaxonomy" class="space-y-2 pt-1">
+        <!-- Discipline Strip (Includes "Favori Dergilerim" Pill first) -->
+        <div id="disciplineStrip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar"></div>
+
+        <!-- Journal Switcher Strip (With inline Heart favorite buttons) -->
+        <div class="flex items-center gap-2 bg-white/[0.02] border border-white/[0.06] rounded-xl px-2.5 py-1.5">
+          <div class="flex items-center gap-1 shrink-0 border-r border-white/[0.07] pr-2">
+            <button onclick="stepJournal(-1)" title="Önceki Dergi ( [ )" class="p-1 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition">
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="stepJournal(1)" title="Sonraki Dergi ( ] )" class="p-1 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition">
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div id="journalStrip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1"></div>
+
+          <a id="activeJournalSiteBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden shrink-0 px-2.5 py-1 rounded-lg bg-[#2cdb4c]/10 border border-[#2cdb4c]/40 text-[#2cdb4c] text-[11px] font-mono items-center gap-1 hover:bg-[#2cdb4c]/20 transition">
+            <span>Resmi Site</span>
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+          </a>
         </div>
       </div>
 
     </div>
   </header>
 
-  <!-- 2. ANA İÇERİK ALANI (MİNİMALİST ODAKLANMIŞ TEK SÜTUN) -->
+  <!-- MAIN EDITORIAL WORKSPACE -->
   <main class="max-w-5xl mx-auto px-4 pt-4 space-y-4">
 
-    <!-- YATAY PSİKOLOJİ ALT DALLARI ŞERİDİ (Kaydırılabilir, Temiz) -->
-    <section class="space-y-2">
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500">1. Disiplin Seçimi</span>
-        <div class="flex items-center gap-2">
-          <!-- Kompakt vs Standart Kart Görünümü Anahtarı -->
-          <button onclick="toggleDensityMode()" id="densityBtn" class="text-[11px] font-mono text-slate-400 hover:text-cyan-300 transition">
-            ☰ Görünüm: Standart Kart
-          </button>
-        </div>
+    <!-- Active Filter / Author / Snowball Status Bar -->
+    <div id="statusToolbar" class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono px-0.5">
+      <div id="activePillsContainer" class="flex flex-wrap items-center gap-1.5"></div>
+      <div id="resultsTelemetryText" class="text-[11px] text-slate-500 ml-auto tabular-nums"></div>
+    </div>
+
+    <!-- Vault Batch Export Toolbar (Only visible in Kasam mode) -->
+    <div id="vaultBatchBar" class="hidden luxury-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 border-[#6530ff]/40">
+      <div class="flex items-center gap-2.5">
+        <i data-lucide="bookmark-check" class="w-4 h-4 text-[#6530ff]"></i>
+        <span class="text-xs font-medium text-white">Kişisel Literatür Kasası — Toplu Dışa Aktarım</span>
       </div>
-      <div id="domainStrip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1"></div>
-    </section>
-
-    <!-- SEÇİLİ ALANIN AMİRAL GEMİSİ (Q1) DERGİLERİ GEÇİŞ RAYI -->
-    <section class="glass-panel rounded-2xl p-3.5 space-y-2.5">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-semibold">2. Q1 Dergi Akışı:</span>
-          <span id="activeVenueLabel" class="text-xs font-semibold text-white">Tüm Elit Q1 Havuzu</span>
-        </div>
-
-        <!-- Hızlı Önceki/Sonraki Dergi ve Resmi Site Kontrolleri -->
-        <div class="flex items-center gap-1.5">
-          <a id="venueOfficialLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[11px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
-            🌐 Dergi Resmi Sitesi ↗
-          </a>
-          <button onclick="stepJournal(-1)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[11px] font-mono transition" title="Önceki Dergi (Klavye: [ )">
-            ‹ Önceki
-          </button>
-          <button onclick="stepJournal(1)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[11px] font-mono transition" title="Sonraki Dergi (Klavye: ] )">
-            Sonraki ›
-          </button>
-        </div>
+      <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+        <button onclick="exportAllVaultAPA()" class="px-3 py-1.5 rounded-xl glass-pill hover:border-[#00f0ff]/50 text-slate-200 flex items-center gap-1.5 transition">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-[#00f0ff]"></i>
+          <span>Tümünü APA 7 Kaynakça Kopyala</span>
+        </button>
+        <button onclick="downloadAllVaultMarkdown()" class="px-3 py-1.5 rounded-xl bg-[#6530ff]/20 border border-[#6530ff]/50 text-white hover:bg-[#6530ff]/30 flex items-center gap-1.5 transition">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Toplu Obsidian (.md) İndir</span>
+        </button>
       </div>
-
-      <!-- Yatay Kaydırılabilir Dergi Çipleri -->
-      <div id="journalStrip" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5"></div>
-    </section>
-
-    <!-- AKTİF FİLTRE VE ARAMA DURUM ÇUBUĞU (Sadece Filtre/Arama Varsa Belirir) -->
-    <div id="activeStatusStrip" class="flex flex-wrap items-center justify-between gap-2 px-1 text-xs font-mono">
-      <div id="activeBreadcrumbs" class="flex flex-wrap items-center gap-1.5"></div>
-      <div id="resultCountText" class="text-[11px] text-slate-400 ml-auto">Yükleniyor...</div>
     </div>
 
-    <!-- AKILLI KURTARMA (SMART FALLBACK) BİLGİ KUTUSU -->
-    <div id="fallbackBanner" class="hidden glass-panel border-amber-500/40 rounded-xl px-4 py-2.5 text-xs font-mono text-amber-200 flex items-center justify-between">
-      <span id="fallbackBannerText"></span>
-      <button onclick="document.getElementById('fallbackBanner').classList.add('hidden')" class="text-slate-400 hover:text-white ml-3">✕</button>
+    <!-- Smart Fallback Notice -->
+    <div id="fallbackNotice" class="hidden luxury-panel rounded-xl px-4 py-2.5 border-[#D2042D]/40 text-xs font-mono text-slate-200 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#D2042D]"></span>
+        <span id="fallbackNoticeText"></span>
+      </div>
+      <button onclick="document.getElementById('fallbackNotice').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      </button>
     </div>
 
-    <!-- YÜKLENİYOR İSKELETİ -->
-    <div id="loadingState" class="hidden glass-panel rounded-2xl p-12 text-center space-y-3">
-      <div class="inline-block w-7 h-7 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-      <p id="loadingText" class="text-xs font-mono text-slate-400">Akademik dizin taranıyor...</p>
+    <!-- Loading Indicator -->
+    <div id="loadingBox" class="hidden luxury-panel rounded-2xl p-14 text-center space-y-3">
+      <div class="inline-block w-6 h-6 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin"></div>
+      <p id="loadingMsg" class="text-xs font-mono text-slate-400">Akademik dizin sorgulanıyor...</p>
     </div>
 
-    <!-- MAKALE AKIŞ LİSTESİ -->
-    <div id="articlesList" class="space-y-3"></div>
+    <!-- Articles Stream Container -->
+    <div id="articlesContainer" class="space-y-3"></div>
 
-    <!-- ALT SAYFALAMA VE KESİNTİSİZ AKIŞ -->
-    <div id="paginationFooter" class="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <!-- Pagination & Continuous Flow Footer -->
+    <footer id="paginationBar" class="luxury-panel rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <button 
         onclick="appendNextPage()" 
-        class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-semibold transition">
-        ➕ Sonraki Sayfayı Listeye Ekle (Kesintisiz Akış)
+        class="w-full sm:w-auto px-5 py-2.5 rounded-xl neon-cyan-active text-xs font-mono font-medium flex items-center justify-center gap-2 transition">
+        <i data-lucide="layers" class="w-3.5 h-3.5 text-[#00f0ff]"></i>
+        <span>Sonraki Sayfayı Akışa Ekle</span>
       </button>
-      <div id="pageControls" class="flex items-center gap-1.5 font-mono text-xs"></div>
-    </div>
+      <div id="paginationControls" class="flex items-center gap-1.5 font-mono text-xs"></div>
+    </footer>
 
   </main>
 
-  <!-- 3. DERİN İNCELEME ÇEKMECESİ (SLIDE-OVER / BOTTOM SHEET INSPECTOR) -->
-  <div id="inspectorBackdrop" onclick="closeInspector()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden"></div>
-  <aside id="inspectorSheet" class="fixed inset-y-0 right-0 z-50 w-full max-w-2xl glass-panel border-l border-slate-700/80 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="px-5 py-4 border-b border-slate-800/90 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span id="sheetQuartile" class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded border">Q1</span>
-        <span id="sheetHIndex" class="text-xs font-mono text-violet-300"></span>
+  <!-- SLIDE-OVER DEEP INSPECTOR DRAWER -->
+  <div id="inspectorOverlay" onclick="closeInspector()" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 hidden"></div>
+  <aside id="inspectorDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-2xl luxury-panel border-l border-white/[0.1] shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="px-6 py-4 border-b border-white/[0.07] flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span id="drawerQuartileBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-md">Q1</span>
+        <span id="drawerJournalMeta" class="text-xs font-mono text-slate-300 truncate max-w-xs"></span>
       </div>
-      <button onclick="closeInspector()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono">
-        Kapat (ESC) ✕
+      <button onclick="closeInspector()" class="p-1.5 rounded-lg glass-pill hover:text-white">
+        <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
-    <div id="inspectorContent" class="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5"></div>
+    <div id="inspectorBody" class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6"></div>
   </aside>
 
-  <!-- 4. TÜM Q1 DERGİLER KATALOĞU MODALI -->
-  <div id="catalogModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="glass-panel border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
-      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+  <!-- Q1 JOURNAL DIRECTORY & FAVORITES CURATION MODAL -->
+  <div id="directoryModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="luxury-panel rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-white/[0.12]">
+      <div class="p-5 border-b border-white/[0.07] flex items-center justify-between">
         <div>
-          <h3 class="text-sm sm:text-base font-bold text-white">🏛️ Küresel Q1 Psikoloji & Sinirbilim Dergi İndeksi</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Doğrudan derginin son sayılarını takip etmek için seçin.</p>
+          <h3 class="font-serif text-xl text-white">Küresel Q1 Dergi Koleksiyonu & Favori Kürasyonu</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Dergilerin yanındaki kalp ikonuna dokunarak kişisel <span class="text-[#D2042D] font-mono">Favori Dergilerim</span> akışınızı oluşturabilirsiniz.</p>
         </div>
-        <button onclick="closeJournalCatalog()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-mono">✕</button>
+        <button onclick="closeDirectoryModal()" class="p-2 rounded-lg glass-pill hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
       </div>
-      <div class="p-3.5 border-b border-slate-800/80">
-        <input id="catalogFilterInput" oninput="renderCatalogItems()" type="text" placeholder="Dergi adı ara (örn: Nature, Consulting, Cognition, Brain)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-400" />
+      <div class="p-4 border-b border-white/[0.06] bg-white/[0.01]">
+        <div class="relative flex items-center">
+          <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5"></i>
+          <input id="dirSearchInput" oninput="renderDirectoryModalContent()" type="text" placeholder="Dergi adı veya ISSN ara (örn: Nature, Consulting, Cognition, Brain)..." class="w-full bg-white/[0.03] border border-white/[0.1] rounded-xl pl-10 pr-4 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#00f0ff]" />
+        </div>
       </div>
-      <div id="catalogGrid" class="p-4 sm:p-5 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+      <div id="directoryGrid" class="p-5 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
   </div>
 
-  <!-- 5. MOBİL ALT NAVİGASYON BARI (Telefon Ergonomisi İçin) -->
-  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 glass-nav border-t border-slate-800/90 px-4 py-2 flex items-center justify-around text-[11px] font-mono">
-    <button onclick="resetAllFilters()" class="flex flex-col items-center gap-0.5 text-cyan-400">
-      <span>🧭</span>
+  <!-- MOBILE BOTTOM NAVIGATION BAR -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 luxury-header border-t border-white/[0.08] px-4 py-2 flex items-center justify-around text-[10px] font-mono">
+    <button onclick="resetToHome()" class="flex flex-col items-center gap-1 text-[#00f0ff]">
+      <i data-lucide="compass" class="w-4 h-4"></i>
       <span>Akış</span>
     </button>
-    <button onclick="openJournalCatalog()" class="flex flex-col items-center gap-0.5 text-slate-300">
-      <span>🏛️</span>
+    <button onclick="toggleFavJournalsStream()" class="flex flex-col items-center gap-1 text-[#D2042D]">
+      <i data-lucide="heart" class="w-4 h-4"></i>
+      <span>Favoriler</span>
+    </button>
+    <button onclick="openDirectoryModal()" class="flex flex-col items-center gap-1 text-slate-300">
+      <i data-lucide="library" class="w-4 h-4"></i>
       <span>Dergiler</span>
     </button>
-    <button onclick="toggleFilterPopover()" class="flex flex-col items-center gap-0.5 text-slate-300">
-      <span>⚙️</span>
-      <span>Filtre</span>
-    </button>
-    <button onclick="toggleVaultMode()" class="flex flex-col items-center gap-0.5 text-amber-300">
-      <span>⭐</span>
+    <button onclick="toggleVaultMode()" class="flex flex-col items-center gap-1 text-[#a78bfa]">
+      <i data-lucide="bookmark" class="w-4 h-4"></i>
       <span>Kasam</span>
     </button>
   </nav>
 
-  <!-- BİLDİRİM TOAST -->
-  <div id="toast" class="fixed bottom-16 md:bottom-6 right-5 z-50 hidden glass-panel border-cyan-500/50 text-cyan-200 px-4 py-2.5 rounded-xl text-xs font-mono shadow-2xl"></div>
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-16 md:bottom-6 right-5 z-50 hidden luxury-panel border-[#00f0ff]/50 text-white px-4 py-2.5 rounded-xl text-xs font-mono shadow-2xl flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-[#00f0ff]"></span>
+    <span id="toastText"></span>
+  </div>
 
   <script>
-    // 1. TÜRKÇE -> İNGİLİZCE AKADEMİK PSİKOLOJİ KAVRAM KÖPRÜSÜ
-    // Kullanıcı Türkçe arama yaptığında OpenAlex'in sıfır sonuç döndürmesini önler
-    const TR_EN_DICTIONARY = {
+    // 1. TURKISH -> ENGLISH ACADEMIC PSYCHOLOGY BRIDGE
+    const TR_EN_MAP = {
       'üstbiliş': 'metacognition',
       'üst biliş': 'metacognition',
       'bağlanma': 'attachment style',
       'travma': 'psychological trauma ptsd',
-      'depresyon': 'depression major depressive disorder',
+      'depresyon': 'major depressive disorder depression',
       'anksiyete': 'anxiety disorder',
       'kaygı': 'anxiety',
       'bilişsel çarpıtma': 'cognitive distortion',
@@ -406,11 +542,11 @@
       'bilişsel davranışçı': 'cognitive behavioral therapy cbt'
     };
 
-    // 2. KANONİK ISSN-L DESTEKLİ PSİKOLOJİ VE Q1 DERGİ VERİTABANI
+    // 2. CANONICAL Q1 PSYCHOLOGY & NEUROSCIENCE JOURNAL DATABASE
     const PSYCH_DOMAINS = [
       {
         id: 'elite_all',
-        name: '🌟 Genel Elit Psikoloji',
+        name: 'Genel Elit Psikoloji',
         conceptId: 'C15744967',
         journals: [
           { name: 'Behavioral and Brain Sciences', issn: '0140-525X' },
@@ -569,54 +705,81 @@
 
     const PRESTIGE_ISSNS = new Set();
     const PRESTIGE_NAMES = new Set();
+    const ALL_JOURNALS_MAP = new Map();
     PSYCH_DOMAINS.forEach(d => d.journals.forEach(j => {
       PRESTIGE_ISSNS.add(j.issn);
       PRESTIGE_NAMES.add(j.name.toLowerCase());
+      ALL_JOURNALS_MAP.set(j.issn, j.name);
     }));
 
-    // UYGULAMA DURUMU (STATE)
+    // APPLICATION STATE
     let activeDomain = PSYCH_DOMAINS[0];
-    let activeJournal = null; // null = Tüm Q1 Havuzu | veya {name, issn}
-    let searchScope = 'scholar_global'; // VARSAYILAN: 'scholar_global' | 'contextual'
-    let isCompactMode = false;
+    let activeJournal = null; // {name, issn} or null
+    let isFavJournalsStream = false; // NEW: Stream only from user's favorite journals
+    let searchScope = 'scholar_global'; // DEFAULT: Global Scholar Mode
+    let activeYearFilter = '2024+'; // 'all' | '2026' | '2024+' | '5yr'
+    let onlyOA = false;
+    let capFutureDates = false;
+    let isCompactView = false;
     let isVaultMode = false;
-    let snowballSourceTitle = null;
+
+    let activeAuthorFilter = null; // {id, name}
+    let activeSnowball = null; // {workId, mode, title}
 
     let currentPage = 1;
     let totalWorksCount = 0;
 
     let articleMap = new Map();
     let currentArticles = [];
-    let sourceCache = {}; // issn veya id -> {h_index, impact_2yr, homepage_url}
-    let vaultList = JSON.parse(localStorage.getItem('psychnexus_vault_v3') || '[]');
+    let sourceCache = {};
+
+    // Persistent LocalStorage States
+    let favJournals = JSON.parse(localStorage.getItem('vibepsych_fav_journals') || '[]'); // Array of {name, issn}
+    let vaultList = JSON.parse(localStorage.getItem('vibepsych_vault') || '[]');
+    let seenWorks = new Set(JSON.parse(localStorage.getItem('vibepsych_seen_works') || '[]'));
 
     let typingTimer = null;
+    let lastScrollY = 0;
 
-    // 3. BAŞLANGIÇ KURULUMU
-    function initApp() {
-      updateVaultBadge();
-      renderDomainStrip();
+    // 3. INITIALIZATION
+    function initVibePsych() {
+      lucide.createIcons();
+      updateCounters();
+      renderDisciplineStrip();
       renderJournalStrip();
       resetAndFetch();
 
       document.getElementById('searchInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           hideAutocomplete();
-          triggerNewSearch();
+          executeSearch();
         }
       });
 
       document.addEventListener('click', (e) => {
-        if (!e.target.closest('#searchInput') && !e.target.closest('#autocompleteDropdown')) {
+        if (!e.target.closest('#searchInput') && !e.target.closest('#autocompleteMenu')) {
           hideAutocomplete();
         }
       });
 
+      // Smart Auto-Hide Header on Scroll
+      window.addEventListener('scroll', () => {
+        const currentY = window.scrollY;
+        const navBox = document.getElementById('collapsibleTaxonomy');
+        if (currentY > 180 && currentY > lastScrollY + 12) {
+          navBox.classList.add('collapsed-nav');
+        } else if (currentY < lastScrollY - 12 || currentY < 100) {
+          navBox.classList.remove('collapsed-nav');
+        }
+        lastScrollY = currentY;
+      }, { passive: true });
+
+      // Keyboard shortcuts
       window.addEventListener('keydown', (e) => {
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (e.key === 'Escape') {
           closeInspector();
-          closeJournalCatalog();
+          closeDirectoryModal();
           hideAutocomplete();
         }
         if (tag !== 'input' && tag !== 'select' && !isVaultMode) {
@@ -626,101 +789,205 @@
       });
     }
 
-    // 4. DİSİPLİN VE Q1 DERGİ ŞERİDİ KONTROLLERİ
-    function renderDomainStrip() {
-      const el = document.getElementById('domainStrip');
-      el.innerHTML = PSYCH_DOMAINS.map(d => {
-        const active = !isVaultMode && d.id === activeDomain.id;
+    // 4. FAVORITE JOURNALS ENGINE (#D2042D)
+    function isJournalFavorited(issn, name) {
+      return favJournals.some(j => (issn && j.issn === issn) || j.name.toLowerCase() === (name || '').toLowerCase());
+    }
+
+    function toggleFavoriteJournal(issn, name, event) {
+      if (event) event.stopPropagation();
+      const idx = favJournals.findIndex(j => (issn && j.issn === issn) || j.name.toLowerCase() === (name || '').toLowerCase());
+
+      if (idx > -1) {
+        const removed = favJournals[idx].name;
+        favJournals.splice(idx, 1);
+        showToast(`"${removed}" favori dergilerden çıkarıldı.`);
+      } else {
+        favJournals.push({ issn: issn || '', name });
+        showToast(`♥ "${name}" favori dergilerinize eklendi!`);
+      }
+
+      localStorage.setItem('vibepsych_fav_journals', JSON.stringify(favJournals));
+      updateCounters();
+      renderDisciplineStrip();
+      renderJournalStrip();
+      if (!document.getElementById('directoryModal').classList.contains('hidden')) {
+        renderDirectoryModalContent();
+      }
+      if (isFavJournalsStream) {
+        if (favJournals.length === 0) {
+          isFavJournalsStream = false;
+          renderDisciplineStrip();
+          renderJournalStrip();
+        }
+        resetAndFetch();
+      } else {
+        applyClientFilters();
+      }
+    }
+
+    function toggleFavJournalsStream() {
+      if (favJournals.length === 0) {
+        showToast('Önce takip etmek istediğiniz dergilerin yanındaki kalp (♥) ikonuna dokunarak favorilerinize ekleyin.');
+        openDirectoryModal();
+        return;
+      }
+      isVaultMode = false;
+      activeAuthorFilter = null;
+      activeSnowball = null;
+      activeJournal = null;
+      isFavJournalsStream = !isFavJournalsStream;
+
+      renderDisciplineStrip();
+      renderJournalStrip();
+      resetAndFetch();
+    }
+
+    function updateCounters() {
+      document.getElementById('favJournalsCount').textContent = favJournals.length;
+      document.getElementById('vaultCountBadge').textContent = vaultList.length;
+
+      const topFavBtn = document.getElementById('topFavStreamBtn');
+      if (isFavJournalsStream) {
+        topFavBtn.className = 'px-3 py-2 rounded-xl neon-crimson-active text-xs font-mono flex items-center gap-1.5 transition';
+      } else {
+        topFavBtn.className = 'px-3 py-2 rounded-xl glass-pill hover:border-[#D2042D]/50 text-xs font-mono flex items-center gap-1.5 transition';
+      }
+    }
+
+    // 5. DISCIPLINE & JOURNAL STRIP RENDERERS
+    function renderDisciplineStrip() {
+      const strip = document.getElementById('disciplineStrip');
+      
+      // First Pill: "Favori Dergilerim" (#D2042D)
+      let html = `
+        <button 
+          onclick="toggleFavJournalsStream()"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border flex items-center gap-1.5 shrink-0 ${
+            isFavJournalsStream 
+              ? 'neon-crimson-active' 
+              : 'bg-[#D2042D]/[0.07] text-slate-200 border-[#D2042D]/30 hover:border-[#D2042D]/60'
+          }">
+          <i data-lucide="heart" class="w-3.5 h-3.5 text-[#D2042D] ${isFavJournalsStream ? 'fill-[#D2042D]' : ''}"></i>
+          <span>Favori Dergilerim (${favJournals.length})</span>
+        </button>
+      `;
+
+      html += PSYCH_DOMAINS.map(d => {
+        const active = !isVaultMode && !isFavJournalsStream && d.id === activeDomain.id;
         return `
           <button 
-            onclick="selectDomain('${d.id}')"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border ${
+            onclick="selectDiscipline('${d.id}')"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border shrink-0 ${
               active 
-                ? 'bg-cyan-500/20 text-cyan-200 border-cyan-500/50 shadow-sm shadow-cyan-500/10' 
-                : 'bg-slate-900/70 text-slate-400 hover:text-slate-200 border-slate-800/90'
+                ? 'neon-cyan-active' 
+                : 'glass-pill hover:text-white'
             }">
             ${d.name}
           </button>
         `;
       }).join('');
+
+      strip.innerHTML = html;
+      lucide.createIcons();
     }
 
-    function selectDomain(id) {
+    function selectDiscipline(id) {
       isVaultMode = false;
-      snowballSourceTitle = null;
+      isFavJournalsStream = false;
+      activeAuthorFilter = null;
+      activeSnowball = null;
       activeDomain = PSYCH_DOMAINS.find(d => d.id === id) || PSYCH_DOMAINS[0];
       activeJournal = null;
-      renderDomainStrip();
+      updateCounters();
+      renderDisciplineStrip();
       renderJournalStrip();
       resetAndFetch();
     }
 
     function renderJournalStrip() {
       const strip = document.getElementById('journalStrip');
-      const label = document.getElementById('activeVenueLabel');
-      const officialLink = document.getElementById('venueOfficialLink');
+      const siteBtn = document.getElementById('activeJournalSiteBtn');
+      const sourceJournals = isFavJournalsStream ? favJournals : activeDomain.journals;
 
       if (activeJournal) {
-        label.textContent = `${activeJournal.name} (${activeJournal.issn})`;
-        updateOfficialJournalLink(activeJournal.issn);
+        updateOfficialSiteLink(activeJournal.issn);
       } else {
-        label.textContent = `${activeDomain.name} — Tüm Q1 Dergi Havuzu (${activeDomain.journals.length} Dergi)`;
-        officialLink.classList.add('hidden');
+        siteBtn.classList.add('hidden');
       }
 
-      const isPool = activeJournal === null;
+      const poolActive = activeJournal === null;
       let html = `
         <button 
           onclick="selectJournal(null)"
-          class="px-3 py-1 rounded-lg text-[11px] font-mono whitespace-nowrap border transition ${
-            isPool 
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-semibold' 
-              : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-slate-200'
+          class="px-2.5 py-1 rounded-lg text-[11px] font-mono whitespace-nowrap border transition shrink-0 ${
+            poolActive 
+              ? (isFavJournalsStream ? 'neon-crimson-active' : 'neon-cyan-active') 
+              : 'glass-pill hover:text-white'
           }">
-          Tüm Q1 Havuzu
+          ${isFavJournalsStream ? `Tüm Favoriler (${favJournals.length})` : `Tüm Q1 Havuzu (${sourceJournals.length})`}
         </button>
       `;
 
-      activeDomain.journals.forEach((j, idx) => {
-        const selected = activeJournal && activeJournal.issn === j.issn;
+      sourceJournals.forEach((j, idx) => {
+        const isSelected = activeJournal && ((j.issn && activeJournal.issn === j.issn) || activeJournal.name === j.name);
+        const isFav = isJournalFavorited(j.issn, j.name);
+
         html += `
-          <button 
-            onclick="selectJournal(${idx})"
-            class="px-3 py-1 rounded-lg text-[11px] font-mono whitespace-nowrap border transition ${
-              selected 
-                ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400 font-semibold' 
-                : 'bg-slate-900/80 text-slate-300 border-slate-800/90 hover:border-cyan-500/40 hover:text-cyan-200'
-            }">
-            ★ ${j.name}
-          </button>
+          <div class="inline-flex items-center rounded-lg border transition shrink-0 overflow-hidden ${
+            isSelected 
+              ? 'neon-cyan-active' 
+              : 'glass-pill hover:border-white/20'
+          }">
+            <button 
+              onclick="selectJournal(${idx})"
+              class="pl-2.5 pr-1.5 py-1 text-[11px] font-mono whitespace-nowrap text-left hover:text-white transition">
+              ${escapeHtml(j.name)}
+            </button>
+            <button 
+              onclick="toggleFavoriteJournal('${j.issn || ''}', '${j.name.replace(/'/g, "\\'")}', event)"
+              title="${isFav ? 'Favorilerden Çıkar' : 'Favori Dergilerime Ekle'}"
+              class="px-1.5 py-1 hover:bg-white/[0.08] transition flex items-center">
+              <i data-lucide="heart" class="w-3 h-3 ${isFav ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
+            </button>
+          </div>
         `;
       });
 
       strip.innerHTML = html;
+      lucide.createIcons();
     }
 
     function selectJournal(idx) {
       isVaultMode = false;
-      snowballSourceTitle = null;
-      activeJournal = (idx === null || idx < 0) ? null : activeDomain.journals[idx];
+      activeAuthorFilter = null;
+      activeSnowball = null;
+      const list = isFavJournalsStream ? favJournals : activeDomain.journals;
+      activeJournal = (idx === null || idx < 0) ? null : list[idx];
       renderJournalStrip();
       resetAndFetch();
     }
 
     function stepJournal(dir) {
-      const list = activeDomain.journals;
-      let idx = activeJournal ? list.findIndex(j => j.issn === activeJournal.issn) : -1;
+      const list = isFavJournalsStream ? favJournals : activeDomain.journals;
+      if (!list || list.length === 0) return;
+      let idx = activeJournal ? list.findIndex(j => j.name === activeJournal.name) : -1;
       let next = idx + dir;
       if (next >= list.length) next = -1;
       if (next < -1) next = list.length - 1;
       selectJournal(next === -1 ? null : next);
     }
 
-    async function updateOfficialJournalLink(issn) {
-      const linkEl = document.getElementById('venueOfficialLink');
+    async function updateOfficialSiteLink(issn) {
+      const btn = document.getElementById('activeJournalSiteBtn');
+      if (!issn) {
+        btn.classList.add('hidden');
+        return;
+      }
       if (sourceCache[issn]?.homepage_url) {
-        linkEl.href = sourceCache[issn].homepage_url;
-        linkEl.classList.remove('hidden');
+        btn.href = sourceCache[issn].homepage_url;
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-flex');
         return;
       }
       try {
@@ -734,56 +1001,88 @@
             homepage_url: src.homepage_url || null
           };
           if (src.homepage_url) {
-            linkEl.href = src.homepage_url;
-            linkEl.classList.remove('hidden');
+            btn.href = src.homepage_url;
+            btn.classList.remove('hidden');
+            btn.classList.add('inline-flex');
           }
         }
       } catch (e) {}
     }
 
-    // 5. SCHOLAR KÜRESEL ARAMA, CANLI AUTOCOMPLETE VE AKILLI KURTARMA (SMART FALLBACK)
+    // 6. INLINE FILTER RIBBON CONTROLS (STRICT YEAR & OA FILTERS)
+    function setYearFilter(yr) {
+      activeYearFilter = yr;
+      document.querySelectorAll('.yr-chip').forEach(btn => {
+        if (btn.dataset.yr === yr) {
+          btn.className = 'yr-chip px-2.5 py-1 rounded-lg neon-cyan-active transition';
+        } else {
+          btn.className = 'yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition';
+        }
+      });
+      resetAndFetch();
+    }
+
+    function toggleOAFilter() {
+      onlyOA = !onlyOA;
+      document.getElementById('oaFilterBtn').className = onlyOA
+        ? 'px-2.5 py-1 rounded-lg badge-q1-elite flex items-center gap-1.5 transition'
+        : 'px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition';
+      resetAndFetch();
+    }
+
+    function toggleCapFuture() {
+      capFutureDates = !capFutureDates;
+      document.getElementById('capDateBtn').className = capFutureDates
+        ? 'px-2.5 py-1 rounded-lg neon-cyan-active flex items-center gap-1.5 transition'
+        : 'px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition';
+      resetAndFetch();
+    }
+
+    function toggleCompactView() {
+      isCompactView = !isCompactView;
+      document.getElementById('compactModeBtn').className = isCompactView
+        ? 'px-2.5 py-1 rounded-lg neon-cyan-active flex items-center gap-1 transition'
+        : 'px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition';
+      applyClientFilters();
+    }
+
+    // 7. HYBRID SEARCH & AUTOCOMPLETE ENGINE
     function toggleSearchScope() {
       searchScope = searchScope === 'scholar_global' ? 'contextual' : 'scholar_global';
-      const icon = document.getElementById('searchScopeIcon');
-      const text = document.getElementById('searchScopeText');
-      const btn = document.getElementById('searchScopeBtn');
+      const btn = document.getElementById('scopeToggleBtn');
+      const txt = document.getElementById('scopeToggleText');
 
       if (searchScope === 'scholar_global') {
-        icon.textContent = '🌐';
-        text.textContent = 'Scholar Küresel';
-        btn.className = 'px-3 py-2 text-[11px] font-mono border-r border-slate-800 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition shrink-0 flex items-center gap-1';
-        showToast('🌐 Scholar Küresel Mod: Tüm yıllar ve dergilerde alaka düzeyine göre arar.');
+        txt.textContent = 'Küresel';
+        btn.className = 'px-3 py-2 text-[11px] font-mono border-r border-white/[0.07] text-[#00f0ff] bg-[#00f0ff]/[0.06] hover:bg-[#00f0ff]/[0.12] transition flex items-center gap-1.5 shrink-0';
+        showToast('Küresel Scholar Modu: Tüm dergilerde alaka düzeyine göre arar.');
       } else {
-        icon.textContent = '🎯';
-        text.textContent = 'Seçili Dergi/Alan';
-        btn.className = 'px-3 py-2 text-[11px] font-mono border-r border-slate-800 bg-violet-500/15 text-violet-300 hover:bg-violet-500/25 transition shrink-0 flex items-center gap-1';
-        showToast('🎯 Bağlamsal Mod: Sadece seçili alt dal veya dergi içinde arar.');
+        txt.textContent = 'Seçili Alan';
+        btn.className = 'px-3 py-2 text-[11px] font-mono border-r border-white/[0.07] text-[#a78bfa] bg-[#6530ff]/[0.15] hover:bg-[#6530ff]/[0.25] transition flex items-center gap-1.5 shrink-0';
+        showToast('Seçili Alan Modu: Yalnızca aktif dergi/disiplin içinde arar.');
       }
+
       if (document.getElementById('searchInput').value.trim().length > 0) {
-        triggerNewSearch();
+        executeSearch();
       }
     }
 
-    function translateQueryIfNeeded(rawQuery) {
-      let q = rawQuery.trim();
-      const lower = q.toLowerCase();
-      if (TR_EN_DICTIONARY[lower]) {
-        return TR_EN_DICTIONARY[lower];
-      }
-      for (const [trTerm, enTerm] of Object.entries(TR_EN_DICTIONARY)) {
-        if (lower.includes(trTerm)) {
-          q = lower.replace(trTerm, enTerm);
+    function translateQuery(raw) {
+      let q = raw.trim();
+      const low = q.toLowerCase();
+      if (TR_EN_MAP[low]) return TR_EN_MAP[low];
+      for (const [tr, en] of Object.entries(TR_EN_MAP)) {
+        if (low.includes(tr)) {
+          q = low.replace(tr, en);
           break;
         }
       }
       return q;
     }
 
-    function handleSearchTyping() {
+    function handleSearchInput() {
       const val = document.getElementById('searchInput').value.trim();
       document.getElementById('clearSearchBtn').classList.toggle('hidden', val.length === 0);
-
-      // Ekrandaki mevcut makalelerde anında kelime vurgulama yap
       applyClientFilters();
 
       clearTimeout(typingTimer);
@@ -791,57 +1090,57 @@
         hideAutocomplete();
         return;
       }
-      typingTimer = setTimeout(() => fetchAutocompleteSuggestions(val), 240);
+      typingTimer = setTimeout(() => fetchAutocomplete(val), 220);
     }
 
-    async function fetchAutocompleteSuggestions(query) {
-      const translated = translateQueryIfNeeded(query);
+    async function fetchAutocomplete(query) {
+      const trans = translateQuery(query);
       try {
-        const res = await fetch(`https://api.openalex.org/autocomplete/works?q=${encodeURIComponent(translated)}`);
+        const res = await fetch(`https://api.openalex.org/autocomplete/works?q=${encodeURIComponent(trans)}`);
         const data = await res.json();
-        const items = (data.results || []).slice(0, 5);
-        const drop = document.getElementById('autocompleteDropdown');
+        const list = (data.results || []).slice(0, 5);
+        const menu = document.getElementById('autocompleteMenu');
 
-        if (items.length === 0) {
+        if (list.length === 0) {
           hideAutocomplete();
           return;
         }
 
-        drop.innerHTML = `
-          <div class="px-3 py-1.5 bg-slate-950/90 text-[10px] font-mono text-cyan-400 flex items-center justify-between">
-            <span>🔍 "${escapeHtml(query)}" için hızlı eşleşmeler (Tüm sonuçlar için Enter'a basın)</span>
-            ${translated !== query.trim() ? `<span class="text-amber-300">TR➔EN: ${escapeHtml(translated)}</span>` : ''}
+        menu.innerHTML = `
+          <div class="px-3.5 py-1.5 bg-black/60 text-[10px] font-mono text-[#00f0ff] flex items-center justify-between">
+            <span>Hızlı Eşleşmeler (Tam arama için Enter)</span>
+            ${trans !== query.trim() ? `<span class="text-[#2cdb4c]">TR➔EN: ${escapeHtml(trans)}</span>` : ''}
           </div>
-        ` + items.map(it => `
+        ` + list.map(it => `
           <button 
-            onclick="selectAutocompleteWork('${escapeHtml(it.display_name).replace(/'/g, "\\'")}')"
-            class="w-full text-left px-3.5 py-2 hover:bg-slate-800/80 transition flex items-center justify-between gap-2">
-            <span class="text-xs text-slate-200 line-clamp-1">${escapeHtml(it.display_name)}</span>
-            <span class="text-[10px] font-mono text-slate-500 shrink-0">${escapeHtml(it.hint || 'Makale')}</span>
+            onclick="pickAutocomplete('${escapeHtml(it.display_name).replace(/'/g, "\\'")}')"
+            class="w-full text-left px-3.5 py-2 hover:bg-white/[0.06] transition flex items-center justify-between gap-3">
+            <span class="text-xs text-slate-200 line-clamp-1 font-serif">${escapeHtml(it.display_name)}</span>
+            <span class="text-[10px] font-mono text-slate-500 shrink-0">${escapeHtml(it.hint || '')}</span>
           </button>
         `).join('');
 
-        drop.classList.remove('hidden');
+        menu.classList.remove('hidden');
       } catch (e) {
         hideAutocomplete();
       }
     }
 
-    function selectAutocompleteWork(title) {
+    function pickAutocomplete(title) {
       document.getElementById('searchInput').value = title;
       hideAutocomplete();
-      triggerNewSearch();
+      executeSearch();
     }
 
     function hideAutocomplete() {
-      document.getElementById('autocompleteDropdown').classList.add('hidden');
+      document.getElementById('autocompleteMenu').classList.add('hidden');
     }
 
-    function triggerNewSearch() {
-      snowballSourceTitle = null;
+    function executeSearch() {
+      activeAuthorFilter = null;
+      activeSnowball = null;
       const q = document.getElementById('searchInput').value.trim();
       if (q.length > 0) {
-        // Arama yapıldığında Scholar gibi BM25 Alaka Düzeyine geç
         document.getElementById('sortSelect').value = 'relevance_score:desc';
       } else {
         document.getElementById('sortSelect').value = 'publication_date:desc';
@@ -849,103 +1148,119 @@
       resetAndFetch();
     }
 
-    function clearSearchInput() {
+    function clearSearch() {
       document.getElementById('searchInput').value = '';
       document.getElementById('clearSearchBtn').classList.add('hidden');
       document.getElementById('sortSelect').value = 'publication_date:desc';
-      snowballSourceTitle = null;
       hideAutocomplete();
       resetAndFetch();
     }
 
-    // 6. ANA OPENALEX SORGUSU VE AKILLI SIFIR SONUÇ KURTARICI
+    // 8. CORE OPENALEX FETCH ENGINE (WITH GUARANTEED YEAR FILTER)
     function resetAndFetch() {
       currentPage = 1;
-      document.getElementById('fallbackBanner').classList.add('hidden');
-      fetchArticles(false, false);
+      document.getElementById('fallbackNotice').classList.add('hidden');
+      fetchLiterature(false, false);
     }
 
     function goToPage(p) {
       if (p < 1) return;
       currentPage = p;
-      fetchArticles(false, false);
+      fetchLiterature(false, false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function appendNextPage() {
       currentPage += 1;
-      fetchArticles(true, false);
+      fetchLiterature(true, false);
     }
 
-    async function fetchArticles(appendMode = false, isFallbackRetry = false) {
+    async function fetchLiterature(appendMode = false, isFallback = false) {
+      document.getElementById('vaultBatchBar').classList.toggle('hidden', !isVaultMode);
       if (isVaultMode) {
-        renderVaultArticles();
+        renderVaultStream();
         return;
       }
 
-      const loader = document.getElementById('loadingState');
-      const listEl = document.getElementById('articlesList');
+      const loader = document.getElementById('loadingBox');
+      const container = document.getElementById('articlesContainer');
       loader.classList.remove('hidden');
-      if (!appendMode) listEl.innerHTML = '';
+      if (!appendMode) container.innerHTML = '';
 
-      const rawQuery = document.getElementById('searchInput').value.trim();
-      const effectiveQuery = translateQueryIfNeeded(rawQuery);
-      const hasSearch = effectiveQuery.length > 0;
-
+      const rawQ = document.getElementById('searchInput').value.trim();
+      const effectiveQ = translateQuery(rawQ);
+      const hasSearch = effectiveQ.length > 0;
       const sortVal = document.getElementById('sortSelect').value;
-      const yearVal = document.getElementById('yearSelect').value;
-      const oaOnly = document.getElementById('oaToggle').checked;
-      const hideFuture = document.getElementById('hideFutureToggle').checked;
 
-      // Makale, Derleme (Review) ve Ön Baskıları dahil et (Meta-analizleri kaçırmamak için)
       let filters = ['type:article|review'];
 
-      if (isFallbackRetry) {
-        // Akıllı Kurtarma Modu: Dergi ve Yıl kısıtlamalarını tamamen gevşet
-      } else if (hasSearch && searchScope === 'scholar_global') {
-        // VARSAYILAN SCHOLAR KÜRESEL MOD:
-        // Kullanıcı bir kelime arattığında dergi/yıl dar boğazına takılmadan tüm literatürde arar
-      } else {
-        // Dergi veya Alt Dal Keşif Modu
-        if (activeJournal) {
-          filters.push(`primary_location.source.issn:${activeJournal.issn}`);
-        } else {
-          const issnList = activeDomain.journals.map(j => j.issn).join('|');
-          filters.push(`primary_location.source.issn:${issnList}`);
-        }
-        if (yearVal !== 'all') {
-          filters.push(`publication_year:${yearVal}`);
+      // 1. STRICT GLOBAL DATE FILTER (Always applied outside conditional branches so 1900s articles never leak!)
+      if (!isFallback) {
+        if (activeYearFilter === '2026') {
+          filters.push('from_publication_date:2026-01-01');
+        } else if (activeYearFilter === '2024+') {
+          filters.push('from_publication_date:2024-01-01');
+        } else if (activeYearFilter === '5yr') {
+          filters.push('from_publication_date:2021-01-01');
         }
       }
 
-      if (oaOnly) filters.push('is_oa:true');
-      if (hideFuture) {
+      if (onlyOA) filters.push('is_oa:true');
+      if (capFutureDates) {
         const today = new Date().toISOString().split('T')[0];
         filters.push(`to_publication_date:${today}`);
       }
 
-      let url = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=25&page=${currentPage}`;
-      if (hasSearch) {
-        url += `&search=${encodeURIComponent(effectiveQuery)}`;
+      // 2. SPECIAL FILTERS: AUTHOR PIVOT OR SNOWBALLING
+      if (activeAuthorFilter) {
+        filters.push(`author.id:${activeAuthorFilter.id}`);
+      } else if (activeSnowball) {
+        const shortId = activeSnowball.workId.replace('https://openalex.org/', '');
+        filters.push(activeSnowball.mode === 'cites' ? `cites:${shortId}` : `related_to:${shortId}`);
+      } else if (isFallback) {
+        // Smart Fallback: Relax venue constraint to search globally across psychology
+      } else if (isFavJournalsStream) {
+        // FAVORITE JOURNALS STREAM (#D2042D)
+        const favIssns = favJournals.map(j => j.issn).filter(Boolean);
+        if (activeJournal?.issn) {
+          filters.push(`primary_location.source.issn:${activeJournal.issn}`);
+        } else if (favIssns.length > 0) {
+          filters.push(`primary_location.source.issn:${favIssns.join('|')}`);
+        }
+      } else if (hasSearch && searchScope === 'scholar_global') {
+        // Global Scholar Search (while still respecting the strict year filter above!)
+      } else {
+        // Standard Discipline / Journal Pool Stream
+        if (activeJournal?.issn) {
+          filters.push(`primary_location.source.issn:${activeJournal.issn}`);
+        } else {
+          const issnPool = activeDomain.journals.map(j => j.issn).join('|');
+          filters.push(`primary_location.source.issn:${issnPool}`);
+        }
+      }
+
+      let apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=25&page=${currentPage}`;
+      if (hasSearch && !activeAuthorFilter && !activeSnowball) {
+        apiUrl += `&search=${encodeURIComponent(effectiveQ)}`;
       }
 
       try {
-        const res = await fetch(url);
+        const res = await fetch(apiUrl);
         const data = await res.json();
         const works = data.results || [];
         totalWorksCount = data.meta?.count || works.length;
 
-        // EĞER DAR FİLTREDE 0 SONUÇ ÇIKTIYSA OTOMATİK SCHOLAR FALLBACK ÇALIŞTIR
-        if (works.length === 0 && !isFallbackRetry && (hasSearch || activeJournal || yearVal !== 'all')) {
-          const banner = document.getElementById('fallbackBanner');
-          document.getElementById('fallbackBannerText').textContent = 
-            `⚡ Dar filtrede eşleşme bulunamadı; kısıtlamalar esnetilerek Küresel Scholar sonuçları getirildi.`;
-          banner.classList.remove('hidden');
-          await fetchArticles(false, true);
+        // Smart Fallback if narrow venue/year returned 0 results
+        if (works.length === 0 && !isFallback && (hasSearch || activeJournal || isFavJournalsStream)) {
+          const fb = document.getElementById('fallbackNotice');
+          document.getElementById('fallbackNoticeText').textContent = 
+            `Seçili dar filtrede sonuç bulunamadı; kapsam genişletilerek küresel sonuçlar listelendi.`;
+          fb.classList.remove('hidden');
+          await fetchLiterature(false, true);
           return;
         }
 
-        // Dergi H-Index metriklerini toplu çek
+        // Batch fetch Journal H-Index & Impact
         const missingIds = [...new Set(
           works
             .map(w => w.primary_location?.source?.id)
@@ -967,93 +1282,69 @@
           });
         }
 
-        const enriched = works
+        const processed = works
           .filter(w => !/^(correction to|erratum|corrigendum)/i.test(w.title || ''))
-          .map(w => processWork(w));
+          .map(w => enrichWork(w));
 
-        enriched.forEach(a => articleMap.set(a.id, a));
+        processed.forEach(a => articleMap.set(a.id, a));
 
         if (appendMode) {
-          const seen = new Set(currentArticles.map(x => x.id));
-          enriched.forEach(a => { if (!seen.has(a.id)) currentArticles.push(a); });
+          const existing = new Set(currentArticles.map(x => x.id));
+          processed.forEach(a => { if (!existing.has(a.id)) currentArticles.push(a); });
         } else {
-          currentArticles = enriched;
+          currentArticles = processed;
         }
 
         loader.classList.add('hidden');
-        renderStatusBreadcrumbs(rawQuery, effectiveQuery);
+        renderStatusPills(rawQ, effectiveQ);
         applyClientFilters();
         renderPagination();
 
       } catch (err) {
         loader.classList.add('hidden');
-        listEl.innerHTML = `
-          <div class="glass-panel rounded-2xl p-8 text-center text-xs font-mono text-red-300">
-            Bağlantı hatası: ${escapeHtml(err.message)}. Lütfen tekrar deneyin.
+        container.innerHTML = `
+          <div class="luxury-panel rounded-2xl p-8 text-center text-xs font-mono text-[#D2042D]">
+            Bağlantı hatası: ${escapeHtml(err.message)}
           </div>
         `;
       }
     }
 
-    // 7. KARTOPU KEŞİF (SNOWBALLING: ATIF YAPANLAR & İLGİLİ ÇALIŞMALAR)
-    async function fetchSnowballWorks(workId, mode, title) {
-      closeInspector();
-      isVaultMode = false;
-      const shortId = workId.replace('https://openalex.org/', '');
-      snowballSourceTitle = `${mode === 'cites' ? 'Atıf Yapanlar' : 'Benzer Çalışmalar'}: "${title.slice(0, 45)}..."`;
-
-      const loader = document.getElementById('loadingState');
-      loader.classList.remove('hidden');
-      document.getElementById('articlesList').innerHTML = '';
-
-      const filterStr = mode === 'cites' ? `cites:${shortId}` : `related_to:${shortId}`;
-      const url = `https://api.openalex.org/works?filter=${encodeURIComponent(filterStr)}&sort=cited_by_count:desc&per-page=25`;
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        const works = (data.results || []).map(w => processWork(w));
-        works.forEach(a => articleMap.set(a.id, a));
-        currentArticles = works;
-        totalWorksCount = data.meta?.count || works.length;
-        loader.classList.add('hidden');
-        renderStatusBreadcrumbs('', '');
-        applyClientFilters();
-      } catch (e) {
-        loader.classList.add('hidden');
-      }
-    }
-
-    // 8. VERİ ZENGİNLEŞTİRME
-    function processWork(w) {
+    // 9. DATA ENRICHMENT
+    function enrichWork(w) {
       const absText = cleanXml(rebuildAbstract(w.abstract_inverted_index));
       const src = w.primary_location?.source || {};
       const srcId = src.id;
       const issn = src.issn_l || (src.issn ? src.issn[0] : '');
-      const journalName = src.display_name || activeJournal?.name || 'Akademik Yayın';
+      const journalName = src.display_name || activeJournal?.name || 'Akademik Dergi';
 
       const metrics = (srcId && sourceCache[srcId]) || (issn && sourceCache[issn]) || { h_index: null, impact_2yr: 0, homepage_url: null };
-      const isFlagship = (issn && PRESTIGE_ISSNS.has(issn)) || PRESTIGE_NAMES.has(journalName.toLowerCase());
+      const isPrestige = (issn && PRESTIGE_ISSNS.has(issn)) || PRESTIGE_NAMES.has(journalName.toLowerCase());
 
-      let quartile = 'Q2 / İndeksli';
-      let qStyle = 'bg-slate-800 text-slate-300 border-slate-700';
+      let quartile = 'Q2';
+      let qClass = 'glass-pill';
 
-      if (isFlagship || metrics.impact_2yr >= 3.5 || (metrics.h_index && metrics.h_index >= 110)) {
+      if (isPrestige || metrics.impact_2yr >= 3.5 || (metrics.h_index && metrics.h_index >= 110)) {
         quartile = 'Q1 ELITE';
-        qStyle = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        qClass = 'badge-q1-elite';
       } else if (metrics.impact_2yr >= 2.0 || (metrics.h_index && metrics.h_index >= 65)) {
         quartile = 'Q1';
-        qStyle = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
+        qClass = 'badge-q1';
       }
 
-      const combined = `${w.title || ''} ${absText}`.toLowerCase();
+      const textCorpus = `${w.title || ''} ${absText}`.toLowerCase();
       const methods = [];
-      if (/meta-analys|meta analys|systematic review|prisma/.test(combined)) methods.push('Meta-Analiz / Derleme');
-      if (/randomized controlled|rct|experiment|placebo|double-blind/.test(combined)) methods.push('Deneysel / RKÇ');
-      if (/fmri|eeg|erp|neuroimaging|bold signal|prefrontal|amygdala/.test(combined)) methods.push('Nörogörüntüleme');
-      if (/longitudinal|prospective cohort|follow-up/.test(combined)) methods.push('Boylamasına');
-      if (/psychometric|confirmatory factor|cronbach|item response|scale/.test(combined)) methods.push('Psikometri / Ölçek');
+      if (/meta-analys|meta analys|systematic review|prisma/.test(textCorpus)) methods.push('Meta-Analiz / Derleme');
+      if (/randomized controlled|rct|experiment|placebo|double-blind/.test(textCorpus)) methods.push('Deneysel / RKÇ');
+      if (/fmri|eeg|erp|neuroimaging|bold signal|prefrontal|amygdala/.test(textCorpus)) methods.push('Nörogörüntüleme');
+      if (/longitudinal|prospective cohort|follow-up/.test(textCorpus)) methods.push('Boylamasına');
+      if (/psychometric|confirmatory factor|cronbach|item response|scale/.test(textCorpus)) methods.push('Psikometri / Ölçek');
       if (methods.length === 0) methods.push('Araştırma');
+
+      const authorObjs = (w.authorships || []).slice(0, 4).map(a => ({
+        id: a.author?.id ? a.author.id.replace('https://openalex.org/', '') : '',
+        name: a.author?.display_name || ''
+      })).filter(a => a.name);
 
       return {
         id: w.id,
@@ -1064,42 +1355,40 @@
         issn,
         hIndex: metrics.h_index,
         impact2yr: metrics.impact_2yr ? metrics.impact_2yr.toFixed(2) : null,
-        homepageUrl: metrics.homepage_url,
         quartile,
-        qStyle,
+        qClass,
         citations: w.cited_by_count || 0,
         isOA: w.open_access?.is_oa || false,
         oaUrl: w.open_access?.oa_url || w.doi || '#',
         doi: w.doi || '',
-        authors: (w.authorships || []).slice(0, 4).map(a => a.author?.display_name).filter(Boolean),
+        authorObjs,
+        authors: authorObjs.map(a => a.name),
         totalAuthors: (w.authorships || []).length,
         abstractText: absText,
-        hasRealAbstract: Boolean(w.abstract_inverted_index),
         methods
       };
     }
 
     function rebuildAbstract(inv) {
-      if (!inv) return 'Tam metin ve özet detayları için doğrudan yayıncı (DOI) bağlantısını açabilirsiniz.';
+      if (!inv) return 'Tam metin ve özet detayları için doğrudan DOI bağlantısını ziyaret edebilirsiniz.';
       const arr = [];
-      for (const [word, posList] of Object.entries(inv)) {
-        for (const p of posList) arr[p] = word;
+      for (const [w, pos] of Object.entries(inv)) {
+        for (const p of pos) arr[p] = w;
       }
       return arr.join(' ');
     }
 
-    function cleanXml(str) {
-      return String(str).replace(/<[^>]+>/g, ' ').replace(/^Abstract[:\s]*/i, '').replace(/\s+/g, ' ').trim();
+    function cleanXml(s) {
+      return String(s).replace(/<[^>]+>/g, ' ').replace(/^Abstract[:\s]*/i, '').replace(/\s+/g, ' ').trim();
     }
 
-    // 9. ARAMA KELİMESİ VURGULAMA (HIGHLIGHTING)
+    // 10. HIGHLIGHTING & RENDERING (EDITORIAL LUXURY CARDS)
     function getHighlightTokens() {
       const raw = document.getElementById('searchInput').value.trim();
       if (!raw) return [];
-      const translated = translateQueryIfNeeded(raw);
-      const combined = `${raw} ${translated}`;
+      const trans = translateQuery(raw);
       return [...new Set(
-        combined
+        `${raw} ${trans}`
           .split(/\s+/)
           .map(s => s.replace(/["']/g, '').trim())
           .filter(s => s.length >= 2 && !['and', 'or', 'the', 'for'].includes(s.toLowerCase()))
@@ -1113,43 +1402,67 @@
     function highlightText(text) {
       const safe = escapeHtml(text || '');
       const tokens = getHighlightTokens();
-      if (tokens.length === 0) return { html: safe, count: 0 };
-
+      if (tokens.length === 0) return { html: safe, hits: 0 };
       const pattern = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
       const rx = new RegExp(`(${pattern})`, 'gi');
-      let count = 0;
-      const html = safe.replace(rx, (m) => {
-        count++;
+      let hits = 0;
+      const html = safe.replace(rx, m => {
+        hits++;
         return `<mark class="search-hl">${m}</mark>`;
       });
-      return { html, count };
+      return { html, hits };
     }
 
-    // 10. MİNİMALİST KART VE KOMPAKT LİSTE RENDER MOTORU
-    function toggleDensityMode() {
-      isCompactMode = !isCompactMode;
-      document.getElementById('densityBtn').textContent = isCompactMode
-        ? '☰ Görünüm: Kompakt Liste'
-        : '☰ Görünüm: Standart Kart';
-      applyClientFilters();
-    }
+    function renderStatusPills(rawQ, transQ) {
+      const box = document.getElementById('activePillsContainer');
+      const pills = [];
 
-    function renderStatusBreadcrumbs(rawQ, transQ) {
-      const box = document.getElementById('activeBreadcrumbs');
-      let pills = [];
-
-      if (snowballSourceTitle) {
-        pills.push(`<span class="px-2.5 py-0.5 rounded-lg bg-violet-500/20 text-violet-200 border border-violet-500/40">🕸️ ${escapeHtml(snowballSourceTitle)} <button onclick="resetAllFilters()" class="ml-1 text-white">✕</button></span>`);
+      if (isFavJournalsStream) {
+        pills.push(`
+          <span class="px-2.5 py-1 rounded-lg neon-crimson-active text-[11px] flex items-center gap-1.5">
+            <i data-lucide="heart" class="w-3 h-3 fill-[#D2042D] text-[#D2042D]"></i>
+            <span>Favori Dergilerim Akışı</span>
+            <button onclick="toggleFavJournalsStream()" class="ml-1 hover:text-slate-300">✕</button>
+          </span>
+        `);
+      }
+      if (activeAuthorFilter) {
+        pills.push(`
+          <span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5">
+            <i data-lucide="user" class="w-3 h-3"></i>
+            <span>Yazar: ${escapeHtml(activeAuthorFilter.name)}</span>
+            <button onclick="clearAuthorFilter()" class="ml-1">✕</button>
+          </span>
+        `);
+      }
+      if (activeSnowball) {
+        pills.push(`
+          <span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5">
+            <span>${activeSnowball.mode === 'cites' ? 'Atıf Yapanlar' : 'Benzer Çalışmalar'}: "${escapeHtml(activeSnowball.title.slice(0, 35))}..."</span>
+            <button onclick="clearSnowball()" class="ml-1">✕</button>
+          </span>
+        `);
       }
       if (rawQ) {
-        const label = transQ !== rawQ ? `"${rawQ}" (➔ ${transQ})` : `"${rawQ}"`;
-        pills.push(`<span class="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-200 border border-cyan-500/40">🔍 Arama: ${escapeHtml(label)} <button onclick="clearSearchInput()" class="ml-1 text-white">✕</button></span>`);
+        const lbl = transQ !== rawQ ? `"${rawQ}" ➔ ${transQ}` : `"${rawQ}"`;
+        pills.push(`
+          <span class="px-2.5 py-1 rounded-lg neon-cyan-active text-[11px] flex items-center gap-1.5">
+            <span>Arama: ${escapeHtml(lbl)}</span>
+            <button onclick="clearSearch()" class="ml-1">✕</button>
+          </span>
+        `);
       }
-      if (activeJournal && (!rawQ || searchScope === 'contextual')) {
-        pills.push(`<span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-200 border border-emerald-500/40">🏛️ ${escapeHtml(activeJournal.name)} <button onclick="selectJournal(null)" class="ml-1 text-white">✕</button></span>`);
+      if (activeJournal) {
+        pills.push(`
+          <span class="px-2.5 py-1 rounded-lg glass-pill border-[#00f0ff]/40 text-[#00f0ff] text-[11px] flex items-center gap-1.5">
+            <span>${escapeHtml(activeJournal.name)}</span>
+            <button onclick="selectJournal(null)" class="ml-1 text-white">✕</button>
+          </span>
+        `);
       }
 
       box.innerHTML = pills.join('');
+      lucide.createIcons();
     }
 
     function applyClientFilters() {
@@ -1161,21 +1474,22 @@
         return true;
       });
 
-      document.getElementById('resultCountText').textContent = isVaultMode
-        ? `Kasada ${filtered.length} kayıt`
+      document.getElementById('resultsTelemetryText').textContent = isVaultMode
+        ? `Kasada ${filtered.length} makale`
         : `Sayfa ${currentPage} • ${filtered.length} gösterilen (Toplam: ${totalWorksCount.toLocaleString('tr-TR')})`;
 
-      renderArticles(filtered);
+      renderCards(filtered);
+      lucide.createIcons();
     }
 
-    function renderArticles(articles) {
-      const container = document.getElementById('articlesList');
+    function renderCards(articles) {
+      const container = document.getElementById('articlesContainer');
       if (articles.length === 0) {
         container.innerHTML = `
-          <div class="glass-panel rounded-2xl p-10 text-center space-y-3">
-            <p class="text-sm font-medium text-slate-200">Eşleşen çalışma bulunamadı.</p>
-            <button onclick="resetAllFilters()" class="px-4 py-2 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono">
-              Tüm Filtreleri Sıfırla
+          <div class="luxury-panel rounded-2xl p-12 text-center space-y-3">
+            <p class="font-serif text-lg text-white">Bu kriterlere uygun yayın bulunamadı.</p>
+            <button onclick="resetToHome()" class="px-4 py-2 rounded-xl neon-cyan-active text-xs font-mono">
+              Filtreleri Sıfırla
             </button>
           </div>
         `;
@@ -1185,96 +1499,145 @@
       container.innerHTML = articles.map(art => {
         const titleHL = highlightText(art.title);
         const absHL = highlightText(art.abstractText);
-        const totalHits = titleHL.count + absHL.count;
-        const saved = vaultList.some(v => v.id === art.id);
+        const hits = titleHL.hits + absHL.hits;
+        const isSaved = vaultList.some(v => v.id === art.id);
+        const isSeen = seenWorks.has(art.id);
+        const isFavVenue = isJournalFavorited(art.issn, art.journalName);
 
-        // KOMPAKT TARAMA MODU (Maksimum Minimalizm)
-        if (isCompactMode) {
+        // COMPACT LIST MODE
+        if (isCompactView) {
           return `
-            <article onclick="openInspector('${art.id}')" class="glass-card rounded-xl px-4 py-3 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <article onclick="openInspector('${art.id}')" class="luxury-card ${isSeen ? 'seen-article' : ''} rounded-xl px-4 py-3 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div class="space-y-1 min-w-0 flex-1">
                 <div class="flex items-center gap-2 text-[11px] font-mono">
-                  <span class="px-2 py-0.2 rounded border font-semibold ${art.qStyle}">${art.quartile}</span>
-                  <span class="text-cyan-300 truncate">${escapeHtml(art.journalName)}</span>
-                  <span class="text-slate-500">• ${art.pubDate}</span>
+                  <span class="px-2 py-0.2 rounded font-semibold ${art.qClass}">${art.quartile}</span>
+                  <span class="text-slate-200 truncate">${escapeHtml(art.journalName)}</span>
+                  <span class="text-slate-500 tabular-nums">• ${art.pubDate}</span>
+                  ${isSeen ? `<span class="text-[10px] text-[#a78bfa]">✓ İncelendi</span>` : ''}
                 </div>
-                <h2 class="text-sm font-semibold text-white truncate">${titleHL.html}</h2>
+                <h2 class="font-serif text-base font-medium text-white truncate">${titleHL.html}</h2>
               </div>
-              <div class="flex items-center gap-2 font-mono text-[11px] shrink-0">
-                ${art.hIndex ? `<span class="text-violet-300">H:${art.hIndex}</span>` : ''}
-                <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300">Atıf: ${art.citations}</span>
+              <div class="flex items-center gap-2 font-mono text-[11px] shrink-0 tabular-nums">
+                ${art.hIndex ? `<span class="glass-pill px-2 py-0.5 rounded"><span class="inline-block w-1.5 h-1.5 rounded-full bg-[#6530ff] mr-1"></span>H:${art.hIndex}</span>` : ''}
+                <span class="glass-pill px-2 py-0.5 rounded"><span class="inline-block w-1.5 h-1.5 rounded-full bg-[#00f0ff] mr-1"></span>Atıf:${art.citations}</span>
               </div>
             </article>
           `;
         }
 
-        // STANDART MİNİMALİST KART MODU (Sadece İlk Görmek İstediğin Çekirdek Metrikler)
+        // STANDARD EDITORIAL LUXURY CARD
         return `
-          <article class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+          <article class="luxury-card ${isSeen ? 'seen-article' : ''} rounded-2xl p-5 space-y-3.5">
             
-            <!-- ÜST BAR: 1. Q1 Durumu, 2. Dergi Adı, 3. Dergi H-Index, 4. Atıf Sayısı, 5. Tarih -->
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/70 pb-2.5 text-[11px] font-mono">
+            <!-- TOP TELEMETRY BAR: Q1 Badge, Journal Name + Favorite Heart, H-Index, Citations, Date -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3 text-[11px] font-mono">
+              
               <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2 py-0.5 rounded-md border font-semibold ${art.qStyle}">
+                <span class="px-2.5 py-0.5 rounded-md font-semibold tracking-wide ${art.qClass}">
                   ${art.quartile}
                 </span>
-                <span class="text-cyan-300 font-semibold">
-                  ${escapeHtml(art.journalName)}
-                </span>
+                <div class="inline-flex items-center gap-1.5">
+                  <button 
+                    onclick="filterByCardJournal('${art.journalName.replace(/'/g, "\\'")}', '${art.issn}')"
+                    class="text-slate-100 hover:text-[#00f0ff] font-medium transition text-left">
+                    ${escapeHtml(art.journalName)}
+                  </button>
+                  <button 
+                    onclick="toggleFavoriteJournal('${art.issn}', '${art.journalName.replace(/'/g, "\\'")}', event)"
+                    title="${isFavVenue ? 'Favori Dergilerimden Çıkar' : 'Bu Dergiyi Favorilerime Ekle'}"
+                    class="p-1 rounded hover:bg-white/[0.06] transition">
+                    <i data-lucide="heart" class="w-3.5 h-3.5 ${isFavVenue ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
+                  </button>
+                </div>
               </div>
 
-              <div class="flex flex-wrap items-center gap-1.5">
-                ${totalHits > 0 ? `
-                  <span class="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 font-semibold">
-                    🔍 ${totalHits} Eşleşme
+              <!-- Smoked Glass Pills with Micro-Neon Dots -->
+              <div class="flex flex-wrap items-center gap-1.5 tabular-nums">
+                ${isSeen ? `
+                  <span class="px-2 py-0.5 rounded-md bg-[#6530ff]/15 text-[#a78bfa] border border-[#6530ff]/30">
+                    ✓ İncelendi
+                  </span>
+                ` : ''}
+                ${hits > 0 ? `
+                  <span class="px-2 py-0.5 rounded-md neon-cyan-active">
+                    ${hits} Eşleşme
                   </span>
                 ` : ''}
                 ${art.hIndex ? `
-                  <span class="px-2 py-0.5 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/30">
-                    H-Index: <strong>${art.hIndex}</strong>
+                  <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5" title="Dergi H-İndeksi">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#6530ff]"></span>
+                    <span>H-Index: <strong class="text-white">${art.hIndex}</strong></span>
                   </span>
                 ` : ''}
-                <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  Atıf: <strong>${art.citations}</strong>
+                <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#00f0ff]"></span>
+                  <span>Atıf: <strong class="text-white">${art.citations}</strong></span>
                 </span>
-                <span class="px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800">
+                <span class="px-2.5 py-0.5 rounded-md glass-pill text-slate-400">
                   ${art.pubDate}
                 </span>
               </div>
             </div>
 
-            <!-- BAŞLIK VE YAZARLAR -->
-            <div>
-              <h2 onclick="openInspector('${art.id}')" class="text-base font-bold text-white hover:text-cyan-300 transition cursor-pointer leading-snug">
+            <!-- EDITORIAL SERIF TITLE & CLICKABLE AUTHORS -->
+            <div class="space-y-1.5">
+              <h2 onclick="openInspector('${art.id}')" class="font-serif text-lg sm:text-xl font-medium text-white hover:text-[#00f0ff] transition cursor-pointer leading-snug tracking-tight">
                 ${titleHL.html}
               </h2>
-              <p class="text-xs text-slate-400 mt-1">
-                ${escapeHtml(art.authors.join(', '))}${art.totalAuthors > 4 ? ` +${art.totalAuthors - 4}` : ''}
-              </p>
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+                ${art.authorObjs.map(au => `
+                  <button onclick="pivotByAuthor('${au.id}', '${au.name.replace(/'/g, "\\'")}')" class="hover:text-[#00f0ff] hover:underline transition">
+                    ${escapeHtml(au.name)}
+                  </button>
+                `).join('<span class="text-slate-600">•</span>')}
+                ${art.totalAuthors > 4 ? `<span class="text-slate-500 font-mono text-[11px]">+${art.totalAuthors - 4}</span>` : ''}
+              </div>
             </div>
 
-            <!-- KISA ÖZET ÖNİZLEMESİ -->
-            <p onclick="openInspector('${art.id}')" class="text-xs text-slate-300/90 leading-relaxed ${totalHits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200">
+            <!-- ABSTRACT PREVIEW -->
+            <p onclick="openInspector('${art.id}')" class="text-xs text-slate-300/90 leading-relaxed ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-100 transition">
               ${absHL.html}
             </p>
 
-            <!-- ALT MİNİMAL BAR: Metodoloji Etiketi & Hızlı Aksiyonlar -->
+            <!-- BOTTOM MINIMAL BAR -->
             <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono">
               <div class="flex flex-wrap items-center gap-1.5">
-                ${art.methods.map(m => `<span class="px-2 py-0.5 rounded bg-slate-900/90 text-slate-400 border border-slate-800">${m}</span>`).join('')}
-                ${art.isOA ? `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Açık Erişim PDF</span>` : ''}
+                ${art.methods.map(m => `
+                  <span class="px-2 py-0.5 rounded-md glass-pill flex items-center gap-1">
+                    <span class="w-1 h-1 rounded-full bg-[#6530ff]"></span>
+                    <span>${m}</span>
+                  </span>
+                `).join('')}
+                ${art.isOA ? `
+                  <span class="px-2 py-0.5 rounded-md bg-[#2cdb4c]/10 border border-[#2cdb4c]/30 text-[#2cdb4c]">
+                    Açık Erişim PDF
+                  </span>
+                ` : ''}
               </div>
 
               <div class="flex items-center gap-1.5">
-                <button onclick="toggleVaultItem('${art.id}')" class="px-2.5 py-1 rounded-lg border transition ${saved ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-800'}">
-                  ${saved ? '⭐ Kayıtlı' : '☆ Kaydet'}
+                <button 
+                  onclick="toggleVaultArticle('${art.id}')" 
+                  class="px-2.5 py-1 rounded-lg border transition flex items-center gap-1 ${
+                    isSaved 
+                      ? 'neon-violet-active' 
+                      : 'glass-pill hover:text-white'
+                  }">
+                  <i data-lucide="bookmark" class="w-3 h-3 ${isSaved ? 'fill-current' : ''}"></i>
+                  <span>${isSaved ? 'Kasada' : 'Kaydet'}</span>
                 </button>
-                <button onclick="openInspector('${art.id}')" class="px-3 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition">
-                  İncele & Atıf →
+
+                <button 
+                  onclick="openInspector('${art.id}')" 
+                  class="px-3 py-1 rounded-lg glass-pill hover:border-[#00f0ff]/50 hover:text-[#00f0ff] transition flex items-center gap-1">
+                  <span>İncele</span>
+                  <i data-lucide="arrow-right" class="w-3 h-3"></i>
                 </button>
+
                 ${art.oaUrl && art.oaUrl !== '#' ? `
-                  <a href="${art.oaUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition">
-                    DOI ↗
+                  <a href="${art.oaUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg glass-pill hover:text-white transition flex items-center gap-1">
+                    <span>DOI</span>
+                    <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
                   </a>
                 ` : ''}
               </div>
@@ -1285,192 +1648,304 @@
       }).join('');
     }
 
-    // 11. DERİN İNCELEME ÇEKMECESİ (TÜM DETAYLAR BURADA TOPLANIR)
+    // 11. AUTHOR PIVOTING, CARD JOURNAL CLICK & SNOWBALLING
+    function pivotByAuthor(authorId, authorName) {
+      if (!authorId) return;
+      isVaultMode = false;
+      activeSnowball = null;
+      activeAuthorFilter = { id: authorId, name: authorName };
+      resetAndFetch();
+    }
+
+    function clearAuthorFilter() {
+      activeAuthorFilter = null;
+      resetAndFetch();
+    }
+
+    function filterByCardJournal(name, issn) {
+      if (!issn) return;
+      isVaultMode = false;
+      activeJournal = { name, issn };
+      renderJournalStrip();
+      resetAndFetch();
+    }
+
+    function triggerSnowball(workId, mode, title) {
+      closeInspector();
+      isVaultMode = false;
+      activeAuthorFilter = null;
+      activeSnowball = { workId, mode, title };
+      resetAndFetch();
+    }
+
+    function clearSnowball() {
+      activeSnowball = null;
+      resetAndFetch();
+    }
+
+    // 12. DEEP INSPECTOR DRAWER & SEEN MEMORY
     function openInspector(id) {
       const art = articleMap.get(id) || vaultList.find(v => v.id === id);
       if (!art) return;
 
-      document.getElementById('sheetQuartile').className = `text-[11px] font-mono font-bold px-2.5 py-0.5 rounded border ${art.qStyle}`;
-      document.getElementById('sheetQuartile').textContent = art.quartile;
-      document.getElementById('sheetHIndex').textContent = `${art.journalName} • H-Index: ${art.hIndex || 'N/A'}`;
+      // Mark as Seen / Read
+      seenWorks.add(art.id);
+      localStorage.setItem('vibepsych_seen_works', JSON.stringify([...seenWorks].slice(-500)));
+      applyClientFilters();
 
-      const seg = segmentAbstractText(art.abstractText);
-      const content = document.getElementById('inspectorContent');
+      const qBadge = document.getElementById('drawerQuartileBadge');
+      qBadge.className = `text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-md ${art.qClass}`;
+      qBadge.textContent = art.quartile;
+      document.getElementById('drawerJournalMeta').textContent = `${art.journalName} • H-Index: ${art.hIndex || 'N/A'}`;
 
-      content.innerHTML = `
-        <div class="space-y-4">
-          <div class="text-xs font-mono text-slate-400">${art.pubDate} • Atıf: <strong class="text-amber-300">${art.citations}</strong> ${art.impact2yr ? `• 2yr IF: <strong class="text-cyan-300">${art.impact2yr}</strong>` : ''}</div>
-          <h3 class="text-lg font-bold text-white leading-snug">${highlightText(art.title).html}</h3>
-          <p class="text-xs text-slate-300">${escapeHtml(art.authors.join(', '))}</p>
+      const seg = splitAbstract(art.abstractText);
+      const isFavVenue = isJournalFavorited(art.issn, art.journalName);
 
-          <!-- Yapılandırılmış Özet -->
-          <div class="space-y-2.5 pt-2">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Bölümlendirilmiş Özet</span>
-            <div class="border-l-2 border-cyan-400 bg-slate-900/70 pl-3.5 py-2.5 pr-3 rounded-r-xl">
-              <span class="text-[10px] font-mono uppercase text-cyan-300 block mb-1">🎯 Amaç & Arka Plan</span>
+      document.getElementById('inspectorBody').innerHTML = `
+        <div class="space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400">
+            <span>Yayın Tarihi: <strong class="text-white">${art.pubDate}</strong></span>
+            <span>Atıf: <strong class="text-[#00f0ff]">${art.citations}</strong> ${art.impact2yr ? `• 2yr IF: <strong class="text-[#2cdb4c]">${art.impact2yr}</strong>` : ''}</span>
+          </div>
+
+          <h2 class="font-serif text-xl sm:text-2xl text-white leading-snug">${highlightText(art.title).html}</h2>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-b border-white/[0.07] pb-4">
+            <p class="text-xs text-slate-300">${escapeHtml(art.authors.join(', '))}</p>
+            <button 
+              onclick="toggleFavoriteJournal('${art.issn}', '${art.journalName.replace(/'/g, "\\'")}', event); openInspector('${art.id}')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-mono border transition flex items-center gap-1.5 ${
+                isFavVenue ? 'neon-crimson-active' : 'glass-pill hover:border-[#D2042D]/50'
+              }">
+              <i data-lucide="heart" class="w-3 h-3 ${isFavVenue ? 'fill-[#D2042D] text-[#D2042D]' : 'text-[#D2042D]'}"></i>
+              <span>${isFavVenue ? 'Favori Dergim' : 'Dergiyi Favorile'}</span>
+            </button>
+          </div>
+
+          <!-- Segmented Abstract -->
+          <div class="space-y-3">
+            <div class="border-l-2 border-[#00f0ff] bg-white/[0.02] pl-4 py-2.5 pr-3 rounded-r-xl">
+              <span class="text-[10px] font-mono uppercase text-[#00f0ff] block mb-1">Amaç & Kuramsal Çerçeve</span>
               <p class="text-xs text-slate-200 leading-relaxed">${highlightText(seg.bg).html}</p>
             </div>
             ${seg.method ? `
-              <div class="border-l-2 border-violet-400 bg-slate-900/70 pl-3.5 py-2.5 pr-3 rounded-r-xl">
-                <span class="text-[10px] font-mono uppercase text-violet-300 block mb-1">⚙️ Yöntem & Analiz</span>
+              <div class="border-l-2 border-[#6530ff] bg-white/[0.02] pl-4 py-2.5 pr-3 rounded-r-xl">
+                <span class="text-[10px] font-mono uppercase text-[#a78bfa] block mb-1">Metodoloji & Örneklem</span>
                 <p class="text-xs text-slate-200 leading-relaxed">${highlightText(seg.method).html}</p>
               </div>
             ` : ''}
             ${seg.res ? `
-              <div class="border-l-2 border-emerald-400 bg-slate-900/70 pl-3.5 py-2.5 pr-3 rounded-r-xl">
-                <span class="text-[10px] font-mono uppercase text-emerald-300 block mb-1">📊 Bulgular & Sonuç</span>
+              <div class="border-l-2 border-[#2cdb4c] bg-white/[0.02] pl-4 py-2.5 pr-3 rounded-r-xl">
+                <span class="text-[10px] font-mono uppercase text-[#2cdb4c] block mb-1">Temel Bulgular & Sonuç</span>
                 <p class="text-xs text-slate-200 leading-relaxed">${highlightText(seg.res).html}</p>
               </div>
             ` : ''}
           </div>
 
-          <!-- Kartopu Keşif (Snowballing) Butonları -->
-          <div class="pt-3 border-t border-slate-800 space-y-2">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Kartopu Literatür Keşfi (Snowballing)</span>
-            <div class="flex flex-wrap gap-2">
-              <button onclick="fetchSnowballWorks('${art.id}', 'cites', '${art.title.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 text-violet-200 border border-violet-500/30 text-xs font-mono transition">
-                🕸️ Bu Makaleye Atıf Yapan Çalışmaları Gör (${art.citations})
+          <!-- Citation Snowballing -->
+          <div class="pt-3 border-t border-white/[0.07] space-y-2">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Kartopu Keşfi (Snowballing)</span>
+            <div class="flex flex-wrap gap-2 font-mono text-xs">
+              <button onclick="triggerSnowball('${art.id}', 'cites', '${art.title.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
+                <i data-lucide="git-branch" class="w-3.5 h-3.5"></i>
+                <span>Atıf Yapan Çalışmalar (${art.citations})</span>
               </button>
-              <button onclick="fetchSnowballWorks('${art.id}', 'related', '${art.title.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono transition">
-                🔗 Kavramsal Benzer Çalışmalar
+              <button onclick="triggerSnowball('${art.id}', 'related', '${art.title.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#00f0ff]"></i>
+                <span>Kavramsal Benzer Çalışmalar</span>
               </button>
             </div>
           </div>
 
-          <!-- Dışa Aktarım ve Tam Metin -->
-          <div class="pt-3 border-t border-slate-800 flex flex-wrap gap-2 font-mono text-xs">
-            <button onclick="copyAPA('${art.id}')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200">📋 APA 7 Kopyala</button>
-            <button onclick="copyObsidian('${art.id}')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300">📝 Obsidian (.md)</button>
-            ${art.doi ? `<a href="${art.doi}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold">Makaleye Git (DOI) ↗</a>` : ''}
+          <!-- Export Actions -->
+          <div class="pt-4 border-t border-white/[0.07] flex flex-wrap gap-2 font-mono text-xs">
+            <button onclick="copyAPA('${art.id}')" class="px-3.5 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
+              <i data-lucide="quote" class="w-3.5 h-3.5 text-[#00f0ff]"></i>
+              <span>APA 7 Kopyala</span>
+            </button>
+            <button onclick="copyObsidian('${art.id}')" class="px-3.5 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
+              <i data-lucide="file-code" class="w-3.5 h-3.5 text-[#6530ff]"></i>
+              <span>Obsidian (.md)</span>
+            </button>
+            ${art.doi ? `
+              <a href="${art.doi}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl neon-cyan-active flex items-center gap-1.5 ml-auto">
+                <span>Makaleye Git (DOI)</span>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+              </a>
+            ` : ''}
           </div>
         </div>
       `;
 
-      document.getElementById('inspectorBackdrop').classList.remove('hidden');
-      document.getElementById('inspectorSheet').classList.remove('translate-x-full');
+      document.getElementById('inspectorOverlay').classList.remove('hidden');
+      document.getElementById('inspectorDrawer').classList.remove('translate-x-full');
+      lucide.createIcons();
     }
 
     function closeInspector() {
-      document.getElementById('inspectorBackdrop').classList.add('hidden');
-      document.getElementById('inspectorSheet').classList.add('translate-x-full');
+      document.getElementById('inspectorOverlay').classList.add('hidden');
+      document.getElementById('inspectorDrawer').classList.add('translate-x-full');
     }
 
-    function segmentAbstractText(t) {
+    function splitAbstract(t) {
       const s = t.split(/(?<=[.!?])\s+/);
       if (s.length <= 3) return { bg: t, method: null, res: null };
       const k = Math.ceil(s.length / 3);
       return { bg: s.slice(0, k).join(' '), method: s.slice(k, k * 2).join(' '), res: s.slice(k * 2).join(' ') };
     }
 
-    // 12. YARDIMCI FONKSİYONLAR (SAYFALAMA, KATALOG, KASA, KOPYALAMA)
-    function renderPagination() {
-      const maxP = Math.min(400, Math.ceil(totalWorksCount / 25) || 1);
-      document.getElementById('pageControls').innerHTML = `
-        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 disabled:opacity-40">«</button>
-        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 disabled:opacity-40">‹ Önceki</button>
-        <span class="px-3 py-1.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">${currentPage} / ${maxP}</span>
-        <button onclick="goToPage(${currentPage + 1})" ${currentPage >= maxP ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 disabled:opacity-40">Sonraki ›</button>
-      `;
+    // 13. JOURNAL DIRECTORY MODAL
+    function openDirectoryModal() {
+      document.getElementById('directoryModal').classList.remove('hidden');
+      renderDirectoryModalContent();
     }
 
-    function toggleFilterPopover() {
-      document.getElementById('filterPopover').classList.toggle('hidden');
+    function closeDirectoryModal() {
+      document.getElementById('directoryModal').classList.add('hidden');
     }
 
-    function openJournalCatalog() {
-      document.getElementById('catalogModal').classList.remove('hidden');
-      renderCatalogItems();
-    }
+    function renderDirectoryModalContent() {
+      const q = (document.getElementById('dirSearchInput').value || '').toLowerCase().trim();
+      const grid = document.getElementById('directoryGrid');
 
-    function closeJournalCatalog() {
-      document.getElementById('catalogModal').classList.add('hidden');
-    }
+      let html = '';
 
-    function renderCatalogItems() {
-      const q = (document.getElementById('catalogFilterInput').value || '').toLowerCase().trim();
-      const grid = document.getElementById('catalogGrid');
-      grid.innerHTML = PSYCH_DOMAINS.map(d => {
-        const list = d.journals.filter(j => !q || j.name.toLowerCase().includes(q));
-        if (list.length === 0) return '';
-        return `
-          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 space-y-2">
-            <h4 class="text-xs font-mono font-bold text-cyan-300 border-b border-slate-800 pb-1.5">${d.name}</h4>
+      // Show User's Favorite Journals Box First if any exist
+      if (favJournals.length > 0 && !q) {
+        html += `
+          <div class="md:col-span-2 bg-[#D2042D]/[0.06] border border-[#D2042D]/30 rounded-xl p-4 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-semibold text-[#D2042D] flex items-center gap-1.5">
+                <i data-lucide="heart" class="w-3.5 h-3.5 fill-[#D2042D]"></i>
+                <span>Favori Dergilerim (${favJournals.length})</span>
+              </span>
+              <button onclick="closeDirectoryModal(); if(!isFavJournalsStream) toggleFavJournalsStream();" class="text-[11px] font-mono text-white underline">
+                Sadece Favori Dergilerimi Listele →
+              </button>
+            </div>
             <div class="flex flex-wrap gap-1.5">
-              ${list.map(j => `
-                <button onclick="pickFromCatalog('${d.id}', '${j.issn}')" class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-200 border border-slate-800 transition text-left">
-                  ★ ${j.name}
-                </button>
+              ${favJournals.map(j => `
+                <div class="inline-flex items-center rounded-lg neon-crimson-active text-[11px] font-mono overflow-hidden">
+                  <button onclick="closeDirectoryModal(); filterByCardJournal('${j.name.replace(/'/g, "\\'")}', '${j.issn}')" class="pl-2.5 pr-1.5 py-1">
+                    ${escapeHtml(j.name)}
+                  </button>
+                  <button onclick="toggleFavoriteJournal('${j.issn}', '${j.name.replace(/'/g, "\\'")}', event)" class="px-1.5 py-1 hover:bg-black/30">
+                    ✕
+                  </button>
+                </div>
               `).join('')}
             </div>
           </div>
         `;
+      }
+
+      html += PSYCH_DOMAINS.map(d => {
+        const matched = d.journals.filter(j => !q || j.name.toLowerCase().includes(q) || j.issn.toLowerCase().includes(q));
+        if (matched.length === 0) return '';
+        return `
+          <div class="bg-white/[0.02] border border-white/[0.07] rounded-xl p-4 space-y-2.5">
+            <h4 class="font-serif text-base text-white border-b border-white/[0.06] pb-1.5">${d.name}</h4>
+            <div class="space-y-1">
+              ${matched.map(j => {
+                const fav = isJournalFavorited(j.issn, j.name);
+                return `
+                  <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] transition text-xs font-mono">
+                    <button onclick="pickJournalFromModal('${d.id}', '${j.issn}')" class="text-slate-200 hover:text-[#00f0ff] truncate text-left flex-1">
+                      ${escapeHtml(j.name)}
+                    </button>
+                    <button 
+                      onclick="toggleFavoriteJournal('${j.issn}', '${j.name.replace(/'/g, "\\'")}', event)"
+                      class="p-1 rounded hover:bg-white/[0.08] shrink-0">
+                      <i data-lucide="heart" class="w-3.5 h-3.5 ${fav ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
       }).join('');
+
+      grid.innerHTML = html;
+      lucide.createIcons();
     }
 
-    function pickFromCatalog(domId, issn) {
-      closeJournalCatalog();
+    function pickJournalFromModal(domId, issn) {
+      closeDirectoryModal();
       isVaultMode = false;
+      isFavJournalsStream = false;
       activeDomain = PSYCH_DOMAINS.find(d => d.id === domId) || PSYCH_DOMAINS[0];
       const idx = activeDomain.journals.findIndex(j => j.issn === issn);
-      renderDomainStrip();
+      renderDisciplineStrip();
       selectJournal(idx >= 0 ? idx : null);
     }
 
-    function toggleVaultItem(id) {
+    // 14. VAULT & BATCH EXPORTERS
+    function toggleVaultArticle(id) {
       const idx = vaultList.findIndex(v => v.id === id);
       if (idx > -1) {
         vaultList.splice(idx, 1);
-        showToast('Kasadan çıkarıldı.');
+        showToast('Makale kasadan çıkarıldı.');
       } else {
         const art = articleMap.get(id);
         if (art) {
           vaultList.unshift(art);
-          showToast('⭐ Makale kasaya kaydedildi.');
+          showToast('Makale kasaya kaydedildi.');
         }
       }
-      localStorage.setItem('psychnexus_vault_v3', JSON.stringify(vaultList));
-      updateVaultBadge();
+      localStorage.setItem('vibepsych_vault', JSON.stringify(vaultList));
+      updateCounters();
       applyClientFilters();
-    }
-
-    function updateVaultBadge() {
-      document.getElementById('vaultBadge').textContent = vaultList.length;
     }
 
     function toggleVaultMode() {
       isVaultMode = !isVaultMode;
-      renderDomainStrip();
+      isFavJournalsStream = false;
+      updateCounters();
+      renderDisciplineStrip();
+      document.getElementById('vaultBatchBar').classList.toggle('hidden', !isVaultMode);
       if (isVaultMode) {
-        renderVaultArticles();
+        renderVaultStream();
       } else {
         resetAndFetch();
       }
     }
 
-    function renderVaultArticles() {
+    function renderVaultStream() {
       vaultList.forEach(a => articleMap.set(a.id, a));
       applyClientFilters();
     }
 
-    function resetAllFilters() {
-      isVaultMode = false;
-      snowballSourceTitle = null;
-      activeJournal = null;
-      document.getElementById('searchInput').value = '';
-      document.getElementById('clearSearchBtn').classList.add('hidden');
-      document.getElementById('methodSelect').value = 'ALL';
-      document.getElementById('sortSelect').value = 'publication_date:desc';
-      renderDomainStrip();
-      renderJournalStrip();
-      resetAndFetch();
+    function exportAllVaultAPA() {
+      if (vaultList.length === 0) return;
+      const apaList = vaultList.map(art => {
+        const au = art.authors.length > 0 ? art.authors.join(', ') : 'Yazar Belirtilmemiş';
+        return `${au} (${art.pubYear}). ${art.title}. ${art.journalName}. ${art.doi}`;
+      }).join('\n\n');
+      navigator.clipboard.writeText(apaList);
+      showToast(`${vaultList.length} makale APA 7 kaynakça listesi olarak kopyalandı!`);
+    }
+
+    function downloadAllVaultMarkdown() {
+      if (vaultList.length === 0) return;
+      const content = `# VibePsych Literatür Sentezi (${new Date().toISOString().split('T')[0]})\n\n` +
+        vaultList.map(art => `## ${art.title}\n- **Yazarlar:** ${art.authors.join(', ')}\n- **Dergi:** ${art.journalName} (${art.quartile} | H-Index: ${art.hIndex || 'N/A'})\n- **Tarih:** ${art.pubDate} | **Atıf:** ${art.citations}\n- **DOI:** ${art.doi}\n\n### Özet\n${art.abstractText}\n\n---\n`).join('\n');
+
+      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `VibePsych_Literature_Vault.md`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     function copyAPA(id) {
       const art = articleMap.get(id);
       if (!art) return;
-      const authors = art.authors.length > 0 ? art.authors.join(', ') : 'Yazar Belirtilmemiş';
-      navigator.clipboard.writeText(`${authors} (${art.pubYear}). ${art.title}. ${art.journalName}. ${art.doi}`);
-      showToast('📋 APA 7 atıf kopyalandı!');
+      const au = art.authors.length > 0 ? art.authors.join(', ') : 'Yazar Belirtilmemiş';
+      navigator.clipboard.writeText(`${au} (${art.pubYear}). ${art.title}. ${art.journalName}. ${art.doi}`);
+      showToast('APA 7 atıf kopyalandı.');
     }
 
     function copyObsidian(id) {
@@ -1487,30 +1962,57 @@ citations: ${art.citations}
 doi: "${art.doi}"
 tags:
   - literature-note
-  - psychology/${activeDomain.id}
+  - vibepsych/${activeDomain.id}
 ---
 
 # ${art.title}
 
 - **Dergi:** ${art.journalName} (${art.quartile} | H-Index: ${art.hIndex || 'N/A'})
-- **Yıl:** ${art.pubDate} | **Atıf:** ${art.citations}
+- **Tarih:** ${art.pubDate} | **Atıf:** ${art.citations}
 - **DOI:** ${art.doi}
 
 ## Özet
 ${art.abstractText}
 `;
       navigator.clipboard.writeText(md);
-      showToast('📝 Obsidian (.md) notu kopyalandı!');
+      showToast('Obsidian (.md) notu panoya kopyalandı.');
+    }
+
+    function renderPagination() {
+      const maxP = Math.min(400, Math.ceil(totalWorksCount / 25) || 1);
+      document.getElementById('paginationControls').innerHTML = `
+        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg glass-pill disabled:opacity-30">«</button>
+        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30">‹ Önceki</button>
+        <span class="px-3 py-1.5 rounded-lg neon-cyan-active tabular-nums">${currentPage} / ${maxP}</span>
+        <button onclick="goToPage(${currentPage + 1})" ${currentPage >= maxP ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30">Sonraki ›</button>
+      `;
+    }
+
+    function resetToHome() {
+      isVaultMode = false;
+      isFavJournalsStream = false;
+      activeAuthorFilter = null;
+      activeSnowball = null;
+      activeJournal = null;
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      document.getElementById('methodSelect').value = 'ALL';
+      document.getElementById('sortSelect').value = 'publication_date:desc';
+      setYearFilter('2024+');
+      updateCounters();
+      renderDisciplineStrip();
+      renderJournalStrip();
+      resetAndFetch();
     }
 
     function showToast(msg) {
       const t = document.getElementById('toast');
-      t.textContent = msg;
+      document.getElementById('toastText').textContent = msg;
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 2500);
+      setTimeout(() => t.classList.add('hidden'), 2600);
     }
 
-    window.addEventListener('DOMContentLoaded', initApp);
+    window.addEventListener('DOMContentLoaded', initVibePsych);
   </script>
 </body>
 </html>
