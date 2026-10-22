@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>PsychNexus v2.5 // Akademik Literatür & Scientometrics Komuta Merkezi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: #05070b;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.10) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.10) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #e2e8f0;
+    }
+    .glass-panel {
+      background: rgba(13, 18, 30, 0.84);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.74);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      border-color: rgba(6, 182, 212, 0.48);
+      box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.22);
+      transform: translateY(-2px);
+    }
+    /* Arama Kelimesi Vurgulama (Lexical Highlight) Stili */
+    mark.search-hl {
+      background: linear-gradient(90deg, rgba(6, 182, 212, 0.35), rgba(245, 158, 11, 0.35));
+      color: #fef08a;
+      border-bottom: 1.5px solid #f59e0b;
+      padding: 0 3px;
+      border-radius: 3px;
+      font-weight: 600;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #05070b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden pb-12">
+
+  <!-- ÜST KOMUTA ÇUBUĞU (HEADER) -->
+  <header class="sticky top-0 z-30 glass-panel border-b border-slate-800/80 px-3.5 sm:px-6 py-3">
+    <div class="max-w-[1600px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+      
+      <!-- Logo, Başlık ve Mobil Hızlı Kontroller -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 font-mono font-bold text-lg text-white shrink-0">
+            Ψ
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">PsychNexus</h1>
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">v2.5 // Smart Venue & Highlighter</span>
+            </div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">Taksonomi, Q1 Dergi Çözümleyici ve Dinamik Kelime Vurgulama Terminali</p>
+          </div>
+        </div>
+
+        <!-- Mobil Hızlı Erişim Butonları -->
+        <div class="flex items-center gap-1.5 xl:hidden">
+          <button onclick="openMobileFiltersModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-cyan-300 text-xs font-mono border border-cyan-500/30">
+            ⚙️ Filtreler
+          </button>
+          <button onclick="openCommandPalette()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-mono border border-slate-700">
+            ⌘K
+          </button>
+        </div>
+      </div>
+
+      <!-- Orta: Scholar Kalitesinde Hibrit Arama & Canlı Vurgulama Kutusu -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 max-w-2xl">
+        <div class="flex-1 flex items-center bg-slate-900/95 border border-slate-700/80 focus-within:border-cyan-400 rounded-lg overflow-hidden transition">
+          <!-- Arama Kapsamı Seçici -->
+          <select 
+            id="searchScopeSelect" 
+            onchange="handleSearchScopeChange()"
+            aria-label="Arama Kapsamı"
+            class="bg-slate-950 text-[11px] font-mono text-cyan-300 px-2.5 py-2 border-r border-slate-800 focus:outline-none cursor-pointer shrink-0">
+            <option value="contextual">Seçili Alan/Dergi</option>
+            <option value="scholar_global">Scholar Küresel Mod</option>
+            <option value="title_abs">Kesin Başlık/Özet</option>
+          </select>
+
+          <div class="relative flex-1 min-w-0">
+            <input 
+              id="intersectionInput" 
+              type="text" 
+              oninput="handleSearchInput()"
+              placeholder="🔍 Kavram ara ve vurgula (örn: metacognition, trauma, amygdala)..." 
+              class="w-full bg-transparent pl-3 pr-16 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none font-mono"
+            />
+            <button 
+              id="clearSearchBtn"
+              onclick="clearSearchTerm()" 
+              class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
+              Temizle ✕
+            </button>
+          </div>
+        </div>
+
+        <button 
+          onclick="executeHybridSearch()" 
+          class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-600/20 shrink-0">
+          <span>API'de Ara</span>
+        </button>
+      </div>
+
+      <!-- Sağ: Görünüm Değiştirici, Katalog ve Kasa -->
+      <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2">
+        <div class="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+          <button id="viewCardsBtn" onclick="setViewMode('cards')" class="px-2.5 py-1 rounded text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition">
+            🗂️ Kartlar
+          </button>
+          <button id="viewMatrixBtn" onclick="setViewMode('matrix')" class="px-2.5 py-1 rounded text-xs font-mono text-slate-400 hover:text-slate-200 transition">
+            📊 Matris Tablo
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openJournalCatalogModal()" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-mono transition">
+            🏛️ Q1 Katalog
+          </button>
+
+          <button onclick="toggleVaultMode()" id="vaultBtn" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-mono transition flex items-center gap-1.5">
+            <span>⭐ Kasam</span>
+            <span id="vaultCountBadge" class="px-1.5 py-0.2 rounded bg-amber-500/30 text-amber-200 text-[10px] tabular-nums">0</span>
+          </button>
+
+          <button onclick="openCommandPalette()" class="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 text-xs font-mono transition">
+            <span>Komut</span>
+            <kbd class="px-1.5 py-0.5 text-[10px] bg-slate-800 text-slate-300 rounded border border-slate-700">Ctrl+K</kbd>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MOBİL & TABLET İÇİN PARMAKLA KAYDIRILABİLİR (TOUCH-SWIPEABLE) ALT DAL ŞERİDİ -->
+  <div class="lg:hidden glass-panel border-b border-slate-800/80 px-3.5 py-2.5">
+    <div class="flex items-center justify-between mb-1.5">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Psikoloji & Sinirbilim Alt Dalları (Kaydır →)</span>
+      <span class="text-[10px] font-mono text-cyan-400">13 Kategori</span>
+    </div>
+    <div id="mobileDomainRibbon" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
+  </div>
+
+  <!-- ANA KOMUTA MERKEZİ (MAIN GRID) -->
+  <main class="max-w-[1600px] mx-auto px-3.5 sm:px-6 py-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    
+    <!-- SOL PANEL: TAKSONOMİ VE SCIENTOMETRIC FİLTRELER (Masaüstü) -->
+    <aside class="hidden lg:block lg:col-span-3 xl:col-span-3 space-y-4">
+      
+      <!-- Veri Havuzu Modu Seçici -->
+      <div class="glass-panel rounded-xl p-4 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">Akış Kaynağı Modu</span>
+          <span class="text-[10px] font-mono text-emerald-400">ISSN-L Aktif</span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 bg-slate-950/90 p-1 rounded-lg border border-slate-800">
+          <button 
+            id="poolFlagshipBtn" 
+            onclick="setStreamPoolMode('flagship')" 
+            class="py-1.5 px-2 rounded text-[11px] font-mono transition bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">
+            Q1 Dergi Havuzu
+          </button>
+          <button 
+            id="poolConceptBtn" 
+            onclick="setStreamPoolMode('concept')" 
+            class="py-1.5 px-2 rounded text-[11px] font-mono transition text-slate-400 hover:text-slate-200 border border-transparent">
+            Tüm Alan Arşivi
+          </button>
+        </div>
+        <p id="poolModeHelperText" class="text-[11px] text-slate-400 leading-relaxed">
+          Seçili alt daldaki amiral gemisi Q1 dergilerin doğrudan ISSN havuzundan en son çıkan makaleleri getirir.
+        </p>
+      </div>
+
+      <!-- Psikoloji & Sinirbilim Alt Dalları -->
+      <div class="glass-panel rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">Psikoloji & Sinirbilim Dalları</h2>
+          <span class="text-[10px] font-mono text-cyan-400">13 Kategori</span>
+        </div>
+        <div id="domainList" class="space-y-1 max-h-[380px] overflow-y-auto custom-scrollbar pr-1"></div>
+      </div>
+
+      <!-- Scientometric ve Tarih Filtreleri -->
+      <div class="glass-panel rounded-xl p-4 space-y-3.5">
+        <h2 class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">Sorgu & Kalite Parametreleri</h2>
+
+        <div>
+          <label class="block text-[11px] text-slate-300 mb-1">Sıralama Ölçütü</label>
+          <select id="sortSelect" onchange="syncControlsAndFetch('desktop')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono">
+            <option value="publication_date:desc">En Güncel Yayınlar (Tarih ↓)</option>
+            <option value="relevance_score:desc">Scholar Alaka Düzeyi (BM25 ↓)</option>
+            <option value="cited_by_count:desc">En Yüksek Atıf Sayısı (Atıf ↓)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-1">Zaman Dilimi</label>
+            <select id="yearSelect" onchange="syncControlsAndFetch('desktop')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono">
+              <option value="2024-2027" selected>Son Dönem (2024+)</option>
+              <option value="2026-2027">Sadece 2026+</option>
+              <option value="2022-2027">Son 5 Yıl (2022+)</option>
+              <option value="2015-2027">Son 10 Yıl</option>
+              <option value="all">Tüm Zamanlar</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-1">Sayfa Başına</label>
+            <select id="perPageSelect" onchange="syncControlsAndFetch('desktop')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono">
+              <option value="25" selected>25 Makale</option>
+              <option value="50">50 Makale</option>
+              <option value="100">100 Makale</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filtre Anahtarları -->
+        <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
+          <label class="flex items-center justify-between cursor-pointer">
+            <div>
+              <span class="text-xs font-medium text-slate-200 block">Sadece Q1 / Elite Dergiler</span>
+              <span class="text-[10px] text-slate-400">Yüksek H-İndeksi & IF filtresi</span>
+            </div>
+            <input type="checkbox" id="q1OnlyToggle" onchange="applyClientFilters()" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-emerald-600"></div>
+          </label>
+
+          <label class="flex items-center justify-between cursor-pointer">
+            <div>
+              <span class="text-xs font-medium text-slate-200 block">Sadece Açık Erişim (OA)</span>
+              <span class="text-[10px] text-slate-400">Tam metin ücretsiz PDF</span>
+            </div>
+            <input type="checkbox" id="oaOnlyToggle" onchange="resetAndFetch()" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-cyan-600"></div>
+          </label>
+
+          <label class="flex items-center justify-between cursor-pointer">
+            <div>
+              <span class="text-xs font-medium text-slate-200 block">İleri Sayı Atamalarını Gizle</span>
+              <span class="text-[10px] text-slate-400">Bugünden ileri tarihli Online First</span>
+            </div>
+            <input type="checkbox" id="hideAheadToggle" onchange="resetAndFetch()" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-violet-600"></div>
+          </label>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- SAĞ PANEL: DERGİ BARI, CANLI TELEMETRİ, SAYFALAMA VE MAKALE AKIŞI -->
+    <section class="lg:col-span-9 xl:col-span-9 space-y-4 min-w-0">
+      
+      <!-- Alan Başlığı, Amiral Gemisi Q1 Dergiler ve Canlı Dergi Bilgi Kartı -->
+      <div class="glass-panel rounded-xl p-4 sm:p-5 space-y-4">
+        
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="activeDomainBadge" class="text-[11px] font-mono px-2.5 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">Concept ID</span>
+              <span id="activeVenueStatusBadge" class="text-[11px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Birleşik Q1 Dergi Havuzu</span>
+              <span id="totalApiCountBadge" class="text-[11px] font-mono px-2.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 tabular-nums">Toplam: --</span>
+            </div>
+            <h2 id="activeDomainTitle" class="text-lg sm:text-xl font-bold text-white mt-1.5">🌟 Disiplinlerarası Elit (Genel Q1)</h2>
+            <p id="activeDomainDesc" class="text-xs text-slate-400 mt-0.5"></p>
+          </div>
+
+          <!-- Hızlı Önceki / Sonraki Dergi Geçiş Butonları -->
+          <div class="flex items-center gap-2 self-start xl:self-auto shrink-0">
+            <button 
+              onclick="stepJournal(-1)" 
+              class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 text-xs font-mono transition active:scale-95">
+              ‹ Önceki Dergi
+            </button>
+            <button 
+              onclick="stepJournal(1)" 
+              class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 text-xs font-mono transition active:scale-95">
+              Sonraki Dergi ›
+            </button>
+          </div>
+        </div>
+
+        <!-- Seçili Alandaki Prestijli Q1 Dergiler (Kaydırılabilir & Tıklanabilir) -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-mono text-slate-400 uppercase">
+              🏛️ BU ALANDAKİ AMİRAL GEMİSİ (Q1) DERGİLER (DOĞRUDAN DERGİ AKIŞI İÇİN TIKLA):
+            </span>
+            <button onclick="openJournalCatalogModal()" class="text-[11px] font-mono text-cyan-400 hover:underline shrink-0">
+              Tüm Q1 Dergiler →
+            </button>
+          </div>
+          <div id="topJournalsBar" class="flex items-center sm:flex-wrap gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
+        </div>
+
+        <!-- CANLI DERGİ TELEMETRİ & RESMİ SİTE BARI -->
+        <div class="bg-slate-950/85 border border-slate-800/90 rounded-xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="journalBarBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Q1 ELITE HAVUZU
+              </span>
+              <span id="journalBarTitle" class="text-xs sm:text-sm font-bold text-cyan-300">
+                Seçili Alandaki Tüm Amiral Gemisi Dergiler
+              </span>
+              <span id="journalBarIssn" class="text-[11px] font-mono text-slate-500"></span>
+            </div>
+            <p id="journalBarPublisher" class="text-[11px] text-slate-400">
+              Tek bir derginin son sayılarını, H-İndeksini ve resmi web sitesini görmek için yukarıdan dergi seçebilirsin.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-800/80 shrink-0">
+            <div class="flex items-center gap-2 font-mono text-[11px] tabular-nums">
+              <span class="px-2.5 py-1 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                Dergi H-Index: <strong id="journalBarHIndex">Q1</strong>
+              </span>
+              <span class="px-2.5 py-1 rounded bg-slate-900 text-slate-300 border border-slate-700">
+                2yr IF: <strong id="journalBarImpact" class="text-cyan-300">Elit</strong>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <a id="journalOfficialLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[11px] font-mono px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-500/40 transition">
+                🌐 Resmi Site ↗
+              </a>
+              <a id="journalScimagoLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-[11px] font-mono px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition">
+                📡 Scimago Q1 ↗
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metodoloji Filtre Çipleri -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1" id="methodFilterChips">
+          <span class="text-[10px] font-mono uppercase text-slate-400 mr-1 shrink-0">Metodoloji:</span>
+          <button onclick="setMethodFilter('ALL')" data-method="ALL" class="method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">Tümü</button>
+          <button onclick="setMethodFilter('Meta-Analiz')" data-method="Meta-Analiz" class="method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-700">Meta-Analiz</button>
+          <button onclick="setMethodFilter('Deneysel / RKÇ')" data-method="Deneysel / RKÇ" class="method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-700">Deneysel / RKÇ</button>
+          <button onclick="setMethodFilter('Nörogörüntüleme')" data-method="Nörogörüntüleme" class="method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-700">fMRI / EEG</button>
+          <button onclick="setMethodFilter('Boylamasına')" data-method="Boylamasına" class="method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-700">Boylamasına</button>
+          <button onclick="setMethodFilter('Psikometri / Ölçek')" data-method="Psikometri / Ölçek" class="method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-700">Psikometri</button>
+        </div>
+
+      </div>
+
+      <!-- ÜST SAYFALAMA VE DURUM ÇUBUĞU -->
+      <div id="topPaginationBar" class="glass-panel rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2.5 text-xs font-mono">
+          <span id="showingRangeText" class="text-slate-300 tabular-nums">Sayfa 1</span>
+          <span id="highlightStatsBadge" class="hidden px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            🔍 Kelime Vurgulama Aktif
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5" id="paginationControlsTop"></div>
+      </div>
+
+      <!-- YÜKLENİYOR GÖSTERGESİ -->
+      <div id="loadingIndicator" class="hidden glass-panel rounded-xl p-12 text-center space-y-3">
+        <div class="inline-block w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+        <p id="loadingStepText" class="text-xs font-mono text-slate-300">OpenAlex API üzerinden makaleler ve dergi H-İndeksi metrikleri çözümleniyor...</p>
+      </div>
+
+      <!-- MAKALE KARTLARI VEYA MATRİS TABLO ALANI -->
+      <div id="articlesContainer" class="space-y-3.5"></div>
+
+      <!-- ALT SAYFALAMA VE KESİNTİSİZ EKLEME (LOAD MORE) PANELİ -->
+      <div id="bottomPaginationBar" class="glass-panel rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <button 
+          onclick="loadNextPageAppend()" 
+          id="appendMoreBtn"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-gradient-to-r from-cyan-600/30 to-violet-600/30 hover:from-cyan-600/50 hover:to-violet-600/50 text-cyan-200 border border-cyan-500/40 text-xs font-mono font-semibold transition">
+          ➕ Sonraki Sayfayı Mevcut Listeye Ekle (Kesintisiz Akış)
+        </button>
+        <div class="flex items-center gap-1.5" id="paginationControlsBottom"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- SAĞDAN KAYAR DERİN İNCELEME ÇEKMECESİ (SLIDE-OVER INSPECTOR) -->
+  <div id="inspectorBackdrop" onclick="closeInspector()" class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm"></div>
+  <div id="inspectorDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-2xl glass-panel border-l border-slate-700/80 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-mono uppercase px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">🔬 Derin İnceleme Modülü</span>
+        <span id="drawerQuartileBadge" class="text-xs font-mono px-2.5 py-1 rounded"></span>
+      </div>
+      <button onclick="closeInspector()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono">
+        Kapat (ESC) ✕
+      </button>
+    </div>
+    <div id="inspectorContent" class="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5"></div>
+  </div>
+
+  <!-- MOBİL FİLTRE VE SORGU MODALI -->
+  <div id="mobileFiltersModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="glass-panel border-t sm:border border-slate-700 rounded-t-2xl sm:rounded-2xl w-full max-w-lg p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-bold text-white font-mono">⚙️ Sorgu ve Scientometric Filtreler</h3>
+        <button onclick="closeMobileFiltersModal()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-mono">Kapat ✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-mono text-slate-300 mb-1.5">Akış Kaynağı Modu</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="mobPoolFlagshipBtn" onclick="setStreamPoolMode('flagship')" class="py-2 rounded-lg text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">Q1 Dergi Havuzu</button>
+            <button id="mobPoolConceptBtn" onclick="setStreamPoolMode('concept')" class="py-2 rounded-lg text-xs font-mono bg-slate-900 text-slate-400 border border-slate-800">Tüm Alan Arşivi</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-mono text-slate-300 mb-1">Sıralama Ölçütü</label>
+          <select id="mobSortSelect" onchange="syncControlsAndFetch('mobile')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono">
+            <option value="publication_date:desc">En Güncel Yayınlar (Tarih ↓)</option>
+            <option value="relevance_score:desc">Scholar Alaka Düzeyi (BM25 ↓)</option>
+            <option value="cited_by_count:desc">En Yüksek Atıf Sayısı (Atıf ↓)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">Zaman Dilimi</label>
+            <select id="mobYearSelect" onchange="syncControlsAndFetch('mobile')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 font-mono">
+              <option value="2024-2027" selected>Son Dönem (2024+)</option>
+              <option value="2026-2027">Sadece 2026+</option>
+              <option value="2022-2027">Son 5 Yıl (2022+)</option>
+              <option value="2015-2027">Son 10 Yıl</option>
+              <option value="all">Tüm Zamanlar</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">Sayfa Başına</label>
+            <select id="mobPerPageSelect" onchange="syncControlsAndFetch('mobile')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 font-mono">
+              <option value="25" selected>25 Makale</option>
+              <option value="50">50 Makale</option>
+              <option value="100">100 Makale</option>
+            </select>
+          </div>
+        </div>
+
+        <button onclick="closeMobileFiltersModal()" class="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-semibold">
+          Uygula ve Kapat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TÜM PRESTİJLİ (Q1) DERGİLER KATALOĞU MODALI -->
+  <div id="journalCatalogModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-panel border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between gap-2">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-white">🏛️ Küresel Q1 Psikoloji ve Sinirbilim Dergileri Kataloğu</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Doğrulanmış ISSN-L eşleşmesiyle çalışan amiral gemisi dergiler. Doğrudan akış için dergiye dokun.</p>
+        </div>
+        <button onclick="closeJournalCatalogModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono shrink-0">Kapat ✕</button>
+      </div>
+      <div class="p-3.5 border-b border-slate-800/80">
+        <input id="catalogSearchInput" oninput="renderJournalCatalogList()" type="text" placeholder="Dergi adı veya ISSN ara (örn: Nature, Consulting, Memory, Brain)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-500" />
+      </div>
+      <div id="journalCatalogBody" class="p-4 sm:p-5 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- CTRL+K KOMUT PALETİ -->
+  <div id="commandPaletteModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-start justify-center pt-16 sm:pt-20 p-4">
+    <div class="glass-panel border border-cyan-500/40 rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl">
+      <div class="p-3.5 border-b border-slate-800 flex items-center gap-2">
+        <span class="text-cyan-400 font-mono text-xs">⌘</span>
+        <input id="cmdInput" oninput="renderCommandItems()" type="text" placeholder="Hızlı komut, alt dal veya Q1 dergi adı yaz..." class="w-full bg-transparent text-xs text-white font-mono focus:outline-none" />
+        <button onclick="closeCommandPalette()" class="text-[10px] font-mono text-slate-400 px-2 py-0.5 bg-slate-800 rounded">ESC</button>
+      </div>
+      <div id="cmdList" class="max-h-80 overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- BİLDİRİM TOAST -->
+  <div id="toast" class="fixed bottom-5 right-5 left-5 sm:left-auto z-50 hidden glass-panel border border-cyan-500/50 text-cyan-200 px-4 py-2.5 rounded-xl text-xs font-mono shadow-2xl"></div>
+
+  <script>
+    // 1. 13 PSİKOLOJİ & SİNİRBİLİM ALT DALI VE DOĞRULANMIŞ KANONİK ISSN-L Q1 DERGİ VERİTABANI
+    const PSYCH_DOMAINS = [
+      {
+        id: 'elite_general',
+        name: '🌟 Disiplinlerarası Elit (Genel Q1)',
+        shortName: '🌟 Elit Genel Q1',
+        conceptId: 'C15744967',
+        desc: 'Psikoloji biliminin tüm alt dallarını kapsayan en yüksek etki faktörlü (Impact Factor) amiral gemisi dergiler.',
+        journals: [
+          { name: 'Behavioral and Brain Sciences', issn: '0140-525X', pub: 'Cambridge University Press' },
+          { name: 'Annual Review of Psychology', issn: '0066-4308', pub: 'Annual Reviews' },
+          { name: 'Psychological Bulletin', issn: '0033-2909', pub: 'American Psychological Association' },
+          { name: 'Psychological Review', issn: '0033-295X', pub: 'American Psychological Association' },
+          { name: 'Nature Human Behaviour', issn: '2397-3374', pub: 'Springer Nature' },
+          { name: 'Trends in Cognitive Sciences', issn: '1364-6613', pub: 'Cell Press / Elsevier' },
+          { name: 'Psychological Science', issn: '0956-7976', pub: 'Association for Psychological Science' },
+          { name: 'Perspectives on Psychological Science', issn: '1745-6916', pub: 'Association for Psychological Science' },
+          { name: 'American Psychologist', issn: '0003-066X', pub: 'American Psychological Association' },
+          { name: 'Current Directions in Psychological Science', issn: '0963-7214', pub: 'Association for Psychological Science' }
+        ]
+      },
+      {
+        id: 'clinical',
+        name: 'Klinik Psikoloji & Psikopatoloji',
+        shortName: 'Klinik Psikoloji',
+        conceptId: 'C70410870',
+        desc: 'Psikopatoloji, psikoterapi süreçleri, tanı sistemleri, travma ve klinik müdahale araştırmaları.',
+        journals: [
+          { name: 'World Psychiatry', issn: '1723-8617', pub: 'Wiley / WPA' },
+          { name: 'JAMA Psychiatry', issn: '2168-622X', pub: 'American Medical Association' },
+          { name: 'The Lancet Psychiatry', issn: '2215-0366', pub: 'Elsevier' },
+          { name: 'Annual Review of Clinical Psychology', issn: '1548-5943', pub: 'Annual Reviews' },
+          { name: 'Clinical Psychology Review', issn: '0272-7358', pub: 'Elsevier' },
+          { name: 'Journal of Consulting and Clinical Psychology', issn: '0022-006X', pub: 'American Psychological Association' },
+          { name: 'Psychological Medicine', issn: '0033-2917', pub: 'Cambridge University Press' },
+          { name: 'Behaviour Research and Therapy', issn: '0005-7967', pub: 'Elsevier' },
+          { name: 'Journal of Affective Disorders', issn: '0165-0327', pub: 'Elsevier' }
+        ]
+      },
+      {
+        id: 'social',
+        name: 'Sosyal Psikoloji',
+        shortName: 'Sosyal Psikoloji',
+        conceptId: 'C77805123',
+        desc: 'Sosyal biliş, grup dinamikleri, önyargı, tutumlar, kişilerarası ilişkiler ve kültürel süreçler.',
+        journals: [
+          { name: 'Journal of Personality and Social Psychology', issn: '0022-3514', pub: 'American Psychological Association' },
+          { name: 'Personality and Social Psychology Review', issn: '1088-8683', pub: 'SAGE / SPSP' },
+          { name: 'Personality and Social Psychology Bulletin', issn: '0146-1672', pub: 'SAGE / SPSP' },
+          { name: 'Journal of Experimental Social Psychology', issn: '0022-1031', pub: 'Elsevier' },
+          { name: 'Social Psychological and Personality Science', issn: '1948-5506', pub: 'SAGE' },
+          { name: 'European Journal of Social Psychology', issn: '0046-2772', pub: 'Wiley' },
+          { name: 'British Journal of Social Psychology', issn: '0144-6665', pub: 'Wiley / BPS' }
+        ]
+      },
+      {
+        id: 'cognitive',
+        name: 'Bilişsel Psikoloji & Üstbiliş',
+        shortName: 'Bilişsel & Üstbiliş',
+        conceptId: 'C169900460',
+        desc: 'Algı, dikkat, çalışma belleği, üstbiliş (metacognition), karar verme ve dil işleme mekanizmaları.',
+        journals: [
+          { name: 'Cognition', issn: '0010-0277', pub: 'Elsevier' },
+          { name: 'Cognitive Psychology', issn: '0010-0285', pub: 'Elsevier' },
+          { name: 'Journal of Experimental Psychology: General', issn: '0096-3445', pub: 'American Psychological Association' },
+          { name: 'Journal of Memory and Language', issn: '0749-596X', pub: 'Elsevier' },
+          { name: 'Psychonomic Bulletin & Review', issn: '1069-9384', pub: 'Springer Nature' },
+          { name: 'Memory & Cognition', issn: '0090-502X', pub: 'Springer Nature' },
+          { name: 'Cognitive Science', issn: '0364-0213', pub: 'Wiley' },
+          { name: 'Metacognition and Learning', issn: '1556-1623', pub: 'Springer Nature' },
+          { name: 'Consciousness and Cognition', issn: '1053-8100', pub: 'Elsevier' }
+        ]
+      },
+      {
+        id: 'developmental',
+        name: 'Gelişim Psikolojisi',
+        shortName: 'Gelişim Psikolojisi',
+        conceptId: 'C138496976',
+        desc: 'Bebeklikten yaşlılığa bilişsel, duygusal ve sosyal gelişim, bağlanma ve gelişimsel psikopatoloji.',
+        journals: [
+          { name: 'Child Development', issn: '0009-3920', pub: 'Wiley / SRCD' },
+          { name: 'Developmental Psychology', issn: '0012-1649', pub: 'American Psychological Association' },
+          { name: 'Development and Psychopathology', issn: '0954-5794', pub: 'Cambridge University Press' },
+          { name: 'Journal of Child Psychology and Psychiatry', issn: '0021-9630', pub: 'Wiley' },
+          { name: 'Developmental Review', issn: '0273-2297', pub: 'Elsevier' },
+          { name: 'Developmental Science', issn: '1363-755X', pub: 'Wiley' }
+        ]
+      },
+      {
+        id: 'neuropsychology',
+        name: 'Nöropsikoloji & Bilişsel Sinirbilim',
+        shortName: 'Nöropsikoloji',
+        conceptId: 'C14216870',
+        desc: 'Beyin-davranış ilişkileri, lezyon çalışmaları, yürütücü işlevler ve klinik nörogörüntüleme.',
+        journals: [
+          { name: 'Brain', issn: '0006-8950', pub: 'Oxford University Press' },
+          { name: 'Cortex', issn: '0010-9452', pub: 'Elsevier' },
+          { name: 'Neuropsychologia', issn: '0028-3932', pub: 'Elsevier' },
+          { name: 'Neuropsychology', issn: '0894-4105', pub: 'American Psychological Association' },
+          { name: 'Neuropsychology Review', issn: '1040-7308', pub: 'Springer Nature' },
+          { name: 'Journal of Cognitive Neuroscience', issn: '0898-929X', pub: 'MIT Press' },
+          { name: 'Social Cognitive and Affective Neuroscience', issn: '1749-5016', pub: 'Oxford University Press' },
+          { name: 'Human Brain Mapping', issn: '1065-9471', pub: 'Wiley' }
+        ]
+      },
+      {
+        id: 'neuroscience',
+        name: 'Sinirbilim (Neuroscience)',
+        shortName: 'Sinirbilim',
+        conceptId: 'C169760540',
+        desc: 'Sinir sistemi mimarisi, nörogörüntüleme, sinaptik plastisite, afektif ve davranışsal sinirbilim.',
+        journals: [
+          { name: 'Nature Reviews Neuroscience', issn: '1471-003X', pub: 'Springer Nature' },
+          { name: 'Nature Neuroscience', issn: '1097-6256', pub: 'Springer Nature' },
+          { name: 'Neuron', issn: '0896-6273', pub: 'Cell Press' },
+          { name: 'Trends in Neurosciences', issn: '0166-2236', pub: 'Cell Press' },
+          { name: 'Biological Psychiatry', issn: '0006-3223', pub: 'Elsevier' },
+          { name: 'NeuroImage', issn: '1053-8119', pub: 'Elsevier' },
+          { name: 'Journal of Neuroscience', issn: '0270-6474', pub: 'Society for Neuroscience' },
+          { name: 'Cerebral Cortex', issn: '1047-3211', pub: 'Oxford University Press' }
+        ]
+      },
+      {
+        id: 'experimental',
+        name: 'Deneysel Psikoloji & Psikofizik',
+        shortName: 'Deneysel Psikoloji',
+        conceptId: 'C180747234',
+        desc: 'Kontrollü laboratuvar paradigmaları, duyusal süreçler, tepki süresi ve öğrenme modelleri.',
+        journals: [
+          { name: 'Journal of Experimental Psychology: Human Perception and Performance', issn: '0096-1523', pub: 'American Psychological Association' },
+          { name: 'Journal of Experimental Psychology: Learning, Memory, and Cognition', issn: '0278-7393', pub: 'American Psychological Association' },
+          { name: 'Attention, Perception, & Psychophysics', issn: '1943-3921', pub: 'Springer Nature' },
+          { name: 'Quarterly Journal of Experimental Psychology', issn: '1747-0218', pub: 'SAGE' },
+          { name: 'Psychological Research', issn: '0340-0727', pub: 'Springer Nature' }
+        ]
+      },
+      {
+        id: 'psychometrics',
+        name: 'Psikometri & Nicel Yöntemler',
+        shortName: 'Psikometri',
+        conceptId: 'C171606756',
+        desc: 'Ölçek geliştirme, madde tepki kuramı (IRT), yapısal eşitlik modellemesi ve istatistiksel metodoloji.',
+        journals: [
+          { name: 'Psychological Methods', issn: '1082-989X', pub: 'American Psychological Association' },
+          { name: 'Psychometrika', issn: '0033-3123', pub: 'Cambridge University Press' },
+          { name: 'Behavior Research Methods', issn: '1554-3528', pub: 'Springer Nature' },
+          { name: 'Structural Equation Modeling', issn: '1070-5511', pub: 'Taylor & Francis' },
+          { name: 'Multivariate Behavioral Research', issn: '0027-3171', pub: 'Taylor & Francis' },
+          { name: 'Psychological Assessment', issn: '1040-3590', pub: 'American Psychological Association' }
+        ]
+      },
+      {
+        id: 'io',
+        name: 'Endüstri ve Örgüt (I/O) Psikolojisi',
+        shortName: 'Endüstri & Örgüt',
+        conceptId: 'C178550888',
+        desc: 'Çalışma davranışı, liderlik, örgütsel adalet, motivasyon, insan faktörleri ve tükenmişlik.',
+        journals: [
+          { name: 'Journal of Applied Psychology', issn: '0021-9010', pub: 'American Psychological Association' },
+          { name: 'Personnel Psychology', issn: '0031-5826', pub: 'Wiley' },
+          { name: 'Journal of Organizational Behavior', issn: '0894-3796', pub: 'Wiley' },
+          { name: 'Organizational Behavior and Human Decision Processes', issn: '0749-5978', pub: 'Elsevier' },
+          { name: 'The Leadership Quarterly', issn: '1048-9843', pub: 'Elsevier' }
+        ]
+      },
+      {
+        id: 'personality',
+        name: 'Kişilik Psikolojisi & Bireysel Farklar',
+        shortName: 'Kişilik Psikolojisi',
+        conceptId: 'C187288502',
+        desc: 'Kişilik özellikleri (Big Five, HEXACO), bireysel farklılıklar, zeka ve benlik yapılanması.',
+        journals: [
+          { name: 'Journal of Personality', issn: '0022-3506', pub: 'Wiley' },
+          { name: 'European Journal of Personality', issn: '0890-2070', pub: 'SAGE' },
+          { name: 'Journal of Research in Personality', issn: '0092-6566', pub: 'Elsevier' },
+          { name: 'Personality and Individual Differences', issn: '0191-8869', pub: 'Elsevier' },
+          { name: 'Intelligence', issn: '0160-2896', pub: 'Elsevier' }
+        ]
+      },
+      {
+        id: 'health',
+        name: 'Sağlık Psikolojisi & Davranışsal Tıp',
+        shortName: 'Sağlık Psikolojisi',
+        conceptId: 'C138816342',
+        desc: 'Psikosomatik süreçler, stres fizyolojisi, sağlık davranışları ve kronik hastalıklarla baş etme.',
+        journals: [
+          { name: 'Health Psychology Review', issn: '1743-7199', pub: 'Taylor & Francis' },
+          { name: 'Health Psychology', issn: '0278-6133', pub: 'American Psychological Association' },
+          { name: 'Annals of Behavioral Medicine', issn: '0883-6612', pub: 'Oxford University Press' },
+          { name: 'Psychosomatic Medicine', issn: '0033-3174', pub: 'Wolters Kluwer' },
+          { name: 'Psychoneuroendocrinology', issn: '0306-4530', pub: 'Elsevier' }
+        ]
+      },
+      {
+        id: 'forensic',
+        name: 'Adli Psikoloji & Ahlaki Karar Verme',
+        shortName: 'Adli & Ahlak',
+        conceptId: 'C73484699',
+        desc: 'Hukuk psikolojisi, görgü tanıklığı, suç davranışı, etik ve ahlaki ikilemler (moral dilemmas).',
+        journals: [
+          { name: 'Law and Human Behavior', issn: '0147-7307', pub: 'American Psychological Association' },
+          { name: 'Psychology, Public Policy, and Law', issn: '1076-8971', pub: 'American Psychological Association' },
+          { name: 'Criminal Justice and Behavior', issn: '0093-8548', pub: 'SAGE' },
+          { name: 'Legal and Criminological Psychology', issn: '1355-3259', pub: 'Wiley' },
+          { name: 'Judgment and Decision Making', issn: '1930-2975', pub: 'Cambridge University Press' }
+        ]
+      }
+    ];
+
+    // Küresel Q1 Dergi ISSN ve İsim Kümesi
+    const ALL_PRESTIGE_ISSNS = new Set();
+    const ALL_PRESTIGE_NAMES = new Set();
+    PSYCH_DOMAINS.forEach(d => d.journals.forEach(j => {
+      ALL_PRESTIGE_ISSNS.add(j.issn);
+      ALL_PRESTIGE_NAMES.add(j.name.toLowerCase());
+    }));
+
+    // UYGULAMA DURUM DEĞİŞKENLERİ (STATE)
+    let activeDomain = PSYCH_DOMAINS[0];
+    let activeJournalObj = null; // null = Tüm Q1 Havuzu; veya {name, issn, pub}
+    let streamPoolMode = 'flagship'; // 'flagship' (Q1 ISSN Havuzu) | 'concept' (OpenAlex Concept ID)
+    let activeMethodFilter = 'ALL';
+    let currentViewMode = 'cards'; // 'cards' | 'matrix'
+    let isVaultMode = false;
+
+    let currentPage = 1;
+    let totalApiResults = 0;
+
+    let articleMap = new Map();
+    let currentArticleList = [];
+    let sourceMetricsCache = {}; // issn veya sourceId -> { h_index, impact_2yr, publisher, homepage_url, works_count }
+
+    let vaultArticles = [];
+    try {
+      vaultArticles = JSON.parse(localStorage.getItem('psychnexus_vault_v25') || '[]');
+    } catch (e) {
+      vaultArticles = [];
+    }
+
+    let searchDebounceTimer = null;
+
+    // 2. BAŞLATICI
+    function initApp() {
+      updateVaultBadge();
+      renderDomains();
+      updateDomainHeader();
+      resetAndFetch();
+
+      document.getElementById('intersectionInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') executeHybridSearch();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          openCommandPalette();
+        }
+        if (e.key === 'Escape') {
+          closeInspector();
+          closeJournalCatalogModal();
+          closeCommandPalette();
+          closeMobileFiltersModal();
+        }
+      });
+    }
+
+    // 3. ALT DAL VE DERGİ GEÇİŞ SİSTEMİ (MASAÜSTÜ + MOBİL KAYDIRMALI ŞERİT)
+    function renderDomains() {
+      // Masaüstü Sol Liste
+      const container = document.getElementById('domainList');
+      container.innerHTML = PSYCH_DOMAINS.map(d => {
+        const isActive = !isVaultMode && d.id === activeDomain.id;
+        return `
+          <button 
+            onclick="selectDomain('${d.id}')"
+            class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition flex items-center justify-between ${
+              isActive 
+                ? 'bg-gradient-to-r from-cyan-500/25 to-violet-500/20 text-white border border-cyan-500/40 shadow-sm' 
+                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent'
+            }">
+            <span class="truncate pr-2">${d.name}</span>
+            <span class="text-[10px] font-mono text-slate-500 shrink-0">${d.journals.length} Q1</span>
+          </button>
+        `;
+      }).join('');
+
+      // Mobil Yatay Kaydırılabilir Şerit
+      const mobRibbon = document.getElementById('mobileDomainRibbon');
+      mobRibbon.innerHTML = PSYCH_DOMAINS.map(d => {
+        const isActive = !isVaultMode && d.id === activeDomain.id;
+        return `
+          <button 
+            onclick="selectDomain('${d.id}')"
+            class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-mono transition ${
+              isActive 
+                ? 'bg-gradient-to-r from-cyan-500/30 to-violet-500/25 text-white border border-cyan-400/50 font-semibold shadow-sm' 
+                : 'bg-slate-900/90 text-slate-400 border border-slate-800'
+            }">
+            ${d.shortName}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectDomain(domainId) {
+      isVaultMode = false;
+      activeDomain = PSYCH_DOMAINS.find(d => d.id === domainId) || PSYCH_DOMAINS[0];
+      activeJournalObj = null;
+      renderDomains();
+      updateDomainHeader();
+      resetAndFetch();
+    }
+
+    function selectJournalByIndex(idx) {
+      isVaultMode = false;
+      if (idx === null || idx < 0) {
+        activeJournalObj = null;
+      } else {
+        activeJournalObj = activeDomain.journals[idx] || null;
+      }
+      updateDomainHeader();
+      resetAndFetch();
+      if (activeJournalObj) {
+        fetchLiveJournalBarMetrics(activeJournalObj);
+      }
+    }
+
+    // Önceki / Sonraki Dergi Hızlı Adımlayıcı
+    function stepJournal(delta) {
+      const list = activeDomain.journals;
+      if (!list || list.length === 0) return;
+      let curIdx = activeJournalObj ? list.findIndex(j => j.issn === activeJournalObj.issn) : -1;
+      let nextIdx = curIdx + delta;
+      if (nextIdx >= list.length) nextIdx = -1;
+      if (nextIdx < -1) nextIdx = list.length - 1;
+      selectJournalByIndex(nextIdx === -1 ? null : nextIdx);
+    }
+
+    function setStreamPoolMode(mode) {
+      streamPoolMode = mode;
+      const dFlag = document.getElementById('poolFlagshipBtn');
+      const dConc = document.getElementById('poolConceptBtn');
+      const mFlag = document.getElementById('mobPoolFlagshipBtn');
+      const mConc = document.getElementById('mobPoolConceptBtn');
+      const helper = document.getElementById('poolModeHelperText');
+
+      if (mode === 'flagship') {
+        dFlag.className = 'py-1.5 px-2 rounded text-[11px] font-mono transition bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold';
+        dConc.className = 'py-1.5 px-2 rounded text-[11px] font-mono transition text-slate-400 hover:text-slate-200 border border-transparent';
+        mFlag.className = 'py-2 rounded-lg text-xs font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold';
+        mConc.className = 'py-2 rounded-lg text-xs font-mono bg-slate-900 text-slate-400 border border-slate-800';
+        helper.textContent = 'Seçili alt daldaki amiral gemisi Q1 dergilerin doğrudan ISSN havuzundan en son çıkan makaleleri getirir.';
+      } else {
+        dConc.className = 'py-1.5 px-2 rounded text-[11px] font-mono transition bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold';
+        dFlag.className = 'py-1.5 px-2 rounded text-[11px] font-mono transition text-slate-400 hover:text-slate-200 border border-transparent';
+        mConc.className = 'py-2 rounded-lg text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold';
+        mFlag.className = 'py-2 rounded-lg text-xs font-mono bg-slate-900 text-slate-400 border border-slate-800';
+        helper.textContent = 'OpenAlex üzerindeki tüm dergilerde bu psikoloji alt dalıyla etiketlenmiş çalışmaları getirir.';
+      }
+      updateDomainHeader();
+      resetAndFetch();
+    }
+
+    function updateDomainHeader() {
+      document.getElementById('activeDomainBadge').textContent = `OpenAlex Concept: ${activeDomain.conceptId}`;
+      document.getElementById('activeDomainTitle').textContent = isVaultMode 
+        ? '⭐ Kişisel Literatür Kasam (Kaydedilen Makaleler)' 
+        : activeDomain.name;
+      document.getElementById('activeDomainDesc').textContent = isVaultMode 
+        ? 'Tarayıcı hafızasında saklanan seçilmiş çalışmalarınız. Matris tablo görünümüne geçebilir veya Obsidian (.md) olarak kopyalayabilirsiniz.'
+        : activeDomain.desc;
+
+      const venueBadge = document.getElementById('activeVenueStatusBadge');
+      if (activeJournalObj) {
+        venueBadge.textContent = `🏛️ Seçili Dergi: ${activeJournalObj.name} (${activeJournalObj.issn})`;
+        venueBadge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/25 text-emerald-200 border border-emerald-400/50';
+      } else if (streamPoolMode === 'flagship') {
+        venueBadge.textContent = `🏛️ ${activeDomain.journals.length} Q1 Amiral Gemisi Dergi Havuzu`;
+        venueBadge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+      } else {
+        venueBadge.textContent = `🌐 Tüm Alan Arşivi (${activeDomain.conceptId})`;
+        venueBadge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30';
+      }
+
+      const journalsBar = document.getElementById('topJournalsBar');
+      const isPool = activeJournalObj === null;
+
+      journalsBar.innerHTML = `
+        <button 
+          onclick="selectJournalByIndex(null)" 
+          class="shrink-0 text-[11px] font-mono px-2.5 py-1 rounded border transition ${
+            isPool 
+              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-semibold' 
+              : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:border-slate-700'
+          }">
+          Tüm Q1 Havuzu (${activeDomain.journals.length})
+        </button>
+      ` + activeDomain.journals.map((j, idx) => {
+        const isSelected = activeJournalObj && activeJournalObj.issn === j.issn;
+        return `
+          <button 
+            onclick="selectJournalByIndex(${idx})" 
+            class="shrink-0 text-[11px] font-mono px-2.5 py-1 rounded border transition ${
+              isSelected 
+                ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400 font-semibold shadow-sm shadow-emerald-500/20' 
+                : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-emerald-500/40 hover:text-emerald-300'
+            }">
+            ★ ${j.name}
+          </button>
+        `;
+      }).join('');
+
+      if (isPool) {
+        resetJournalBarToPool();
+      }
+    }
+
+    function resetJournalBarToPool() {
+      document.getElementById('journalBarBadge').textContent = streamPoolMode === 'flagship' ? 'Q1 ELITE HAVUZU' : 'GENEL ARŞİV';
+      document.getElementById('journalBarTitle').textContent = `${activeDomain.shortName} — Birleşik Dergi Akışı`;
+      document.getElementById('journalBarIssn').textContent = '';
+      document.getElementById('journalBarPublisher').textContent = `Bu akışta ${activeDomain.journals.slice(0, 3).map(j => j.name).join(', ')} ve diğer Q1 dergilerdeki en yeni yayınlar listelenir.`;
+      document.getElementById('journalBarHIndex').textContent = 'Q1 Havuzu';
+      document.getElementById('journalBarImpact').textContent = 'Elit';
+      document.getElementById('journalOfficialLink').classList.add('hidden');
+      document.getElementById('journalScimagoLink').classList.add('hidden');
+    }
+
+    async function fetchLiveJournalBarMetrics(journalObj) {
+      document.getElementById('journalBarBadge').textContent = 'Q1 AMİRAL GEMİSİ';
+      document.getElementById('journalBarTitle').textContent = journalObj.name;
+      document.getElementById('journalBarIssn').textContent = `ISSN-L: ${journalObj.issn}`;
+      document.getElementById('journalBarPublisher').textContent = `Yayıncı: ${journalObj.pub}`;
+
+      const scimagoLink = document.getElementById('journalScimagoLink');
+      scimagoLink.href = `https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(journalObj.issn)}`;
+      scimagoLink.classList.remove('hidden');
+
+      if (sourceMetricsCache[journalObj.issn]) {
+        applyJournalBarMetrics(sourceMetricsCache[journalObj.issn]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.openalex.org/sources?filter=issn:${encodeURIComponent(journalObj.issn)}&per-page=1`);
+        const data = await res.json();
+        const src = data.results?.[0];
+        if (src) {
+          const info = {
+            h_index: src.summary_stats?.h_index || 0,
+            impact_2yr: src.summary_stats?.['2yr_mean_citedness'] || 0,
+            publisher: src.host_organization_name || journalObj.pub,
+            homepage_url: src.homepage_url || null
+          };
+          sourceMetricsCache[journalObj.issn] = info;
+          sourceMetricsCache[src.id] = info;
+          applyJournalBarMetrics(info);
+        }
+      } catch (e) {
+        console.warn('Dergi bilgi çekimi uyarısı:', e);
+      }
+    }
+
+    function applyJournalBarMetrics(info) {
+      document.getElementById('journalBarHIndex').textContent = info.h_index || '—';
+      document.getElementById('journalBarImpact').textContent = info.impact_2yr ? info.impact_2yr.toFixed(2) : '—';
+      if (info.publisher) {
+        document.getElementById('journalBarPublisher').textContent = `Yayıncı Kurum: ${info.publisher}`;
+      }
+      const officialLink = document.getElementById('journalOfficialLink');
+      if (info.homepage_url) {
+        officialLink.href = info.homepage_url;
+        officialLink.classList.remove('hidden');
+      } else {
+        officialLink.classList.add('hidden');
+      }
+    }
+
+    // 4. SCHOLAR-GRADE HİBRİT ARAMA VE OPENALEX SORGU MOTORU
+    function syncControlsAndFetch(origin) {
+      if (origin === 'mobile') {
+        document.getElementById('sortSelect').value = document.getElementById('mobSortSelect').value;
+        document.getElementById('yearSelect').value = document.getElementById('mobYearSelect').value;
+        document.getElementById('perPageSelect').value = document.getElementById('mobPerPageSelect').value;
+      } else {
+        document.getElementById('mobSortSelect').value = document.getElementById('sortSelect').value;
+        document.getElementById('mobYearSelect').value = document.getElementById('yearSelect').value;
+        document.getElementById('mobPerPageSelect').value = document.getElementById('perPageSelect').value;
+      }
+      resetAndFetch();
+    }
+
+    function handleSearchScopeChange() {
+      const q = document.getElementById('intersectionInput').value.trim();
+      if (q.length > 0) executeHybridSearch();
+    }
+
+    function executeHybridSearch() {
+      const q = document.getElementById('intersectionInput').value.trim();
+      const scope = document.getElementById('searchScopeSelect').value;
+
+      if (q.length > 0) {
+        // Arama yapıldığında Google Scholar gibi BM25 alaka düzeyine (relevance_score:desc) otomatik geç
+        document.getElementById('sortSelect').value = 'relevance_score:desc';
+        document.getElementById('mobSortSelect').value = 'relevance_score:desc';
+        if (scope === 'scholar_global') {
+          document.getElementById('yearSelect').value = 'all';
+          document.getElementById('mobYearSelect').value = 'all';
+        }
+      } else {
+        document.getElementById('sortSelect').value = 'publication_date:desc';
+        document.getElementById('mobSortSelect').value = 'publication_date:desc';
+      }
+      resetAndFetch();
+    }
+
+    function resetAndFetch() {
+      currentPage = 1;
+      fetchLiterature(false);
+    }
+
+    function goToPage(pageNum) {
+      if (pageNum < 1) return;
+      currentPage = pageNum;
+      fetchLiterature(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadNextPageAppend() {
+      currentPage += 1;
+      fetchLiterature(true);
+    }
+
+    async function fetchLiterature(appendMode = false) {
+      if (isVaultMode) {
+        renderVaultView();
+        return;
+      }
+
+      const loader = document.getElementById('loadingIndicator');
+      const loadingText = document.getElementById('loadingStepText');
+      const container = document.getElementById('articlesContainer');
+
+      loader.classList.remove('hidden');
+      if (!appendMode) container.innerHTML = '';
+
+      const sortVal = document.getElementById('sortSelect').value;
+      const yearVal = document.getElementById('yearSelect').value;
+      const perPage = parseInt(document.getElementById('perPageSelect').value, 10) || 25;
+      const oaOnly = document.getElementById('oaOnlyToggle').checked;
+      const hideAhead = document.getElementById('hideAheadToggle').checked;
+      const searchTerm = document.getElementById('intersectionInput').value.trim();
+      const scope = document.getElementById('searchScopeSelect').value;
+
+      let filters = ['type:article'];
+
+      // 1. KANONİK ISSN-L VEYA KAVRAM FİLTRESİ SEÇİMİ (%100 GARANTİLİ SONUÇ)
+      if (searchTerm.length > 0 && scope === 'scholar_global') {
+        // Küresel Scholar Modu: Tek dergiye hapsetmeden tüm Psikoloji ve Sinirbilim kümesinde ara
+        filters.push('concepts.id:C15744967|C169760540|C70410870|C169900460');
+      } else if (activeJournalObj) {
+        // Tekil Dergi Seçiliyse: Doğrudan derginin ISSN-L numarası ile çek (Concept kısıtlaması olmadan)
+        filters.push(`primary_location.source.issn:${activeJournalObj.issn}`);
+      } else if (streamPoolMode === 'flagship') {
+        // Seçili Alandaki Tüm Q1 Amiral Gemisi Dergilerin ISSN Havuzu
+        const issnPool = activeDomain.journals.map(j => j.issn).join('|');
+        filters.push(`primary_location.source.issn:${issnPool}`);
+      } else {
+        // Geniş Alan Arşivi
+        filters.push(`concepts.id:${activeDomain.conceptId}`);
+        filters.push('has_abstract:true');
+      }
+
+      if (yearVal !== 'all') {
+        filters.push(`publication_year:${yearVal}`);
+      }
+      if (oaOnly) {
+        filters.push('is_oa:true');
+      }
+      if (hideAhead) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        filters.push(`to_publication_date:${todayStr}`);
+      }
+
+      let searchParam = '';
+      if (searchTerm.length > 0) {
+        if (scope === 'title_abs') {
+          filters.push(`title_and_abstract.search:${searchTerm.replace(/,/g, ' ')}`);
+        } else {
+          searchParam = `&search=${encodeURIComponent(searchTerm)}`;
+        }
+      }
+
+      const apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}${searchParam}&sort=${encodeURIComponent(sortVal)}&per-page=${perPage}&page=${currentPage}`;
+
+      loadingText.textContent = activeJournalObj 
+        ? `"${activeJournalObj.name}" (${activeJournalObj.issn}) dergisinden Sayfa ${currentPage} çekiliyor...`
+        : `${activeDomain.shortName} havuzundan Sayfa ${currentPage} makaleleri çekiliyor...`;
+
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        const works = data.results || [];
+        totalApiResults = data.meta?.count || works.length;
+
+        // Eksik dergi H-İndeksi ve 2yr IF metriklerini toplu çek
+        const missingSourceIds = [...new Set(
+          works
+            .map(w => w.primary_location?.source?.id)
+            .filter(id => id && !sourceMetricsCache[id])
+            .map(id => id.replace('https://openalex.org/', ''))
+        )];
+
+        if (missingSourceIds.length > 0) {
+          const sourcesUrl = `https://api.openalex.org/sources?filter=openalex_id:${missingSourceIds.slice(0, 40).join('|')}&per-page=40`;
+          const sRes = await fetch(sourcesUrl);
+          const sData = await sRes.json();
+          (sData.results || []).forEach(src => {
+            const info = {
+              h_index: src.summary_stats?.h_index || 0,
+              impact_2yr: src.summary_stats?.['2yr_mean_citedness'] || 0,
+              publisher: src.host_organization_name || 'Akademik Yayıncı',
+              homepage_url: src.homepage_url || null
+            };
+            sourceMetricsCache[src.id] = info;
+            if (src.issn_l) sourceMetricsCache[src.issn_l] = info;
+          });
+        }
+
+        const processed = works
+          .filter(w => !isEditorialNoise(w.title || ''))
+          .map(w => enrichArticleData(w));
+
+        processed.forEach(art => articleMap.set(art.id, art));
+
+        if (appendMode) {
+          const existingIds = new Set(currentArticleList.map(a => a.id));
+          processed.forEach(p => {
+            if (!existingIds.has(p.id)) currentArticleList.push(p);
+          });
+        } else {
+          currentArticleList = processed;
+        }
+
+        loader.classList.add('hidden');
+        document.getElementById('totalApiCountBadge').textContent = `Toplam İndeks: ${totalApiResults.toLocaleString('tr-TR')} Makale`;
+        applyClientFilters();
+        renderPaginationControls(perPage);
+
+      } catch (err) {
+        loader.classList.add('hidden');
+        container.innerHTML = `
+          <div class="glass-panel rounded-xl p-6 border border-red-500/40 text-red-300 text-xs font-mono">
+            API Bağlantı Hatası: ${escapeHtml(err.message)}. Lütfen tekrar deneyin.
+          </div>
+        `;
+      }
+    }
+
+    function isEditorialNoise(title) {
+      return /^(correction to|erratum|corrigendum|retraction note|publisher's note)/i.test(title.trim());
+    }
+
+    // 5. SCIENTOMETRIC HESAPLAMA VE VERİ ZENGİNLEŞTİRME
+    function enrichArticleData(work) {
+      const rawAbstract = reconstructAbstract(work.abstract_inverted_index);
+      const cleanAbstract = cleanXmlTags(rawAbstract);
+
+      const srcObj = work.primary_location?.source || {};
+      const sourceId = srcObj.id;
+      const issnL = srcObj.issn_l || (srcObj.issn ? srcObj.issn[0] : '');
+      const journalName = srcObj.display_name || activeJournalObj?.name || 'Akademik Dergi / Arşiv';
+
+      const metrics = (sourceId && sourceMetricsCache[sourceId]) || (issnL && sourceMetricsCache[issnL]) || {
+        h_index: null,
+        impact_2yr: 0,
+        publisher: srcObj.host_organization_name || ''
+      };
+
+      const isKnownPrestige = (issnL && ALL_PRESTIGE_ISSNS.has(issnL)) || ALL_PRESTIGE_NAMES.has(journalName.toLowerCase());
+
+      let quartile = 'Q2 / Standart';
+      let quartileColor = 'bg-slate-800 text-slate-300 border-slate-700';
+      let isQ1 = false;
+
+      if (isKnownPrestige || metrics.impact_2yr >= 3.8 || (metrics.h_index && metrics.h_index >= 115)) {
+        quartile = 'Q1 ELITE';
+        quartileColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        isQ1 = true;
+      } else if (metrics.impact_2yr >= 2.0 || (metrics.h_index && metrics.h_index >= 65)) {
+        quartile = 'Q1';
+        quartileColor = 'bg-teal-500/20 text-teal-300 border-teal-500/40';
+        isQ1 = true;
+      } else if (metrics.impact_2yr >= 1.2 || (metrics.h_index && metrics.h_index >= 35)) {
+        quartile = 'Q2';
+        quartileColor = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+      }
+
+      const pubDate = work.publication_date || `${work.publication_year}-01-01`;
+      const isAheadOfPrint = new Date(pubDate) > new Date();
+
+      const combinedText = `${work.title || ''} ${cleanAbstract}`.toLowerCase();
+      let methods = [];
+      if (/meta-analys|meta analys|systematic review|prisma/.test(combinedText)) methods.push('Meta-Analiz');
+      if (/randomized controlled|experiment|rct|placebo|double-blind|participants were randomly/.test(combinedText)) methods.push('Deneysel / RKÇ');
+      if (/fmri|eeg|erp|neuroimaging|bold signal|prefrontal cortex|amygdala|hippocamp/.test(combinedText)) methods.push('Nörogörüntüleme');
+      if (/longitudinal|prospective cohort|follow-up|wave 1|across time/.test(combinedText)) methods.push('Boylamasına');
+      if (/psychometric|validation|confirmatory factor|cronbach|irt|scale development/.test(combinedText)) methods.push('Psikometri / Ölçek');
+      if (methods.length === 0) methods.push('Araştırma Makalesi');
+
+      return {
+        id: work.id,
+        title: cleanXmlTags(work.title || 'Başlıksız Çalışma'),
+        pubDate,
+        pubYear: work.publication_year || new Date().getFullYear(),
+        isAheadOfPrint,
+        journalName,
+        issn: issnL,
+        publisher: metrics.publisher,
+        hIndex: metrics.h_index,
+        impact2yr: metrics.impact_2yr ? metrics.impact_2yr.toFixed(2) : null,
+        quartile,
+        quartileColor,
+        isQ1,
+        citations: work.cited_by_count || 0,
+        fwci: work.fwci ? work.fwci.toFixed(2) : null,
+        isOA: work.open_access?.is_oa || false,
+        oaUrl: work.open_access?.oa_url || work.doi || '#',
+        doi: work.doi || '',
+        authors: (work.authorships || []).slice(0, 5).map(a => a.author?.display_name).filter(Boolean),
+        institutions: [...new Set((work.authorships || []).flatMap(a => (a.institutions || []).map(i => i.display_name)).filter(Boolean))].slice(0, 3),
+        totalAuthors: (work.authorships || []).length,
+        abstractText: cleanAbstract,
+        methods
+      };
+    }
+
+    function reconstructAbstract(invertedIndex) {
+      if (!invertedIndex) return 'Bu çalışma için yayıncı tarafından açık özet metaverisi paylaşılmamıştır. Tam metin için DOI veya PDF bağlantısını kullanabilirsiniz.';
+      const words = [];
+      for (const [word, positions] of Object.entries(invertedIndex)) {
+        for (const pos of positions) {
+          words[pos] = word;
+        }
+      }
+      return words.join(' ');
+    }
+
+    function cleanXmlTags(str) {
+      return String(str)
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/^Abstract[:\s]*/i, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // 6. ARAMA KELİMESİ VURGULAMA (LEXICAL HIGHLIGHTING & KWIC ENGINE)
+    function getActiveSearchTokens() {
+      const raw = document.getElementById('intersectionInput').value.trim();
+      if (!raw) return [];
+      const phrases = [];
+      const regex = /"([^"]+)"|(\S+)/g;
+      let match;
+      while ((match = regex.exec(raw)) !== null) {
+        const token = (match[1] || match[2]).trim();
+        if (token.length >= 2 && !['and', 'or', 'not', 'the', 'for'].includes(token.toLowerCase())) {
+          phrases.push(token);
+        }
+      }
+      return phrases;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function highlightTextWithStats(text) {
+      const safeText = escapeHtml(text || '');
+      const tokens = getActiveSearchTokens();
+      if (tokens.length === 0) return { html: safeText, count: 0 };
+
+      const pattern = tokens.map(escapeRegExp).join('|');
+      const regex = new RegExp(`(${pattern})`, 'gi');
+      let matchCount = 0;
+
+      const highlightedHtml = safeText.replace(regex, (matched) => {
+        matchCount++;
+        return `<mark class="search-hl">${matched}</mark>`;
+      });
+
+      return { html: highlightedHtml, count: matchCount };
+    }
+
+    function extractMatchingSentence(abstractText) {
+      const tokens = getActiveSearchTokens();
+      if (tokens.length === 0 || !abstractText) return null;
+
+      const sentences = abstractText.split(/(?<=[.!?])\s+/);
+      const pattern = new RegExp(`(${tokens.map(escapeRegExp).join('|')})`, 'i');
+
+      for (const s of sentences) {
+        if (pattern.test(s)) {
+          return highlightTextWithStats(s).html;
+        }
+      }
+      return null;
+    }
+
+    function handleSearchInput() {
+      const val = document.getElementById('intersectionInput').value.trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const hlBadge = document.getElementById('highlightStatsBadge');
+
+      if (val.length > 0) {
+        clearBtn.classList.remove('hidden');
+        hlBadge.classList.remove('hidden');
+        hlBadge.textContent = `🔍 Vurgulanan: "${val}"`;
+      } else {
+        clearBtn.classList.add('hidden');
+        hlBadge.classList.add('hidden');
+      }
+
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        applyClientFilters();
+      }, 100);
+    }
+
+    function clearSearchTerm() {
+      document.getElementById('intersectionInput').value = '';
+      document.getElementById('sortSelect').value = 'publication_date:desc';
+      document.getElementById('mobSortSelect').value = 'publication_date:desc';
+      handleSearchInput();
+      resetAndFetch();
+    }
+
+    // 7. FİLTRELEME VE EKRANA RENDER ETME (KARTLAR & MATRİS TABLO)
+    function setMethodFilter(method) {
+      activeMethodFilter = method;
+      document.querySelectorAll('.method-chip').forEach(btn => {
+        if (btn.dataset.method === method) {
+          btn.className = 'method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+        } else {
+          btn.className = 'method-chip shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-700';
+        }
+      });
+      applyClientFilters();
+    }
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      document.getElementById('viewCardsBtn').className = mode === 'cards'
+        ? 'px-2.5 py-1 rounded text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition'
+        : 'px-2.5 py-1 rounded text-xs font-mono text-slate-400 hover:text-slate-200 transition';
+      document.getElementById('viewMatrixBtn').className = mode === 'matrix'
+        ? 'px-2.5 py-1 rounded text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition'
+        : 'px-2.5 py-1 rounded text-xs font-mono text-slate-400 hover:text-slate-200 transition';
+      applyClientFilters();
+    }
+
+    function applyClientFilters() {
+      const q1Only = document.getElementById('q1OnlyToggle').checked;
+      const sourceArray = isVaultMode ? vaultArticles : currentArticleList;
+
+      const filtered = sourceArray.filter(art => {
+        if (q1Only && !art.isQ1) return false;
+        if (activeMethodFilter !== 'ALL' && !art.methods.includes(activeMethodFilter)) return false;
+        return true;
+      });
+
+      document.getElementById('showingRangeText').textContent = isVaultMode
+        ? `Kasada ${filtered.length} Makale Gösteriliyor`
+        : `Sayfa ${currentPage} • Ekranda ${filtered.length} Makale Listeleniyor`;
+
+      if (currentViewMode === 'matrix') {
+        renderMatrixTable(filtered);
+      } else {
+        renderArticleCards(filtered);
+      }
+    }
+
+    function renderArticleCards(articles) {
+      const container = document.getElementById('articlesContainer');
+      if (articles.length === 0) {
+        container.innerHTML = `
+          <div class="glass-panel rounded-xl p-10 text-center space-y-3">
+            <p class="text-sm font-semibold text-slate-200">Bu filtre kombinasyonunda makale bulunamadı.</p>
+            <p class="text-xs text-slate-400">Üstteki arama kapsamını "Scholar Küresel Mod" yapmayı veya Zaman Dilimini "Son 5 Yıl / Tüm Zamanlar" olarak genişletmeyi deneyebilirsin.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = articles.map((art, i) => {
+        const titleHL = highlightTextWithStats(art.title);
+        const absHL = highlightTextWithStats(art.abstractText);
+        const totalMatches = titleHL.count + absHL.count;
+        const kwicSentence = extractMatchingSentence(art.abstractText);
+        const isSaved = vaultArticles.some(v => v.id === art.id);
+
+        return `
+          <article class="glass-card rounded-xl p-4 sm:p-5 space-y-3.5">
+            
+            <!-- ÜST SCIENTOMETRIC VERİ BARI -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded border ${art.quartileColor}">
+                  ${art.quartile}
+                </span>
+                <button onclick="focusJournalFromCard('${art.journalName.replace(/'/g, "\\'")}', '${art.issn}')" class="text-xs font-bold text-cyan-300 hover:text-cyan-200 hover:underline text-left">
+                  🏛️ ${escapeHtml(art.journalName)}
+                </button>
+              </div>
+
+              <!-- H-İndeksi, 2yr IF, FWCI, Atıf ve Tarih -->
+              <div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px] tabular-nums">
+                ${totalMatches > 0 ? `
+                  <span class="px-2 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-400/50 font-bold">
+                    🔍 ${totalMatches} Eşleşme
+                  </span>
+                ` : ''}
+                ${art.hIndex ? `
+                  <span class="px-2 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30" title="Dergi H-İndeksi">
+                    H-Index: <strong>${art.hIndex}</strong>
+                  </span>
+                ` : ''}
+                ${art.impact2yr && art.impact2yr > 0 ? `
+                  <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700" title="Dergi 2 Yıllık Ortalama Atıf (Impact Factor Proxy)">
+                    2yr IF: <strong>${art.impact2yr}</strong>
+                  </span>
+                ` : ''}
+                ${art.fwci ? `
+                  <span class="px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30" title="Alan-Normalize Atıf Etkisi (Field-Weighted Citation Impact)">
+                    FWCI: <strong>${art.fwci}</strong>
+                  </span>
+                ` : ''}
+                <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  Atıf: <strong>${art.citations}</strong>
+                </span>
+                <span class="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700">
+                  📅 ${art.pubDate}
+                </span>
+                ${art.isAheadOfPrint ? `
+                  <span class="px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40" title="Yayıncı tarafından ileri bir sayıya atanmış Online First makale">
+                    ⚡ Erken Görünüm
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- MAKALE BAŞLIĞI VE YAZARLAR -->
+            <div>
+              <button onclick="openInspector('${art.id}')" class="text-left text-base font-bold text-white hover:text-cyan-300 transition leading-snug block">
+                ${titleHL.html}
+              </button>
+              <p class="text-xs text-slate-400 mt-1">
+                ${escapeHtml(art.authors.join(', '))}${art.totalAuthors > 5 ? ` + ${art.totalAuthors - 5} diğer yazar` : ''}
+                ${art.institutions.length > 0 ? ` • <span class="text-slate-500">${escapeHtml(art.institutions[0])}</span>` : ''}
+              </p>
+            </div>
+
+            <!-- METODOLOJİ ROZETLERİ -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              ${art.methods.map(m => `
+                <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                  ⚙ ${m}
+                </span>
+              `).join('')}
+              ${art.isOA ? `
+                <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  🔓 Açık Erişim (PDF)
+                </span>
+              ` : ''}
+            </div>
+
+            <!-- ARAMA KELİMESİ BAĞLAM KUTUSU (KWIC - SADECE EŞLEŞME VARSA GÖRÜNÜR) -->
+            ${kwicSentence ? `
+              <div class="bg-amber-500/10 border-l-2 border-amber-400 px-3 py-2 rounded-r-lg text-xs text-amber-100/90 font-sans">
+                <span class="text-[10px] font-mono uppercase text-amber-300 block mb-0.5 font-semibold">🎯 Arama Terimi Bağlamı (KWIC):</span>
+                "...${kwicSentence}..."
+              </div>
+            ` : ''}
+
+            <!-- ÖZET ALANI (HIGHLIGHT DESTEKLİ) -->
+            <div class="bg-slate-950/65 border border-slate-800/80 rounded-lg p-3.5">
+              <p id="abs-${i}" class="text-xs text-slate-300 leading-relaxed ${totalMatches > 0 ? '' : 'line-clamp-3'}">
+                ${absHL.html}
+              </p>
+              <div class="flex flex-wrap items-center gap-4 mt-2">
+                <button onclick="toggleAbstract(${i})" id="abs-btn-${i}" class="text-[11px] font-mono text-cyan-400 hover:underline">
+                  ${totalMatches > 0 ? '- Özeti Daralt' : '+ Özeti Tam Göster'}
+                </button>
+                <button onclick="openInspector('${art.id}')" class="text-[11px] font-mono text-violet-300 hover:underline">
+                  🔬 Yapılandırılmış Derin İnceleme Panelinde Aç →
+                </button>
+              </div>
+            </div>
+
+            <!-- ALT AKSİYON BUTONLARI -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button onclick="toggleVaultArticle('${art.id}')" class="text-[11px] font-mono px-2.5 py-1.5 rounded-lg border transition ${
+                  isSaved 
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
+                    : 'bg-slate-800/90 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }">
+                  ${isSaved ? '⭐ Kasada Kayıtlı' : '☆ Kasaya Ekle'}
+                </button>
+                <button onclick="copyAPA('${art.id}')" class="text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                  📋 APA 7
+                </button>
+                <button onclick="copyMarkdownNote('${art.id}')" class="text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-violet-300 border border-violet-500/30 transition">
+                  📝 Obsidian (.md)
+                </button>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                ${art.oaUrl && art.oaUrl !== '#' ? `
+                  <a href="${art.oaUrl}" target="_blank" rel="noopener noreferrer" class="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition">
+                    PDF / Kaynak ↗
+                  </a>
+                ` : ''}
+                ${art.doi ? `
+                  <a href="${art.doi}" target="_blank" rel="noopener noreferrer" class="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 transition">
+                    DOI ↗
+                  </a>
+                ` : ''}
+              </div>
+            </div>
+
+          </article>
+        `;
+      }).join('');
+    }
+
+    function focusJournalFromCard(journalName, issn) {
+      const idx = activeDomain.journals.findIndex(j => j.issn === issn || j.name.toLowerCase() === journalName.toLowerCase());
+      if (idx > -1) {
+        selectJournalByIndex(idx);
+      } else if (issn) {
+        activeJournalObj = { name: journalName, issn, pub: 'Akademik Yayıncı' };
+        updateDomainHeader();
+        resetAndFetch();
+        fetchLiveJournalBarMetrics(activeJournalObj);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // MATRİS TABLO GÖRÜNÜMÜ
+    function renderMatrixTable(articles) {
+      const container = document.getElementById('articlesContainer');
+      if (articles.length === 0) {
+        container.innerHTML = `<div class="glass-panel rounded-xl p-8 text-center text-xs text-slate-400">Listelenecek makale bulunamadı.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="glass-panel rounded-xl overflow-hidden border border-slate-800">
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 bg-slate-900/90 text-[11px] font-mono text-slate-400 uppercase">
+                  <th class="p-3">Yıl / Tarih</th>
+                  <th class="p-3">Başlık & Yazarlar</th>
+                  <th class="p-3">Dergi & Q-Dilimi</th>
+                  <th class="p-3">Metrikler</th>
+                  <th class="p-3">Metodoloji</th>
+                  <th class="p-3 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/70 text-xs">
+                ${articles.map(art => {
+                  const titleHL = highlightTextWithStats(art.title);
+                  return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                      <td class="p-3 font-mono text-[11px] text-slate-300 whitespace-nowrap tabular-nums">${art.pubDate}</td>
+                      <td class="p-3 max-w-md">
+                        <button onclick="openInspector('${art.id}')" class="font-semibold text-white hover:text-cyan-300 text-left line-clamp-2">
+                          ${titleHL.html}
+                        </button>
+                        <div class="text-[11px] text-slate-400 mt-0.5 truncate">${escapeHtml(art.authors.slice(0, 3).join(', '))}</div>
+                      </td>
+                      <td class="p-3">
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded border ${art.quartileColor} inline-block mb-1">${art.quartile}</span>
+                        <div class="text-xs text-cyan-300 font-medium">${escapeHtml(art.journalName)}</div>
+                      </td>
+                      <td class="p-3 font-mono text-[11px] whitespace-nowrap space-y-0.5 tabular-nums">
+                        <div>H-Index: <strong class="text-violet-300">${art.hIndex || '-'}</strong></div>
+                        <div>Atıf: <strong class="text-amber-300">${art.citations}</strong></div>
+                      </td>
+                      <td class="p-3">
+                        <div class="flex flex-wrap gap-1">
+                          ${art.methods.map(m => `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">${m}</span>`).join('')}
+                        </div>
+                      </td>
+                      <td class="p-3 text-right whitespace-nowrap space-x-1">
+                        <button onclick="openInspector('${art.id}')" class="px-2 py-1 rounded bg-cyan-500/20 text-cyan-300 text-[11px] font-mono">İncele</button>
+                        <button onclick="copyMarkdownNote('${art.id}')" class="px-2 py-1 rounded bg-slate-800 text-violet-300 text-[11px] font-mono">.md</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 8. SAYFALAMA KONTROLLERİ
+    function renderPaginationControls(perPage) {
+      const totalPages = Math.min(400, Math.ceil(totalApiResults / perPage) || 1);
+      const html = `
+        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-mono text-slate-300 border border-slate-700">« İlk</button>
+        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-mono text-slate-300 border border-slate-700">‹ Önceki</button>
+        <span class="px-3 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold tabular-nums">
+          Sayfa ${currentPage} / ${totalPages}
+        </span>
+        <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-mono text-slate-300 border border-slate-700">Sonraki ›</button>
+      `;
+      document.getElementById('paginationControlsTop').innerHTML = html;
+      document.getElementById('paginationControlsBottom').innerHTML = html;
+    }
+
+    // 9. SAĞDAN AÇILAN DERİN İNCELEME PANELİ (SEGMENTED ABSTRACT INSPECTOR)
+    function openInspector(articleId) {
+      const art = articleMap.get(articleId) || vaultArticles.find(v => v.id === articleId);
+      if (!art) return;
+
+      const drawer = document.getElementById('inspectorDrawer');
+      const backdrop = document.getElementById('inspectorBackdrop');
+      const content = document.getElementById('inspectorContent');
+      const qBadge = document.getElementById('drawerQuartileBadge');
+
+      qBadge.className = `text-xs font-mono px-2.5 py-1 rounded border ${art.quartileColor}`;
+      qBadge.textContent = `${art.quartile} • H-Index: ${art.hIndex || 'N/A'}`;
+
+      const segments = segmentAbstract(art.abstractText);
+      const titleHL = highlightTextWithStats(art.title);
+
+      content.innerHTML = `
+        <div class="space-y-4">
+          <div class="text-xs font-mono text-cyan-400">🏛️ ${escapeHtml(art.journalName)} (${art.pubDate})</div>
+          <h3 class="text-lg font-bold text-white leading-snug">${titleHL.html}</h3>
+          <p class="text-xs text-slate-300">${escapeHtml(art.authors.join(', '))}</p>
+          ${art.institutions.length > 0 ? `<p class="text-[11px] text-slate-400">🏛️ Kurumlar: ${escapeHtml(art.institutions.join(' • '))}</p>` : ''}
+
+          <div class="grid grid-cols-3 gap-3 bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 font-mono text-xs tabular-nums">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Dergi H-İndeksi</span>
+              <strong class="text-violet-300 text-sm">${art.hIndex || 'Belirtilmemiş'}</strong>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">2 Yıllık IF Proxy</span>
+              <strong class="text-cyan-300 text-sm">${art.impact2yr || '-'}</strong>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Toplam Atıf</span>
+              <strong class="text-amber-300 text-sm">${art.citations}</strong>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-slate-400">Bölümlendirilmiş Özet Analizi (Segmented Abstract)</h4>
+            
+            <div class="border-l-2 border-cyan-400 bg-slate-900/60 pl-3.5 py-2.5 pr-3 rounded-r-lg">
+              <span class="text-[10px] font-mono uppercase text-cyan-300 font-semibold block mb-1">🎯 Amaç & Kuramsal Arka Plan</span>
+              <p class="text-xs text-slate-200 leading-relaxed">${highlightTextWithStats(segments.background).html}</p>
+            </div>
+
+            ${segments.methods ? `
+              <div class="border-l-2 border-violet-400 bg-slate-900/60 pl-3.5 py-2.5 pr-3 rounded-r-lg">
+                <span class="text-[10px] font-mono uppercase text-violet-300 font-semibold block mb-1">⚙️ Metodoloji & Örneklem</span>
+                <p class="text-xs text-slate-200 leading-relaxed">${highlightTextWithStats(segments.methods).html}</p>
+              </div>
+            ` : ''}
+
+            ${segments.results ? `
+              <div class="border-l-2 border-emerald-400 bg-slate-900/60 pl-3.5 py-2.5 pr-3 rounded-r-lg">
+                <span class="text-[10px] font-mono uppercase text-emerald-300 font-semibold block mb-1">📊 Temel Bulgular & Sonuç</span>
+                <p class="text-xs text-slate-200 leading-relaxed">${highlightTextWithStats(segments.results).html}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-800">
+            <button onclick="copyAPA('${art.id}')" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200">📋 APA 7 Kopyala</button>
+            <button onclick="copyMarkdownNote('${art.id}')" class="px-3.5 py-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-xs font-mono text-violet-200 border border-violet-500/30">📝 Obsidian (.md) Notu</button>
+            ${art.doi ? `<a href="${art.doi}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-mono text-white">Tam Metne Git (DOI) ↗</a>` : ''}
+          </div>
+        </div>
+      `;
+
+      backdrop.classList.remove('hidden');
+      drawer.classList.remove('translate-x-full');
+    }
+
+    function closeInspector() {
+      document.getElementById('inspectorBackdrop').classList.add('hidden');
+      document.getElementById('inspectorDrawer').classList.add('translate-x-full');
+    }
+
+    function segmentAbstract(text) {
+      const sentences = text.split(/(?<=[.!?])\s+/);
+      if (sentences.length <= 3) {
+        return { background: text, methods: null, results: null };
+      }
+      const third = Math.ceil(sentences.length / 3);
+      return {
+        background: sentences.slice(0, third).join(' '),
+        methods: sentences.slice(third, third * 2).join(' '),
+        results: sentences.slice(third * 2).join(' ')
+      };
+    }
+
+    // 10. DERGİ KATALOĞU, MOBİL FİLTRELER VE CTRL+K KOMUT PALETİ
+    function openJournalCatalogModal() {
+      document.getElementById('journalCatalogModal').classList.remove('hidden');
+      renderJournalCatalogList();
+    }
+
+    function closeJournalCatalogModal() {
+      document.getElementById('journalCatalogModal').classList.add('hidden');
+    }
+
+    function renderJournalCatalogList() {
+      const q = (document.getElementById('catalogSearchInput').value || '').toLowerCase().trim();
+      const body = document.getElementById('journalCatalogBody');
+
+      body.innerHTML = PSYCH_DOMAINS.map(dom => {
+        const matchedJournals = dom.journals.filter(j => !q || j.name.toLowerCase().includes(q) || j.issn.toLowerCase().includes(q));
+        if (matchedJournals.length === 0) return '';
+        return `
+          <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2.5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <h4 class="text-xs font-mono font-bold text-cyan-300">${dom.name}</h4>
+              <span class="text-[10px] font-mono text-emerald-400">${matchedJournals.length} Q1</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              ${matchedJournals.map(j => `
+                <button 
+                  onclick="selectDomainAndJournal('${dom.id}', '${j.issn}')"
+                  class="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-950 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 border border-slate-800 hover:border-emerald-500/40 transition text-left">
+                  ★ ${j.name} <span class="text-[10px] text-slate-500">(${j.issn})</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectDomainAndJournal(domainId, issn) {
+      closeJournalCatalogModal();
+      closeCommandPalette();
+      isVaultMode = false;
+      activeDomain = PSYCH_DOMAINS.find(d => d.id === domainId) || PSYCH_DOMAINS[0];
+      const jIdx = activeDomain.journals.findIndex(j => j.issn === issn);
+      renderDomains();
+      selectJournalByIndex(jIdx >= 0 ? jIdx : null);
+    }
+
+    function openMobileFiltersModal() {
+      document.getElementById('mobileFiltersModal').classList.remove('hidden');
+    }
+
+    function closeMobileFiltersModal() {
+      document.getElementById('mobileFiltersModal').classList.add('hidden');
+    }
+
+    function openCommandPalette() {
+      document.getElementById('commandPaletteModal').classList.remove('hidden');
+      const input = document.getElementById('cmdInput');
+      input.value = '';
+      input.focus();
+      renderCommandItems();
+    }
+
+    function closeCommandPalette() {
+      document.getElementById('commandPaletteModal').classList.add('hidden');
+    }
+
+    function renderCommandItems() {
+      const q = (document.getElementById('cmdInput').value || '').toLowerCase().trim();
+      const list = document.getElementById('cmdList');
+      let items = [];
+
+      PSYCH_DOMAINS.forEach(d => {
+        if (!q || d.name.toLowerCase().includes(q)) {
+          items.push({ label: `Alan Seç: ${d.name}`, action: () => { selectDomain(d.id); closeCommandPalette(); } });
+        }
+        d.journals.forEach(j => {
+          if (!q || j.name.toLowerCase().includes(q) || j.issn.toLowerCase().includes(q)) {
+            items.push({ label: `🏛️ Dergiye Git: ${j.name} (${j.issn})`, action: () => { selectDomainAndJournal(d.id, j.issn); } });
+          }
+        });
+      });
+
+      list.innerHTML = items.slice(0, 18).map((it, idx) => `
+        <button onclick="triggerCmdItem(${idx})" class="w-full text-left px-3 py-2 rounded-lg hover:bg-cyan-500/20 text-xs font-mono text-slate-200 flex items-center justify-between">
+          <span class="truncate pr-2">${it.label}</span>
+          <span class="text-[10px] text-slate-500 shrink-0">Seç ↵</span>
+        </button>
+      `).join('');
+
+      window._currentCmdActions = items.slice(0, 18).map(i => i.action);
+    }
+
+    function triggerCmdItem(idx) {
+      if (window._currentCmdActions && window._currentCmdActions[idx]) {
+        window._currentCmdActions[idx]();
+      }
+    }
+
+    // 11. KİŞİSEL OKUMA KASASI (VAULT) VE GÜVENLİ PANO KOPYALAMA
+    function copyTextSafe(text, msg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(msg);
+      } catch (e) {
+        if (navigator.clipboard) navigator.clipboard.writeText(text);
+        showToast(msg);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function toggleVaultArticle(articleId) {
+      const existingIdx = vaultArticles.findIndex(v => v.id === articleId);
+      if (existingIdx > -1) {
+        vaultArticles.splice(existingIdx, 1);
+        showToast('Makale kasadan çıkarıldı.');
+      } else {
+        const art = articleMap.get(articleId);
+        if (art) {
+          vaultArticles.unshift(art);
+          showToast('⭐ Makale kişisel okuma kasanıza kaydedildi!');
+        }
+      }
+      try {
+        localStorage.setItem('psychnexus_vault_v25', JSON.stringify(vaultArticles));
+      } catch (e) {}
+      updateVaultBadge();
+      applyClientFilters();
+    }
+
+    function updateVaultBadge() {
+      document.getElementById('vaultCountBadge').textContent = vaultArticles.length;
+    }
+
+    function toggleVaultMode() {
+      isVaultMode = !isVaultMode;
+      renderDomains();
+      updateDomainHeader();
+      if (isVaultMode) {
+        renderVaultView();
+      } else {
+        resetAndFetch();
+      }
+    }
+
+    function renderVaultView() {
+      vaultArticles.forEach(a => articleMap.set(a.id, a));
+      applyClientFilters();
+    }
+
+    function toggleAbstract(idx) {
+      const p = document.getElementById(`abs-${idx}`);
+      const btn = document.getElementById(`abs-btn-${idx}`);
+      if (!p || !btn) return;
+      if (p.classList.contains('line-clamp-3')) {
+        p.classList.remove('line-clamp-3');
+        btn.textContent = '- Özeti Daralt';
+      } else {
+        p.classList.add('line-clamp-3');
+        btn.textContent = '+ Özeti Tam Göster';
+      }
+    }
+
+    function copyAPA(articleId) {
+      const art = articleMap.get(articleId) || vaultArticles.find(v => v.id === articleId);
+      if (!art) return;
+      const authorStr = art.authors.length > 0 ? art.authors.join(', ') : 'Yazar Belirtilmemiş';
+      const apa = `${authorStr} (${art.pubYear}). ${art.title}. ${art.journalName}. ${art.doi}`;
+      copyTextSafe(apa, '📋 APA 7 formatında atıf panoya kopyalandı!');
+    }
+
+    function copyMarkdownNote(articleId) {
+      const art = articleMap.get(articleId) || vaultArticles.find(v => v.id === articleId);
+      if (!art) return;
+      const md = `---
+title: "${art.title.replace(/"/g, '\\"')}"
+authors: [${art.authors.map(a => `"${a}"`).join(', ')}]
+journal: "${art.journalName}"
+issn: "${art.issn}"
+year: ${art.pubYear}
+date: "${art.pubDate}"
+quartile: "${art.quartile}"
+journal_h_index: ${art.hIndex || 0}
+citations: ${art.citations}
+fwci: ${art.fwci || 0}
+domain: "${activeDomain.name}"
+methodology: [${art.methods.map(m => `"${m}"`).join(', ')}]
+doi: "${art.doi}"
+tags:
+  - literature-note
+  - psychology/${activeDomain.id}
+---
+
+# ${art.title}
+
+## Scientometric Metadata
+- **Dergi:** ${art.journalName} (${art.quartile} | H-Index: ${art.hIndex || 'N/A'} | 2yr IF: ${art.impact2yr || 'N/A'})
+- **Yayın Tarihi:** ${art.pubDate}
+- **Atıf Sayısı:** ${art.citations}
+- **DOI:** ${art.doi}
+
+## Özet (Abstract)
+${art.abstractText}
+
+## Sentez ve Araştırma Notlarım
+- 
+`;
+      copyTextSafe(md, '📝 Obsidian YAML Frontmatter (.md) notu panoya kopyalandı!');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    window.onload = function () {
+      initApp();
+    };
+  </script>
+</body>
+</html>
