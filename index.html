@@ -2220,26 +2220,10 @@ ${art.abstractText}
     const ATLAS_UID = () => Math.random().toString(36).slice(2, 9);
 
     function createAtlasSeed() {
-      const mk = (o) => Object.assign({
-        id: ATLAS_UID(), title: '', authors: '', year: '', journal: '', doi: '',
-        question: '', method: '', sample: '', measures: '', finding: '', limits: '',
-        relation: '', tags: [], themes: {}, hl: [], hasPdf: false, example: true,
-        space: 'calisma', status: '', summary: '', surprise: '', x: 0, y: 0
-      }, o);
-      const haidt = mk({ title: 'The emotional dog and its rational tail: A social intuitionist approach to moral judgment', authors: 'Haidt, J.', year: '2001', journal: 'Psychological Review', question: 'Ahlaki yargı akıl yürütmeyle mi, sezgiyle mi oluşur?', method: 'Kuramsal', finding: 'Ahlaki yargılar çoğunlukla hızlı sezgilerle oluşur; akıl yürütme çoğu zaman bu yargıyı sonradan gerekçelendirmek için çalışır.', tags: ['ahlaki yargı', 'sezgi'], x: 60, y: 90 });
-      const g01 = mk({ title: 'An fMRI investigation of emotional engagement in moral judgment', authors: 'Greene, J. D.; Sommerville, R. B.; Nystrom, L. E.; Darley, J. M.; Cohen, J. D.', year: '2001', journal: 'Science', method: 'Deneysel', finding: 'Kişisel ahlaki ikilemler, kişisel olmayanlara kıyasla duyguyla ilişkili beyin bölgelerini daha çok etkinleştirir.', tags: ['ahlaki yargı', 'ikili süreç'], x: 480, y: 0 });
-      const g08 = mk({ title: 'Cognitive load selectively interferes with utilitarian moral judgment', authors: 'Greene, J. D.; Morelli, S. A.; Lowenberg, K.; Nystrom, L. E.; Cohen, J. D.', year: '2008', journal: 'Cognition', question: 'Bilişsel yük faydacı yargıyı mı, faydacı olmayan yargıyı mı etkiler?', method: 'Deneysel', finding: 'Bilişsel yük, faydacı ahlaki yargıları yavaşlatır; faydacı olmayan yargıları yavaşlatmaz.', tags: ['ikili süreç'], x: 900, y: 110 });
-      const bon = mk({ title: 'The social dilemma of autonomous vehicles', authors: 'Bonnefon, J.-F.; Shariff, A.; Rahwan, I.', year: '2016', journal: 'Science', method: 'Deneysel', finding: 'İnsanlar yolcuyu feda eden faydacı otonom araçları ilke olarak onaylar, ama kendileri yolcuyu koruyan araçları satın almak ister.', tags: ['yapay zekâ', 'ahlaki yargı'], x: 250, y: 350 });
-      const big = mk({ title: 'People are averse to machines making moral decisions', authors: 'Bigman, Y. E.; Gray, K.', year: '2018', journal: 'Cognition', method: 'Deneysel', finding: 'İnsanlar sonuç aynı olsa bile ahlaki kararları makinelerin vermesinden kaçınır.', tags: ['yapay zekâ'], x: 690, y: 370 });
-      const L = (a, b, t, r) => ({ id: ATLAS_UID(), from: a.id, to: b.id, type: t, reason: r });
       return {
         v: 1,
-        papers: [haidt, g01, g08, bon, big],
-        links: [
-          L(g01, haidt, 'destek', 'Ahlaki yargıda duygusal sürecin rolüne sinirsel kanıt sunar.'),
-          L(g08, g01, 'genislet', 'Bilişsel yük manipülasyonuyla ikili süreç açıklamasını davranışsal olarak sınar.'),
-          L(big, bon, 'yapi', 'İkisi de makinelerin ahlaki kararlarına yönelik insan tutumlarını inceler.')
-        ],
+        papers: [],
+        links: [],
         types: [
           { id: 'destek', name: 'Destekler', color: 'var(--l-destek)' },
           { id: 'curut', name: 'Çürütür', color: 'var(--l-curut)' },
@@ -2250,7 +2234,7 @@ ${art.abstractText}
         ],
         themes: [{ id: ATLAS_UID(), name: 'Benim çalışmamla ilişkisi' }],
         view: null,
-        ui: { screen: 'okuma', paperId: haidt.id, theme: 'dark', tone: 'dark', zoom: 1, space: 'calisma', pen: 'bulgu' }
+        ui: { screen: 'okuma', paperId: null, theme: 'dark', tone: 'dark', zoom: 1, space: 'calisma', pen: 'bulgu' }
       };
     }
 
@@ -2259,7 +2243,18 @@ ${art.abstractText}
         const raw = localStorage.getItem(ATLAS_LS_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed && Array.isArray(parsed.papers)) return parsed;
+          if (parsed && Array.isArray(parsed.papers)) {
+            const exIds = new Set(parsed.papers.filter(p => p.example).map(p => p.id));
+            if (exIds.size > 0) {
+              parsed.papers = parsed.papers.filter(p => !p.example);
+              parsed.links = (parsed.links || []).filter(l => !exIds.has(l.from) && !exIds.has(l.to));
+              if (parsed.ui && exIds.has(parsed.ui.paperId)) {
+                parsed.ui.paperId = parsed.papers[0]?.id || null;
+              }
+              saveAtlasState(parsed);
+            }
+            return parsed;
+          }
         }
       } catch (e) {}
       return createAtlasSeed();

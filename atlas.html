@@ -502,7 +502,7 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
       <textarea class="in code" id="dImp" placeholder="JSON yedeğini buraya yapıştır"></textarea>
       <div class="actions"><input type="file" id="dFile" accept="application/json,.json" style="max-width:220px" class="in"><span class="grow"></span><button class="btn primary" id="dImport">Birleştirerek içe aktar</button></div>
     </div>
-    <div class="actions" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn danger" id="dClearEx">Örnek makaleleri kaldır</button><span class="grow"></span><button class="btn" id="dClose">Kapat</button></div>
+    <div class="actions" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn danger" id="dClearEx" hidden>Örnek makaleleri kaldır</button><span class="grow"></span><button class="btn" id="dClose">Kapat</button></div>
     <div class="field" id="vaultBox" hidden><label>Markdown klasörü</label>
       <div class="doi"><input class="in" id="vaultPath" readonly placeholder="Henüz klasör seçilmedi"><button class="btn" id="vaultPick">Klasör seç</button></div>
       <div class="actions"><button class="btn sm" id="vaultNow">Şimdi yaz</button><button class="btn sm" id="vaultOpen">Klasörü aç</button><span class="grow"></span><small id="vaultSt"></small></div>
@@ -560,21 +560,19 @@ const DESK=window.atlasDesktop||null;
 
 /* ---------- Durum ---------- */
 function seed(){
-  const mk=(o)=>Object.assign({id:uid(),title:'',authors:'',year:'',journal:'',doi:'',question:'',method:'',sample:'',measures:'',finding:'',limits:'',relation:'',tags:[],themes:{},hl:[],hasPdf:false,example:true,x:0,y:0},o);
-  const haidt=mk({title:'The emotional dog and its rational tail: A social intuitionist approach to moral judgment',authors:'Haidt, J.',year:'2001',journal:'Psychological Review',question:'Ahlaki yargı akıl yürütmeyle mi, sezgiyle mi oluşur?',method:'Kuramsal',finding:'Ahlaki yargılar çoğunlukla hızlı sezgilerle oluşur; akıl yürütme çoğu zaman bu yargıyı sonradan gerekçelendirmek için çalışır.',tags:['ahlaki yargı','sezgi'],x:60,y:90});
-  const g01=mk({title:'An fMRI investigation of emotional engagement in moral judgment',authors:'Greene, J. D.; Sommerville, R. B.; Nystrom, L. E.; Darley, J. M.; Cohen, J. D.',year:'2001',journal:'Science',method:'Deneysel',finding:'Kişisel ahlaki ikilemler, kişisel olmayanlara kıyasla duyguyla ilişkili beyin bölgelerini daha çok etkinleştirir.',tags:['ahlaki yargı','ikili süreç'],x:480,y:0});
-  const g08=mk({title:'Cognitive load selectively interferes with utilitarian moral judgment',authors:'Greene, J. D.; Morelli, S. A.; Lowenberg, K.; Nystrom, L. E.; Cohen, J. D.',year:'2008',journal:'Cognition',question:'Bilişsel yük faydacı yargıyı mı, faydacı olmayan yargıyı mı etkiler?',method:'Deneysel',finding:'Bilişsel yük, faydacı ahlaki yargıları yavaşlatır; faydacı olmayan yargıları yavaşlatmaz.',tags:['ikili süreç'],x:900,y:110});
-  const bon=mk({title:'The social dilemma of autonomous vehicles',authors:'Bonnefon, J.-F.; Shariff, A.; Rahwan, I.',year:'2016',journal:'Science',method:'Deneysel',finding:'İnsanlar yolcuyu feda eden faydacı otonom araçları ilke olarak onaylar, ama kendileri yolcuyu koruyan araçları satın almak ister.',tags:['yapay zekâ','ahlaki yargı'],x:250,y:350});
-  const big=mk({title:'People are averse to machines making moral decisions',authors:'Bigman, Y. E.; Gray, K.',year:'2018',journal:'Cognition',method:'Deneysel',finding:'İnsanlar sonuç aynı olsa bile ahlaki kararları makinelerin vermesinden kaçınır.',tags:['yapay zekâ'],x:690,y:370});
-  const L=(a,b,t,r)=>({id:uid(),from:a.id,to:b.id,type:t,reason:r});
-  return {v:1,papers:[haidt,g01,g08,bon,big],
-    links:[L(g01,haidt,'destek','Ahlaki yargıda duygusal sürecin rolüne sinirsel kanıt sunar.'),L(g08,g01,'genislet','Bilişsel yük manipülasyonuyla ikili süreç açıklamasını davranışsal olarak sınar.'),L(big,bon,'yapi','İkisi de makinelerin ahlaki kararlarına yönelik insan tutumlarını inceler.')],
+  return {v:1,papers:[],links:[],
     types:DEF_TYPES.map(t=>({...t})),themes:[{id:uid(),name:'Benim çalışmamla ilişkisi'}],view:null,
-    ui:{screen:'okuma',paperId:haidt.id,theme:'dark',tone:'dark',zoom:1}};
+    ui:{screen:'okuma',paperId:null,theme:'dark',tone:'dark',zoom:1}};
 }
 let S=null;
 try{ const raw=localStorage.getItem(LS); if(raw){ S=JSON.parse(raw); } }catch(e){}
 if(!S||!Array.isArray(S.papers)) S=seed();
+const exIds=new Set(S.papers.filter(p=>p.example).map(p=>p.id));
+if(exIds.size){
+  S.papers=S.papers.filter(p=>!p.example);
+  S.links=(S.links||[]).filter(l=>!exIds.has(l.from)&&!exIds.has(l.to));
+  try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){}
+}
 S.ui=S.ui||{}; S.types=S.types&&S.types.length?S.types:DEF_TYPES.map(t=>({...t})); S.themes=S.themes||[]; S.links=S.links||[];
 if(!S.papers.find(p=>p.id===S.ui.paperId)) S.ui.paperId=S.papers[0]&&S.papers[0].id||null;
 S.papers.forEach(p=>{ p.space=p.space||'calisma'; p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; });
