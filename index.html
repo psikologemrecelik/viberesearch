@@ -66,6 +66,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Hide spin buttons on number inputs for clean year entry */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
     body {
       background-color: var(--bg-base);
       background-image: 
@@ -178,9 +188,10 @@
     }
 
     .badge-q1-elite {
-      background: color-mix(in srgb, var(--neon-emerald) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--neon-emerald) 48%, transparent);
+      background: color-mix(in srgb, var(--neon-emerald) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--neon-emerald) 55%, transparent);
       color: var(--neon-emerald);
+      box-shadow: 0 0 14px -4px color-mix(in srgb, var(--neon-emerald) 30%, transparent);
     }
 
     .badge-q1 {
@@ -222,7 +233,7 @@
     /* Smart Scroll Header Collapse */
     #collapsibleTaxonomy {
       transition: max-height 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
-      max-height: 360px;
+      max-height: 320px;
       opacity: 1;
     }
     #collapsibleTaxonomy.collapsed-nav {
@@ -255,7 +266,7 @@
           </span>
         </button>
 
-        <!-- Center: Clean Search Bar (Respects active tab below without Mode Error) -->
+        <!-- Center: Clean Search Bar -->
         <div class="relative flex-1 max-w-2xl">
           <div class="flex items-center bg-white/[0.03] border border-white/[0.09] focus-within:border-[var(--neon-primary)] rounded-xl transition overflow-hidden">
             
@@ -288,9 +299,8 @@
           <div id="autocompleteMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 luxury-panel rounded-xl z-50 overflow-hidden divide-y divide-white/[0.06]"></div>
         </div>
 
-        <!-- Right: Only 3 Non-Redundant Controls (Dergiler, Kasam, Tema) -->
+        <!-- Right: 3 Non-Redundant Controls (Dergiler, Kasam, Tema) -->
         <div class="flex items-center gap-1.5 shrink-0">
-          <!-- Journal Directory & Live Discovery Modal -->
           <button 
             onclick="openDirectoryModal()" 
             title="Dergi İndeksi & 100.000+ Canlı Dergi Arama"
@@ -299,7 +309,6 @@
             <span class="hidden lg:inline">Dergi Kataloğu</span>
           </button>
 
-          <!-- Vault / Collections -->
           <button 
             onclick="toggleVaultMode()" 
             id="topVaultBtn"
@@ -310,7 +319,6 @@
             <span id="vaultCountBadge" class="text-[11px] font-semibold title-ergonomic">0</span>
           </button>
 
-          <!-- Theme Palette Switcher (Default: Warm Amber Mode) -->
           <button 
             onclick="toggleThemeMode()" 
             id="themeToggleBtn"
@@ -322,15 +330,45 @@
 
       </div>
 
-      <!-- ROW 2: GESTALT-GROUPED INLINE FILTER RIBBON -->
+      <!-- ROW 2: GESTALT-GROUPED INLINE FILTER RIBBON (With Custom Year Input & Explicit Q1 Filter) -->
       <div class="flex items-center justify-between gap-2 overflow-x-auto touch-scroll pt-1.5 border-t border-white/[0.05] text-[11px] font-mono">
         
-        <!-- GROUP 1: Temporal Controls (Years + Cap Future Dates) -->
+        <!-- GROUP 1: Temporal Presets + Custom Year Range Input + Cap Future Dates -->
         <div class="flex items-center gap-1 shrink-0">
-          <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">Tümü</button>
-          <button onclick="setYearFilter('2026')" data-yr="2026" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">2026</button>
-          <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip px-2.5 py-1 rounded-lg neon-primary-active transition">2024+</button>
-          <button onclick="setYearFilter('5yr')" data-yr="5yr" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">Son 5 Yıl</button>
+          <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">Tümü</button>
+          <button onclick="setYearFilter('2026')" data-yr="2026" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">2026</button>
+          <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip px-2 py-1 rounded-lg neon-primary-active transition">2024+</button>
+          <button onclick="setYearFilter('5yr')" data-yr="5yr" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">Son 5 Yıl</button>
+
+          <!-- Custom Year Range Box (Başlangıç - Bitiş) -->
+          <div id="customYearBox" class="inline-flex items-center rounded-lg glass-pill px-1.5 py-0.5 gap-1 ml-0.5 focus-within:border-[var(--neon-primary)] transition">
+            <input 
+              id="customYearFrom" 
+              type="number" 
+              min="1900" 
+              max="2030" 
+              placeholder="1990" 
+              title="Başlangıç Yılı"
+              class="w-11 bg-transparent text-center text-[11px] title-ergonomic placeholder-slate-600 focus:outline-none tabular-nums"
+            />
+            <span class="text-slate-600">–</span>
+            <input 
+              id="customYearTo" 
+              type="number" 
+              min="1900" 
+              max="2030" 
+              placeholder="2026" 
+              title="Bitiş Yılı"
+              class="w-11 bg-transparent text-center text-[11px] title-ergonomic placeholder-slate-600 focus:outline-none tabular-nums"
+            />
+            <button 
+              onclick="applyCustomYearRange()" 
+              title="Özel Yıl Aralığını Uygula"
+              class="px-1.5 py-0.5 rounded bg-white/[0.06] hover:bg-[var(--neon-primary)] hover:text-black text-[10px] title-ergonomic transition">
+              ↵
+            </button>
+          </div>
+
           <button 
             id="capDateBtn" 
             onclick="toggleCapFuture()" 
@@ -341,26 +379,16 @@
           </button>
         </div>
 
-        <!-- Gestalt Visual Separator -->
         <div class="h-4 w-[1px] bg-white/[0.08] shrink-0 hidden sm:block"></div>
 
-        <!-- GROUP 2: Analytical & API-Level Methodology Controls -->
+        <!-- GROUP 2: Server-Side Methodology (Including General Literature Review) & Sort -->
         <div class="flex items-center gap-1.5 shrink-0">
-          <!-- Concept Intersection Matrix Toggle -->
-          <button 
-            id="matrixToggleBtn"
-            onclick="toggleIntersectionBar()" 
-            title="Çift Kavram Çarpıştırıcı (Kesişim Matrisi)"
-            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition">
-            <i data-lucide="git-merge" class="w-3 h-3 text-[var(--neon-violet)]"></i>
-            <span>+ Kesişim</span>
-          </button>
-
           <!-- Server-Side (API) Methodology Filter -->
           <div class="relative flex items-center">
             <select id="methodSelect" onchange="resetAndFetch()" aria-label="Çalışma Metodolojisi" class="themed-select rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-mono focus:outline-none focus:border-[var(--neon-primary)] appearance-none cursor-pointer">
               <option value="ALL">Yöntem: Tümü</option>
-              <option value="META">Meta-Analiz & Derleme</option>
+              <option value="LIT_REVIEW">Genel İnceleme (Review / Overview)</option>
+              <option value="META">Meta-Analiz & Sistematik Derleme</option>
               <option value="RCT">Deneysel / RKÇ</option>
               <option value="NEURO">fMRI / EEG / Nörogörüntüleme</option>
               <option value="LONG">Boylamasına (Longitudinal)</option>
@@ -380,11 +408,20 @@
           </div>
         </div>
 
-        <!-- Gestalt Visual Separator -->
         <div class="h-4 w-[1px] bg-white/[0.08] shrink-0 hidden sm:block"></div>
 
-        <!-- GROUP 3: Format & View Density -->
+        <!-- GROUP 3: Explicit Q1 Toggle, Open Access PDF & Compact View -->
         <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Explicit Sadece Q1 Filter Button (Restored & Active by Default) -->
+          <button 
+            id="q1FilterBtn" 
+            onclick="toggleQ1Only()" 
+            title="Açıkken yalnızca Q1 ve yüksek etki faktörlü prestijli dergileri gösterir; kapatıldığında Q2/Q3 tüm indeksli çalışmaları dahil eder"
+            class="px-2.5 py-1 rounded-lg badge-q1-elite flex items-center gap-1.5 transition font-semibold">
+            <i data-lucide="award" class="w-3 h-3"></i>
+            <span>Sadece Q1</span>
+          </button>
+
           <button 
             id="oaFilterBtn" 
             onclick="toggleOAFilter()" 
@@ -405,10 +442,10 @@
 
       </div>
 
-      <!-- ROW 3 & 4: COLLAPSIBLE TAXONOMY, JOURNAL RAIL & INTERSECTION BAR -->
+      <!-- ROW 3 & 4: COLLAPSIBLE TAXONOMY & JOURNAL RAIL -->
       <div id="collapsibleTaxonomy" class="space-y-1.5 pt-0.5">
         
-        <!-- Unified Scope & Discipline Strip (Starts with Favori Dergilerim & Küresel) -->
+        <!-- Unified Scope & Discipline Strip -->
         <div id="disciplineStrip" class="flex items-center gap-1.5 overflow-x-auto touch-scroll py-0.5"></div>
 
         <!-- Journal Switcher Strip -->
@@ -428,15 +465,6 @@
             <span>Resmi Site</span>
             <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
           </a>
-        </div>
-
-        <!-- DUAL CONCEPT INTERSECTION MATRIX BAR (Warm Theme Compatible) -->
-        <div id="intersectionBar" class="hidden items-center gap-1.5 overflow-x-auto touch-scroll luxury-panel rounded-xl px-2.5 py-1.5 text-[11px] font-mono">
-          <span class="text-[var(--neon-violet)] shrink-0 flex items-center gap-1 pr-1.5 border-r border-white/[0.08] font-semibold">
-            <i data-lucide="git-merge" class="w-3 h-3"></i>
-            <span>Kesişim (AND):</span>
-          </span>
-          <div id="intersectionChips" class="flex items-center gap-1.5 shrink-0"></div>
         </div>
 
       </div>
@@ -576,10 +604,6 @@
       <i data-lucide="heart" class="w-4 h-4"></i>
       <span>Favoriler (<span id="mobFavCount">0</span>)</span>
     </button>
-    <button onclick="toggleIntersectionBar()" class="flex flex-col items-center gap-1 text-[var(--neon-violet)]">
-      <i data-lucide="git-merge" class="w-4 h-4"></i>
-      <span>Kesişim</span>
-    </button>
     <button onclick="openDirectoryModal()" class="flex flex-col items-center gap-1 text-slate-300">
       <i data-lucide="library" class="w-4 h-4"></i>
       <span>Dergiler</span>
@@ -634,8 +658,9 @@
       'siberpsikoloji': 'cyberpsychology human computer interaction'
     };
 
-    // 2. SERVER-SIDE (API) METHODOLOGY QUERIES (Fixes client-side empty filtering)
+    // 2. SERVER-SIDE (API) METHODOLOGY QUERIES (Includes General Literature Review / Overview)
     const API_METHOD_QUERIES = {
+      'LIT_REVIEW': '("literature review" OR "narrative review" OR "scoping review" OR "integrative review" OR "theoretical review" OR "overview")',
       'META': '("meta-analysis" OR "systematic review")',
       'RCT': '("randomized controlled" OR "experimental study" OR "clinical trial" OR "experiment")',
       'NEURO': '(fMRI OR EEG OR ERP OR neuroimaging OR "prefrontal cortex" OR amygdala)',
@@ -643,18 +668,7 @@
       'PSYCHOM': '(psychometric OR "scale development" OR "confirmatory factor" OR "item response")'
     };
 
-    // 3. CONCEPT INTERSECTION MATRIX PRESETS
-    const INTERSECTION_PRESETS = [
-      { id: 'ai_algo', label: '+ Yapay Zeka & Algoritma', query: '("artificial intelligence" OR "large language model" OR "human-AI" OR algorithmic)' },
-      { id: 'metacog', label: '+ Üstbiliş (Metacognition)', query: '(metacognition OR metacognitive OR "confidence judgment" OR "self-monitoring")' },
-      { id: 'moral', label: '+ Ahlak & Karar Verme', query: '("moral decision" OR "moral dilemma" OR "moral judgment" OR prosocial)' },
-      { id: 'emotion_reg', label: '+ Duygu Düzenleme', query: '("emotion regulation" OR reappraisal OR "affective dynamics")' },
-      { id: 'trauma_stress', label: '+ Travma & Kronik Stres', query: '(trauma OR PTSD OR "adverse childhood" OR dissociation)' },
-      { id: 'neuro_img', label: '+ Nörogörüntüleme (fMRI/EEG)', query: '(fMRI OR EEG OR neuroimaging OR "prefrontal cortex" OR amygdala)' },
-      { id: 'attachment', label: '+ Bağlanma & İlişkiler', query: '("attachment style" OR "romantic relationship" OR interpersonal)' }
-    ];
-
-    // 4. UNIFIED 16-DISCIPLINE TAXONOMY (First item is Global Scholar Scope)
+    // 3. UNIFIED 16-DISCIPLINE TAXONOMY
     const PSYCH_DOMAINS = [
       {
         id: 'global_all',
@@ -886,17 +900,18 @@
     }));
 
     // APPLICATION STATE
-    let activeDomain = PSYCH_DOMAINS[0]; // Starts on 'Tüm Alanlar (Küresel)'
+    let activeDomain = PSYCH_DOMAINS[0];
     let activeJournal = null;
     let isFavJournalsStream = false;
-    let activeYearFilter = '2024+';
+    let activeYearFilter = '2024+'; // 'all' | '2026' | '2024+' | '5yr' | 'custom'
+    let customYearFrom = null;
+    let customYearTo = null;
     let capFutureDates = false;
-    let activeIntersection = null;
+    let onlyQ1 = true; // Explicit Q1 Filter (Restored & Active by Default)
     let onlyOA = false;
     let isCompactView = false;
     let isVaultMode = false;
 
-    // Warm Mode is DEFAULT (true unless user explicitly saved 'cyber')
     let isCyberMode = localStorage.getItem('vibepsych_theme') === 'cyber';
 
     let activeAuthorFilter = null;
@@ -919,7 +934,7 @@
     let dirSearchTimer = null;
     let lastScrollY = 0;
 
-    // 5. INITIALIZATION
+    // 4. INITIALIZATION
     function initVibePsych() {
       if (isCyberMode) {
         document.body.classList.add('cyber-mode');
@@ -929,7 +944,6 @@
       updateCounters();
       renderDisciplineStrip();
       renderJournalStrip();
-      renderIntersectionChips();
       resetAndFetch();
 
       document.getElementById('searchInput').addEventListener('keydown', (e) => {
@@ -937,6 +951,13 @@
           hideAutocomplete();
           executeSearch();
         }
+      });
+
+      // Custom Year Inputs Enter Key Support
+      ['customYearFrom', 'customYearTo'].forEach(id => {
+        document.getElementById(id).addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') applyCustomYearRange();
+        });
       });
 
       document.addEventListener('click', (e) => {
@@ -970,7 +991,7 @@
       });
     }
 
-    // 6. THEME SWITCHER (Default: Warm Amber Mode)
+    // 5. THEME SWITCHER
     function toggleThemeMode() {
       isCyberMode = !isCyberMode;
       document.body.classList.toggle('cyber-mode', isCyberMode);
@@ -985,66 +1006,7 @@
       }
     }
 
-    // 7. CONCEPT INTERSECTION MATRIX
-    function toggleIntersectionBar() {
-      const bar = document.getElementById('intersectionBar');
-      const btn = document.getElementById('matrixToggleBtn');
-      const isHidden = bar.classList.contains('hidden');
-      if (isHidden) {
-        bar.classList.remove('hidden');
-        bar.classList.add('flex');
-        btn.classList.add('neon-violet-active');
-      } else {
-        bar.classList.add('hidden');
-        bar.classList.remove('flex');
-        if (!activeIntersection) btn.classList.remove('neon-violet-active');
-      }
-    }
-
-    function renderIntersectionChips() {
-      const box = document.getElementById('intersectionChips');
-      box.innerHTML = INTERSECTION_PRESETS.map(p => {
-        const active = activeIntersection && activeIntersection.id === p.id;
-        return `
-          <button 
-            onclick="selectIntersection('${p.id}')"
-            class="px-2.5 py-0.5 rounded-lg whitespace-nowrap transition border ${
-              active ? 'neon-violet-active' : 'glass-pill hover:text-white'
-            }">
-            ${p.label}
-          </button>
-        `;
-      }).join('') + `
-        <button onclick="promptCustomIntersection()" class="px-2.5 py-0.5 rounded-lg glass-pill hover:border-[var(--neon-primary)] text-[var(--neon-primary)] whitespace-nowrap">
-          + Özel Kavram...
-        </button>
-      `;
-    }
-
-    function selectIntersection(id) {
-      if (activeIntersection && activeIntersection.id === id) {
-        activeIntersection = null;
-      } else {
-        activeIntersection = INTERSECTION_PRESETS.find(p => p.id === id) || null;
-      }
-      renderIntersectionChips();
-      resetAndFetch();
-    }
-
-    function promptCustomIntersection() {
-      const term = prompt('Mevcut akışla kesiştirmek (AND) istediğiniz ikinci kavramı yazın:');
-      if (!term || !term.trim()) return;
-      const clean = term.trim();
-      activeIntersection = {
-        id: 'custom',
-        label: `+ ${clean}`,
-        query: `(${translateQuery(clean)})`
-      };
-      renderIntersectionChips();
-      resetAndFetch();
-    }
-
-    // 8. FAVORITE JOURNALS ENGINE (#D2042D)
+    // 6. FAVORITE JOURNALS ENGINE (#D2042D)
     function isJournalFavorited(issn, name) {
       return favJournals.some(j => (issn && j.issn === issn) || j.name.toLowerCase() === (name || '').toLowerCase());
     }
@@ -1073,8 +1035,7 @@
         if (favJournals.length === 0) isFavJournalsStream = false;
         resetAndFetch();
       } else {
-        renderCards(currentArticles);
-        lucide.createIcons();
+        renderFilteredCards();
       }
     }
 
@@ -1101,11 +1062,10 @@
       document.getElementById('mobVaultCount').textContent = vaultList.length;
     }
 
-    // 9. UNIFIED DISCIPLINE & JOURNAL STRIP RENDERERS (Zero Mode Error)
+    // 7. UNIFIED DISCIPLINE & JOURNAL STRIP RENDERERS
     function renderDisciplineStrip() {
       const strip = document.getElementById('disciplineStrip');
       
-      // 1st Tab: Favori Dergilerim (#D2042D)
       let html = `
         <button 
           onclick="toggleFavJournalsStream()"
@@ -1119,7 +1079,6 @@
         </button>
       `;
 
-      // Subsequent Tabs: 'Tüm Alanlar (Küresel)' + 15 Specific Sub-Disciplines
       html += PSYCH_DOMAINS.map(d => {
         const active = !isVaultMode && !isFavJournalsStream && d.id === activeDomain.id;
         return `
@@ -1256,14 +1215,47 @@
       } catch (e) {}
     }
 
-    // 10. INLINE FILTER CONTROLS
+    // 8. INLINE FILTER CONTROLS (PRESET YEARS, CUSTOM YEAR RANGE & EXPLICIT Q1 TOGGLE)
     function setYearFilter(yr) {
       activeYearFilter = yr;
+      if (yr !== 'custom') {
+        document.getElementById('customYearFrom').value = '';
+        document.getElementById('customYearTo').value = '';
+        document.getElementById('customYearBox').className = 'inline-flex items-center rounded-lg glass-pill px-1.5 py-0.5 gap-1 ml-0.5 focus-within:border-[var(--neon-primary)] transition';
+      }
       document.querySelectorAll('.yr-chip').forEach(btn => {
         btn.className = btn.dataset.yr === yr
-          ? 'yr-chip px-2.5 py-1 rounded-lg neon-primary-active transition'
-          : 'yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition';
+          ? 'yr-chip px-2 py-1 rounded-lg neon-primary-active transition'
+          : 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition';
       });
+      resetAndFetch();
+    }
+
+    function applyCustomYearRange() {
+      const fromVal = parseInt(document.getElementById('customYearFrom').value, 10);
+      const toVal = parseInt(document.getElementById('customYearTo').value, 10);
+
+      if (!fromVal && !toVal) {
+        setYearFilter('all');
+        return;
+      }
+
+      customYearFrom = (!isNaN(fromVal) && fromVal >= 1800 && fromVal <= 2035) ? fromVal : null;
+      customYearTo = (!isNaN(toVal) && toVal >= 1800 && toVal <= 2035) ? toVal : null;
+
+      if (customYearFrom && customYearTo && customYearFrom > customYearTo) {
+        const temp = customYearFrom;
+        customYearFrom = customYearTo;
+        customYearTo = temp;
+        document.getElementById('customYearFrom').value = customYearFrom;
+        document.getElementById('customYearTo').value = customYearTo;
+      }
+
+      activeYearFilter = 'custom';
+      document.querySelectorAll('.yr-chip').forEach(btn => {
+        btn.className = 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition';
+      });
+      document.getElementById('customYearBox').className = 'inline-flex items-center rounded-lg neon-primary-active px-1.5 py-0.5 gap-1 ml-0.5 transition';
       resetAndFetch();
     }
 
@@ -1273,6 +1265,17 @@
         ? 'px-2 py-1 rounded-lg neon-primary-active flex items-center gap-1 transition ml-0.5'
         : 'px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition ml-0.5';
       resetAndFetch();
+    }
+
+    function toggleQ1Only() {
+      onlyQ1 = !onlyQ1;
+      document.getElementById('q1FilterBtn').className = onlyQ1
+        ? 'px-2.5 py-1 rounded-lg badge-q1-elite flex items-center gap-1.5 transition font-semibold'
+        : 'px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition';
+      showToast(onlyQ1
+        ? 'Sadece Q1 Modu Aktif: Yalnızca yüksek etki faktörlü Q1 dergiler listelenir.'
+        : 'Tüm Dergiler Modu: Q2/Q3 ve tüm indeksli dergiler sonuçlara dahil edildi.');
+      renderFilteredCards();
     }
 
     function toggleOAFilter() {
@@ -1288,11 +1291,10 @@
       document.getElementById('compactModeBtn').className = isCompactView
         ? 'px-2 py-1 rounded-lg neon-primary-active flex items-center transition'
         : 'px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center transition';
-      renderCards(isVaultMode ? getActiveVaultSubset() : currentArticles);
-      lucide.createIcons();
+      renderFilteredCards();
     }
 
-    // 11. SEARCH & AUTOCOMPLETE
+    // 9. SEARCH & AUTOCOMPLETE
     function translateQuery(raw) {
       let q = raw.trim();
       const low = q.toLowerCase();
@@ -1309,8 +1311,7 @@
     function handleSearchInput() {
       const val = document.getElementById('searchInput').value.trim();
       document.getElementById('clearSearchBtn').classList.toggle('hidden', val.length === 0);
-      renderCards(isVaultMode ? getActiveVaultSubset() : currentArticles);
-      lucide.createIcons();
+      renderFilteredCards();
 
       clearTimeout(typingTimer);
       if (val.length < 3) {
@@ -1376,7 +1377,7 @@
       resetAndFetch();
     }
 
-    // 12. CORE OPENALEX FETCH ENGINE (UNIFIED SCOPE + SERVER-SIDE METHODOLOGY + STRICT DATES)
+    // 10. CORE OPENALEX FETCH ENGINE
     function resetAndFetch() {
       currentPage = 1;
       document.getElementById('fallbackNotice').classList.add('hidden');
@@ -1414,13 +1415,20 @@
       const sortVal = document.getElementById('sortSelect').value;
       const methodKey = document.getElementById('methodSelect').value;
 
-      let filters = [methodKey === 'META' ? 'type:article|review' : 'type:article|review'];
+      let filters = ['type:article|review'];
 
-      // 1. STRICT GLOBAL DATE FILTER & FUTURE CAP
+      // 1. STRICT GLOBAL DATE FILTER (Supports Presets + Custom Year Range)
       if (!isFallback) {
-        if (activeYearFilter === '2026') filters.push('from_publication_date:2026-01-01');
-        else if (activeYearFilter === '2024+') filters.push('from_publication_date:2024-01-01');
-        else if (activeYearFilter === '5yr') filters.push('from_publication_date:2021-01-01');
+        if (activeYearFilter === '2026') {
+          filters.push('from_publication_date:2026-01-01');
+        } else if (activeYearFilter === '2024+') {
+          filters.push('from_publication_date:2024-01-01');
+        } else if (activeYearFilter === '5yr') {
+          filters.push('from_publication_date:2021-01-01');
+        } else if (activeYearFilter === 'custom') {
+          if (customYearFrom) filters.push(`from_publication_date:${customYearFrom}-01-01`);
+          if (customYearTo) filters.push(`to_publication_date:${customYearTo}-12-31`);
+        }
       }
 
       if (capFutureDates) {
@@ -1430,7 +1438,7 @@
 
       if (onlyOA) filters.push('is_oa:true');
 
-      // 2. TRUE SCOPE RESOLUTION (No Mode Error: Whatever tab is active truly governs the query!)
+      // 2. TRUE SCOPE RESOLUTION
       if (activeAuthorFilter) {
         filters.push(`author.id:${activeAuthorFilter.id}`);
       } else if (activeSnowball) {
@@ -1443,33 +1451,30 @@
         if (activeJournal?.issn) filters.push(`primary_location.source.issn:${activeJournal.issn}`);
         else if (favIssns.length > 0) filters.push(`primary_location.source.issn:${favIssns.join('|')}`);
       } else if (activeJournal?.issn) {
-        // Specific Journal Selected -> Always filter by that journal's ISSN
         filters.push(`primary_location.source.issn:${activeJournal.issn}`);
       } else if (activeDomain.isGlobal) {
-        // 'Tüm Alanlar (Küresel)' Selected ->
-        // If user is searching/filtering by method/intersection, search globally across all psychology/neuroscience!
-        // If user is just browsing with no query, show the elite interdisciplinary Q1 pool.
-        if (!hasSearch && !activeIntersection && methodKey === 'ALL') {
+        if (!hasSearch && methodKey === 'ALL') {
           const issnPool = activeDomain.journals.map(j => j.issn).join('|');
           filters.push(`primary_location.source.issn:${issnPool}`);
         }
       } else {
-        // Specific Discipline Selected (e.g., Klinik Psikoloji) -> Filter by that discipline's Q1 journals!
         const issnPool = activeDomain.journals.map(j => j.issn).join('|');
         filters.push(`primary_location.source.issn:${issnPool}`);
       }
 
-      // 3. BUILD COMBINED SEARCH STRING (Query + Intersection Matrix + Server-Side Methodology)
+      // 3. BUILD COMBINED SEARCH STRING (Query + Server-Side Methodology)
       const queryParts = [];
       if (hasSearch) queryParts.push(`(${effectiveQ})`);
-      if (activeIntersection) queryParts.push(activeIntersection.query);
       if (methodKey !== 'ALL' && API_METHOD_QUERIES[methodKey]) {
         queryParts.push(API_METHOD_QUERIES[methodKey]);
       }
 
       const finalSearchString = queryParts.join(' AND ');
 
-      let apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=25&page=${currentPage}`;
+      // Fetch 40 items per page when Global Search + Sadece Q1 is active so Q1 filtering always yields a rich list
+      const pageSize = (activeDomain.isGlobal && hasSearch && onlyQ1) ? 40 : 25;
+
+      let apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=${pageSize}&page=${currentPage}`;
       if (finalSearchString && !activeAuthorFilter && !activeSnowball) {
         apiUrl += `&search=${encodeURIComponent(finalSearchString)}`;
       }
@@ -1480,7 +1485,6 @@
         const works = data.results || [];
         totalWorksCount = data.meta?.count || works.length;
 
-        // Smart Fallback if narrow journal/discipline returned 0 results
         if (works.length === 0 && !isFallback && (finalSearchString || activeJournal || !activeDomain.isGlobal || isFavJournalsStream)) {
           const fb = document.getElementById('fallbackNotice');
           document.getElementById('fallbackNoticeText').textContent = 
@@ -1490,7 +1494,6 @@
           return;
         }
 
-        // Batch fetch Journal H-Index & Impact
         const missingIds = [...new Set(
           works
             .map(w => w.primary_location?.source?.id)
@@ -1499,7 +1502,7 @@
         )];
 
         if (missingIds.length > 0) {
-          const sRes = await fetch(`https://api.openalex.org/sources?filter=openalex_id:${missingIds.slice(0, 35).join('|')}&per-page=35`);
+          const sRes = await fetch(`https://api.openalex.org/sources?filter=openalex_id:${missingIds.slice(0, 40).join('|')}&per-page=40`);
           const sData = await sRes.json();
           (sData.results || []).forEach(src => {
             const info = {
@@ -1527,11 +1530,8 @@
 
         loader.classList.add('hidden');
         renderStatusPills(rawQ, effectiveQ, methodKey);
-        document.getElementById('resultsTelemetryText').textContent =
-          `Sayfa ${currentPage} • ${currentArticles.length} gösterilen (Toplam: ${totalWorksCount.toLocaleString('tr-TR')})`;
-        renderCards(currentArticles);
+        renderFilteredCards();
         renderPagination();
-        lucide.createIcons();
 
       } catch (err) {
         loader.classList.add('hidden');
@@ -1549,20 +1549,28 @@
       const metrics = (srcId && sourceCache[srcId]) || (issn && sourceCache[issn]) || { h_index: null, impact_2yr: 0, homepage_url: null };
       const isPrestige = (issn && PRESTIGE_ISSNS.has(issn)) || PRESTIGE_NAMES.has(journalName.toLowerCase());
 
-      let quartile = 'Q2';
+      let quartile = 'Q2 / İndeksli';
       let qClass = 'glass-pill';
+      let isQ1 = false;
 
       if (isPrestige || metrics.impact_2yr >= 3.5 || (metrics.h_index && metrics.h_index >= 110)) {
         quartile = 'Q1 ELITE';
         qClass = 'badge-q1-elite';
-      } else if (metrics.impact_2yr >= 2.0 || (metrics.h_index && metrics.h_index >= 65)) {
+        isQ1 = true;
+      } else if (metrics.impact_2yr >= 2.0 || (metrics.h_index && metrics.h_index >= 60)) {
         quartile = 'Q1';
         qClass = 'badge-q1';
+        isQ1 = true;
       }
 
       const textCorpus = `${w.title || ''} ${absText}`.toLowerCase();
       const methods = [];
-      if (/meta-analys|meta analys|systematic review|prisma/.test(textCorpus)) methods.push('Meta-Analiz / Derleme');
+      if (/meta-analys|meta analys|systematic review|prisma/.test(textCorpus)) {
+        methods.push('Meta-Analiz / Sistematik');
+      }
+      if (w.type === 'review' || /literature review|narrative review|scoping review|integrative review|theoretical review|an overview of|critical review/.test(textCorpus)) {
+        if (!methods.includes('Genel İnceleme (Review)')) methods.push('Genel İnceleme (Review)');
+      }
       if (/randomized controlled|rct|experiment|placebo|double-blind/.test(textCorpus)) methods.push('Deneysel / RKÇ');
       if (/fmri|eeg|erp|neuroimaging|bold signal|prefrontal|amygdala/.test(textCorpus)) methods.push('Nörogörüntüleme');
       if (/longitudinal|prospective cohort|follow-up/.test(textCorpus)) methods.push('Boylamasına');
@@ -1585,6 +1593,7 @@
         impact2yr: metrics.impact_2yr ? metrics.impact_2yr.toFixed(2) : null,
         quartile,
         qClass,
+        isQ1,
         citations: w.cited_by_count || 0,
         isOA: w.open_access?.is_oa || false,
         oaUrl: w.open_access?.oa_url || w.doi || '#',
@@ -1611,14 +1620,13 @@
       return String(s).replace(/<[^>]+>/g, ' ').replace(/^Abstract[:\s]*/i, '').replace(/\s+/g, ' ').trim();
     }
 
-    // 13. HIGHLIGHTING & CARD RENDERING
+    // 11. HIGHLIGHTING & CARD RENDERING (WITH EXPLICIT Q1 FILTERING)
     function getHighlightTokens() {
       const raw = document.getElementById('searchInput').value.trim();
-      const inter = activeIntersection ? activeIntersection.query.replace(/OR|AND|"/g, ' ') : '';
-      if (!raw && !inter) return [];
-      const trans = raw ? translateQuery(raw) : '';
+      if (!raw) return [];
+      const trans = translateQuery(raw);
       return [...new Set(
-        `${raw} ${trans} ${inter}`
+        `${raw} ${trans}`
           .split(/\s+/)
           .map(s => s.replace(/["'()]/g, '').trim())
           .filter(s => s.length >= 3 && !['and', 'or', 'the', 'for'].includes(s.toLowerCase()))
@@ -1655,8 +1663,8 @@
       if (activeJournal) {
         pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Dergi: ${escapeHtml(activeJournal.name)}</span><button onclick="selectJournal(null)">✕</button></span>`);
       }
-      if (activeIntersection) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>Kesişim: ${escapeHtml(activeIntersection.label)}</span><button onclick="selectIntersection('${activeIntersection.id}')">✕</button></span>`);
+      if (activeYearFilter === 'custom' && (customYearFrom || customYearTo)) {
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Yıl: ${customYearFrom || '...'} – ${customYearTo || 'Güncel'}</span><button onclick="setYearFilter('2024+')">✕</button></span>`);
       }
       if (methodKey && methodKey !== 'ALL') {
         const methodText = document.getElementById('methodSelect').options[document.getElementById('methodSelect').selectedIndex].text;
@@ -1676,13 +1684,31 @@
       box.innerHTML = pills.join('');
     }
 
+    function renderFilteredCards() {
+      const baseList = isVaultMode ? getActiveVaultSubset() : currentArticles;
+      const filtered = baseList.filter(art => {
+        if (!isVaultMode && onlyQ1 && !art.isQ1) return false;
+        return true;
+      });
+
+      document.getElementById('resultsTelemetryText').textContent = isVaultMode
+        ? `Klasörde ${filtered.length} makale`
+        : `Sayfa ${currentPage} • ${filtered.length} gösterilen ${onlyQ1 ? '(Sadece Q1)' : '(Tüm İndeks)'} • Toplam: ${totalWorksCount.toLocaleString('tr-TR')}`;
+
+      renderCards(filtered);
+      lucide.createIcons();
+    }
+
     function renderCards(articles) {
       const container = document.getElementById('articlesContainer');
       if (articles.length === 0) {
         container.innerHTML = `
           <div class="luxury-panel rounded-2xl p-12 text-center space-y-3">
             <p class="font-serif text-lg title-ergonomic">Bu kriterlere uygun yayın bulunamadı.</p>
-            <button onclick="resetToHome()" class="px-4 py-2 rounded-xl neon-primary-active text-xs font-mono">Filtreleri Sıfırla</button>
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+              ${onlyQ1 ? `<button onclick="toggleQ1Only()" class="px-4 py-2 rounded-xl glass-pill hover:text-white text-xs font-mono">Sadece Q1 Filtresini Kapat (Q2/Q3 Göster)</button>` : ''}
+              <button onclick="resetToHome()" class="px-4 py-2 rounded-xl neon-primary-active text-xs font-mono">Tüm Filtreleri Sıfırla</button>
+            </div>
           </div>
         `;
         return;
@@ -1819,7 +1845,7 @@
       }).join('');
     }
 
-    // 14. DIRECT OBSIDIAN URI PROTOCOL INTEGRATION
+    // 12. DIRECT OBSIDIAN URI PROTOCOL INTEGRATION
     function buildMarkdownContent(art) {
       const folderTag = (art.folder || 'Genel Okumalar').toLowerCase().replace(/\s+/g, '-');
       return `---
@@ -1864,7 +1890,7 @@ ${art.abstractText}
       showToast('Obsidian uygulaması tetiklendi...');
     }
 
-    // 15. CUSTOM RESEARCH COLLECTIONS / FOLDERS IN VAULT
+    // 13. CUSTOM RESEARCH COLLECTIONS / FOLDERS IN VAULT
     function renderVaultCollectionsBar() {
       const bar = document.getElementById('collectionFoldersBar');
       let html = `
@@ -1945,8 +1971,7 @@ ${art.abstractText}
         renderVaultCollectionsBar();
         renderVaultStream();
       } else {
-        renderCards(currentArticles);
-        lucide.createIcons();
+        renderFilteredCards();
       }
     }
 
@@ -1966,10 +1991,7 @@ ${art.abstractText}
 
     function renderVaultStream() {
       vaultList.forEach(a => articleMap.set(a.id, a));
-      const subset = getActiveVaultSubset();
-      document.getElementById('resultsTelemetryText').textContent = `Klasörde ${subset.length} makale`;
-      renderCards(subset);
-      lucide.createIcons();
+      renderFilteredCards();
     }
 
     function getActiveVaultSubset() {
@@ -2005,14 +2027,14 @@ ${art.abstractText}
       URL.revokeObjectURL(url);
     }
 
-    // 16. DEEP INSPECTOR DRAWER / MOBILE BOTTOM SHEET
+    // 14. DEEP INSPECTOR DRAWER / MOBILE BOTTOM SHEET
     function openInspector(id) {
       const art = articleMap.get(id) || vaultList.find(v => v.id === id);
       if (!art) return;
 
       seenWorks.add(art.id);
       localStorage.setItem('vibepsych_seen_works', JSON.stringify([...seenWorks].slice(-500)));
-      renderCards(isVaultMode ? getActiveVaultSubset() : currentArticles);
+      renderFilteredCards();
 
       const qBadge = document.getElementById('drawerQuartileBadge');
       qBadge.className = `text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-md ${art.qClass}`;
@@ -2117,7 +2139,7 @@ ${art.abstractText}
       return { bg: s.slice(0, k).join(' '), method: s.slice(k, k * 2).join(' '), res: s.slice(k * 2).join(' ') };
     }
 
-    // 17. LIVE OPENALEX VENUE DISCOVERY ENGINE IN DIRECTORY MODAL
+    // 15. LIVE OPENALEX VENUE DISCOVERY ENGINE IN DIRECTORY MODAL
     function openDirectoryModal() {
       document.getElementById('directoryModal').classList.remove('hidden');
       renderDirectoryGrid();
@@ -2256,7 +2278,7 @@ ${art.abstractText}
       selectJournal(idx >= 0 ? idx : null);
     }
 
-    // 18. HELPERS & EXPORTERS
+    // 16. HELPERS & EXPORTERS
     function pivotByAuthor(authorId, authorName) {
       if (!authorId) return;
       isVaultMode = false;
@@ -2321,9 +2343,10 @@ ${art.abstractText}
       isFavJournalsStream = false;
       activeAuthorFilter = null;
       activeSnowball = null;
-      activeIntersection = null;
       activeJournal = null;
       activeDomain = PSYCH_DOMAINS[0];
+      customYearFrom = null;
+      customYearTo = null;
       document.getElementById('searchInput').value = '';
       document.getElementById('clearSearchBtn').classList.add('hidden');
       document.getElementById('methodSelect').value = 'ALL';
@@ -2332,7 +2355,6 @@ ${art.abstractText}
       updateCounters();
       renderDisciplineStrip();
       renderJournalStrip();
-      renderIntersectionChips();
       resetAndFetch();
     }
 
