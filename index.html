@@ -24,14 +24,35 @@
     }
   </script>
   <style>
+    /* DEFAULT THEME: Warm Editorial Luxury (Amber / Copper / Sage / Warm Carbon) */
     :root {
+      --bg-base: #0c0a08;
+      --bg-header: rgba(12, 10, 8, 0.90);
+      --bg-panel: rgba(22, 18, 15, 0.86);
+      --bg-select: #16120f;
+      --bg-card-top: rgba(28, 23, 19, 0.78);
+      --bg-card-bottom: rgba(17, 14, 11, 0.90);
+      --text-title: #F2EAE0;      /* Anti-Halation Warm Ivory */
+      --text-body: #B8ACA0;       /* Soft Warm Silver */
+      --text-muted: #7C7065;
+      --neon-crimson: #D2042D;    /* Favorite Journals Accent */
+      --neon-primary: #E5A93C;    /* Warm Amber Gold */
+      --neon-violet: #C87D55;     /* Warm Copper / Terracotta */
+      --neon-emerald: #78B868;    /* Sage Emerald Q1 */
+      --hl-bg: rgba(229, 169, 60, 0.20);
+      --hl-text: #F3C165;
+    }
+
+    /* OPTIONAL SECONDARY THEME: Obsidian Cyber Neon */
+    body.cyber-mode {
       --bg-base: #050609;
       --bg-header: rgba(5, 6, 9, 0.88);
-      --bg-panel: rgba(11, 14, 22, 0.78);
-      --bg-card-top: rgba(16, 20, 31, 0.72);
-      --bg-card-bottom: rgba(10, 13, 20, 0.84);
-      --text-title: #E8ECF2;      /* Anti-Halation Platinum White */
-      --text-body: #A8B3C5;       /* Anti-Halation Soft Silver */
+      --bg-panel: rgba(11, 14, 22, 0.82);
+      --bg-select: #0a0d14;
+      --bg-card-top: rgba(16, 20, 31, 0.74);
+      --bg-card-bottom: rgba(10, 13, 20, 0.86);
+      --text-title: #E8ECF2;
+      --text-body: #A8B3C5;
       --text-muted: #64748B;
       --neon-crimson: #D2042D;
       --neon-primary: #00f0ff;
@@ -41,23 +62,6 @@
       --hl-text: #00f0ff;
     }
 
-    /* Circadian Warm / Night Reading Mode Override */
-    body.warm-mode {
-      --bg-base: #0c0a08;
-      --bg-header: rgba(12, 10, 8, 0.90);
-      --bg-panel: rgba(22, 18, 15, 0.82);
-      --bg-card-top: rgba(28, 23, 19, 0.76);
-      --bg-card-bottom: rgba(18, 15, 12, 0.88);
-      --text-title: #F0E8DC;
-      --text-body: #B8ACA0;
-      --text-muted: #7C7065;
-      --neon-primary: #E5A93C;
-      --neon-violet: #C87D55;
-      --neon-emerald: #78B868;
-      --hl-bg: rgba(229, 169, 60, 0.20);
-      --hl-text: #F3C165;
-    }
-
     * {
       -webkit-tap-highlight-color: transparent;
     }
@@ -65,17 +69,11 @@
     body {
       background-color: var(--bg-base);
       background-image: 
-        radial-gradient(at 10% 0%, rgba(101, 48, 255, 0.06) 0px, transparent 45%),
-        radial-gradient(at 90% 0%, rgba(0, 240, 255, 0.05) 0px, transparent 45%);
+        radial-gradient(at 15% 0%, color-mix(in srgb, var(--neon-primary) 7%, transparent) 0px, transparent 45%),
+        radial-gradient(at 85% 0%, color-mix(in srgb, var(--neon-violet) 6%, transparent) 0px, transparent 45%);
       color: var(--text-body);
       overflow-x: hidden;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    body.warm-mode {
-      background-image: 
-        radial-gradient(at 15% 0%, rgba(229, 169, 60, 0.06) 0px, transparent 45%),
-        radial-gradient(at 85% 0%, rgba(200, 125, 85, 0.05) 0px, transparent 45%);
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     .title-ergonomic {
@@ -86,6 +84,16 @@
       color: var(--text-body);
       max-width: 68ch;
       line-height: 1.65;
+    }
+
+    .themed-select {
+      background-color: var(--bg-select);
+      color: var(--text-title);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .themed-select option {
+      background-color: var(--bg-select);
+      color: var(--text-title);
     }
 
     /* Luxury Smoked Glassmorphism */
@@ -100,7 +108,7 @@
       background: var(--bg-panel);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.7);
     }
 
@@ -111,28 +119,28 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.07);
       box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.09), 0 4px 20px -6px rgba(0, 0, 0, 0.55);
-      transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .luxury-card:hover {
-      border-color: color-mix(in srgb, var(--neon-primary) 38%, transparent);
-      box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--neon-primary) 25%, transparent), 0 14px 34px -12px rgba(0, 0, 0, 0.7);
+      border-color: color-mix(in srgb, var(--neon-primary) 42%, transparent);
+      box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--neon-primary) 25%, transparent), 0 14px 34px -12px rgba(0, 0, 0, 0.75);
       transform: translateY(-1px);
     }
 
     /* Seen / Read Dimming */
     .luxury-card.seen-article {
-      opacity: 0.64;
+      opacity: 0.62;
       border-color: rgba(255, 255, 255, 0.04);
     }
     .luxury-card.seen-article:hover {
       opacity: 1;
     }
 
-    /* Progressive Hover Reveal ("Ghost" Actions to reduce visual crowding) */
+    /* Progressive Hover Reveal ("Ghost" Actions) */
     @media (hover: hover) {
       .ghost-actions {
-        opacity: 0.42;
+        opacity: 0.45;
         transition: opacity 0.2s ease;
       }
       .luxury-card:hover .ghost-actions,
@@ -147,16 +155,16 @@
       color: var(--text-body);
     }
 
-    /* Semantic Neon States */
+    /* Semantic Accent States */
     .neon-primary-active {
-      background: color-mix(in srgb, var(--neon-primary) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--neon-primary) 55%, transparent);
+      background: color-mix(in srgb, var(--neon-primary) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--neon-primary) 60%, transparent);
       color: var(--text-title);
       box-shadow: 0 0 15px -4px color-mix(in srgb, var(--neon-primary) 35%, transparent);
     }
 
     .neon-crimson-active {
-      background: rgba(210, 4, 45, 0.15);
+      background: rgba(210, 4, 45, 0.16);
       border: 1px solid rgba(210, 4, 45, 0.65);
       color: #ffffff;
       box-shadow: 0 0 16px -4px rgba(210, 4, 45, 0.45);
@@ -166,18 +174,18 @@
       background: color-mix(in srgb, var(--neon-violet) 18%, transparent);
       border: 1px solid color-mix(in srgb, var(--neon-violet) 60%, transparent);
       color: var(--text-title);
-      box-shadow: 0 0 15px -4px color-mix(in srgb, var(--neon-violet) 40%, transparent);
+      box-shadow: 0 0 15px -4px color-mix(in srgb, var(--neon-violet) 38%, transparent);
     }
 
     .badge-q1-elite {
-      background: color-mix(in srgb, var(--neon-emerald) 11%, transparent);
-      border: 1px solid color-mix(in srgb, var(--neon-emerald) 45%, transparent);
+      background: color-mix(in srgb, var(--neon-emerald) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--neon-emerald) 48%, transparent);
       color: var(--neon-emerald);
     }
 
     .badge-q1 {
-      background: color-mix(in srgb, var(--neon-primary) 9%, transparent);
-      border: 1px solid color-mix(in srgb, var(--neon-primary) 40%, transparent);
+      background: color-mix(in srgb, var(--neon-primary) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--neon-primary) 42%, transparent);
       color: var(--neon-primary);
     }
 
@@ -207,14 +215,14 @@
       background: var(--bg-base);
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #1e293b;
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 3px;
     }
 
     /* Smart Scroll Header Collapse */
     #collapsibleTaxonomy {
       transition: max-height 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
-      max-height: 340px;
+      max-height: 360px;
       opacity: 1;
     }
     #collapsibleTaxonomy.collapsed-nav {
@@ -229,10 +237,10 @@
 
   <!-- ZERO-NOISE STICKY COMMAND HEADER -->
   <header class="sticky top-0 z-30 luxury-header px-3 sm:px-4 py-2.5 sm:py-3">
-    <div class="max-w-5xl mx-auto space-y-2">
+    <div class="max-w-5xl mx-auto space-y-2.5">
       
-      <!-- Top Row: Brand, Search Bar & Core Modules -->
-      <div class="flex items-center justify-between gap-2 sm:gap-3">
+      <!-- ROW 1: Brand, Unified Search Bar & 3 Clean Utility Buttons -->
+      <div class="flex items-center justify-between gap-2.5 sm:gap-3">
         
         <!-- Brand: VibePsych -->
         <button onclick="resetToHome()" class="flex items-center gap-2 group focus:outline-none shrink-0">
@@ -247,68 +255,48 @@
           </span>
         </button>
 
-        <!-- Center: Default Global Scholar Search Bar (16px on mobile to prevent iOS auto-zoom) -->
+        <!-- Center: Clean Search Bar (Respects active tab below without Mode Error) -->
         <div class="relative flex-1 max-w-2xl">
           <div class="flex items-center bg-white/[0.03] border border-white/[0.09] focus-within:border-[var(--neon-primary)] rounded-xl transition overflow-hidden">
             
-            <button 
-              id="scopeToggleBtn"
-              onclick="toggleSearchScope()"
-              title="Arama kapsamı: Küresel Scholar / Seçili Alan"
-              class="px-2.5 sm:px-3 py-2 text-[11px] font-mono border-r border-white/[0.07] text-[var(--neon-primary)] bg-white/[0.03] hover:bg-white/[0.07] transition flex items-center gap-1 shrink-0">
-              <i data-lucide="globe" class="w-3.5 h-3.5"></i>
-              <span id="scopeToggleText" class="hidden md:inline">Küresel</span>
-            </button>
-
             <div class="relative flex-1 flex items-center">
-              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 ml-2.5 shrink-0 hidden sm:block"></i>
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 ml-3 shrink-0"></i>
               <input 
                 id="searchInput" 
                 type="text" 
                 autocomplete="off"
                 oninput="handleSearchInput()"
-                placeholder="Kavram, makale veya yazar ara..." 
+                placeholder="Kavram, makale veya yazar ara (Türkçe veya İngilizce)..." 
                 class="w-full bg-transparent px-2.5 py-1.5 sm:py-2 text-[16px] sm:text-xs title-ergonomic placeholder-slate-500 focus:outline-none"
               />
               <button 
                 id="clearSearchBtn"
                 onclick="clearSearch()" 
-                class="hidden pr-2 text-slate-500 hover:text-white">
+                class="hidden pr-2.5 text-slate-500 hover:text-white">
                 <i data-lucide="x" class="w-4 h-4"></i>
               </button>
             </div>
 
             <button 
               onclick="executeSearch()" 
-              class="px-3 sm:px-3.5 py-2 bg-white/[0.04] hover:bg-white/[0.09] title-ergonomic border-l border-white/[0.07] font-mono text-xs transition shrink-0">
+              class="px-3.5 sm:px-4 py-2 bg-white/[0.04] hover:bg-white/[0.09] text-[var(--neon-primary)] border-l border-white/[0.07] font-mono text-xs font-medium transition shrink-0">
               Ara
             </button>
           </div>
 
-          <!-- Live Autocomplete Menu -->
+          <!-- Live Autocomplete Dropdown -->
           <div id="autocompleteMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 luxury-panel rounded-xl z-50 overflow-hidden divide-y divide-white/[0.06]"></div>
         </div>
 
-        <!-- Right: Favorite Journals, Directory, Vault & Circadian Warm Mode -->
-        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          <!-- Favorite Journals Stream (#D2042D) -->
-          <button 
-            onclick="toggleFavJournalsStream()" 
-            id="topFavStreamBtn"
-            title="Sadece Favori Dergilerim"
-            class="hidden sm:flex px-2.5 py-2 rounded-xl glass-pill hover:border-[#D2042D]/50 text-xs font-mono items-center gap-1.5 transition">
-            <i data-lucide="heart" class="w-3.5 h-3.5 text-[#D2042D]"></i>
-            <span class="hidden lg:inline">Favoriler</span>
-            <span id="favJournalsCount" class="text-[11px] font-semibold text-[#D2042D]">0</span>
-          </button>
-
-          <!-- Live Journal Directory Modal -->
+        <!-- Right: Only 3 Non-Redundant Controls (Dergiler, Kasam, Tema) -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Journal Directory & Live Discovery Modal -->
           <button 
             onclick="openDirectoryModal()" 
-            title="Dergi İndeksi & Canlı Dergi Arama"
-            class="hidden sm:flex px-2.5 py-2 rounded-xl glass-pill hover:border-[var(--neon-primary)] text-xs font-mono items-center gap-1.5 transition">
+            title="Dergi İndeksi & 100.000+ Canlı Dergi Arama"
+            class="hidden sm:flex px-3 py-2 rounded-xl glass-pill hover:border-[var(--neon-primary)] text-xs font-mono items-center gap-1.5 transition">
             <i data-lucide="library" class="w-3.5 h-3.5 text-[var(--neon-primary)]"></i>
-            <span class="hidden xl:inline">Dergiler</span>
+            <span class="hidden lg:inline">Dergi Kataloğu</span>
           </button>
 
           <!-- Vault / Collections -->
@@ -316,72 +304,92 @@
             onclick="toggleVaultMode()" 
             id="topVaultBtn"
             title="Kişisel Literatür Kasası & Klasörler"
-            class="hidden sm:flex px-2.5 py-2 rounded-xl glass-pill hover:border-[var(--neon-violet)] text-xs font-mono items-center gap-1.5 transition">
+            class="hidden sm:flex px-3 py-2 rounded-xl glass-pill hover:border-[var(--neon-violet)] text-xs font-mono items-center gap-1.5 transition">
             <i data-lucide="folder-heart" class="w-3.5 h-3.5 text-[var(--neon-violet)]"></i>
-            <span class="hidden xl:inline">Kasam</span>
-            <span id="vaultCountBadge" class="text-[11px] font-semibold">0</span>
+            <span class="hidden lg:inline">Kasam</span>
+            <span id="vaultCountBadge" class="text-[11px] font-semibold title-ergonomic">0</span>
           </button>
 
-          <!-- Circadian Warm / Night Reading Mode Toggle -->
+          <!-- Theme Palette Switcher (Default: Warm Amber Mode) -->
           <button 
-            onclick="toggleWarmMode()" 
-            id="warmModeBtn"
-            title="Sıcak Gece Okuma Modu (Göz Yorgunluğu Önleyici Kehribar Filtresi)"
-            class="p-2 rounded-xl glass-pill hover:text-white transition">
-            <i data-lucide="flame" id="warmModeIcon" class="w-4 h-4 text-slate-400"></i>
+            onclick="toggleThemeMode()" 
+            id="themeToggleBtn"
+            title="Tema Değiştir: Sıcak Kehribar (Varsayılan) / Soğuk Obsidyen Neon"
+            class="p-2 rounded-xl neon-primary-active transition">
+            <i data-lucide="flame" id="themeToggleIcon" class="w-4 h-4 text-[var(--neon-primary)]"></i>
           </button>
         </div>
 
       </div>
 
-      <!-- ALWAYS-VISIBLE SINGLE-LINE INLINE FILTER RIBBON -->
-      <div class="flex items-center justify-between gap-2 overflow-x-auto touch-scroll pt-1 border-t border-white/[0.05] text-[11px] font-mono">
+      <!-- ROW 2: GESTALT-GROUPED INLINE FILTER RIBBON -->
+      <div class="flex items-center justify-between gap-2 overflow-x-auto touch-scroll pt-1.5 border-t border-white/[0.05] text-[11px] font-mono">
         
-        <!-- One-Tap Year Presets -->
+        <!-- GROUP 1: Temporal Controls (Years + Cap Future Dates) -->
         <div class="flex items-center gap-1 shrink-0">
           <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">Tümü</button>
           <button onclick="setYearFilter('2026')" data-yr="2026" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">2026</button>
           <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip px-2.5 py-1 rounded-lg neon-primary-active transition">2024+</button>
           <button onclick="setYearFilter('5yr')" data-yr="5yr" class="yr-chip px-2.5 py-1 rounded-lg glass-pill hover:text-white transition">Son 5 Yıl</button>
+          <button 
+            id="capDateBtn" 
+            onclick="toggleCapFuture()" 
+            title="İleri sayı tarihli (2027 vb.) Online First atamalarını bugüne sınırla"
+            class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition ml-0.5">
+            <i data-lucide="calendar-check" class="w-3 h-3 text-[var(--neon-primary)]"></i>
+            <span>≤ Bugün</span>
+          </button>
         </div>
 
-        <!-- Inline Sort, Methodology, Concept Matrix Trigger, OA & Compact -->
+        <!-- Gestalt Visual Separator -->
+        <div class="h-4 w-[1px] bg-white/[0.08] shrink-0 hidden sm:block"></div>
+
+        <!-- GROUP 2: Analytical & API-Level Methodology Controls -->
         <div class="flex items-center gap-1.5 shrink-0">
-          <!-- Concept Intersection Matrix Toggle Button -->
+          <!-- Concept Intersection Matrix Toggle -->
           <button 
             id="matrixToggleBtn"
             onclick="toggleIntersectionBar()" 
             title="Çift Kavram Çarpıştırıcı (Kesişim Matrisi)"
-            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition">
+            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition">
             <i data-lucide="git-merge" class="w-3 h-3 text-[var(--neon-violet)]"></i>
             <span>+ Kesişim</span>
           </button>
 
+          <!-- Server-Side (API) Methodology Filter -->
           <div class="relative flex items-center">
-            <select id="sortSelect" onchange="resetAndFetch()" class="glass-pill rounded-lg pl-2 pr-5 py-1 text-[11px] font-mono focus:outline-none appearance-none cursor-pointer bg-[#0a0d14]">
-              <option value="publication_date:desc">En Güncel ↓</option>
-              <option value="relevance_score:desc">Alaka Düzeyi ↓</option>
-              <option value="cited_by_count:desc">En Çok Atıf ↓</option>
-            </select>
-            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-1.5 pointer-events-none"></i>
-          </div>
-
-          <div class="relative flex items-center">
-            <select id="methodSelect" onchange="applyClientFilters()" class="glass-pill rounded-lg pl-2 pr-5 py-1 text-[11px] font-mono focus:outline-none appearance-none cursor-pointer bg-[#0a0d14]">
+            <select id="methodSelect" onchange="resetAndFetch()" aria-label="Çalışma Metodolojisi" class="themed-select rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-mono focus:outline-none focus:border-[var(--neon-primary)] appearance-none cursor-pointer">
               <option value="ALL">Yöntem: Tümü</option>
-              <option value="Meta-Analiz / Derleme">Meta-Analiz</option>
-              <option value="Deneysel / RKÇ">Deneysel / RKÇ</option>
-              <option value="Nörogörüntüleme">fMRI / EEG</option>
-              <option value="Boylamasına">Boylamasına</option>
-              <option value="Psikometri / Ölçek">Psikometri</option>
+              <option value="META">Meta-Analiz & Derleme</option>
+              <option value="RCT">Deneysel / RKÇ</option>
+              <option value="NEURO">fMRI / EEG / Nörogörüntüleme</option>
+              <option value="LONG">Boylamasına (Longitudinal)</option>
+              <option value="PSYCHOM">Psikometri & Ölçek</option>
             </select>
-            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-1.5 pointer-events-none"></i>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-1.5 pointer-events-none"></i>
           </div>
 
+          <!-- Sort Select -->
+          <div class="relative flex items-center">
+            <select id="sortSelect" onchange="resetAndFetch()" aria-label="Sıralama Ölçütü" class="themed-select rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-mono focus:outline-none focus:border-[var(--neon-primary)] appearance-none cursor-pointer">
+              <option value="publication_date:desc">Sırala: En Güncel ↓</option>
+              <option value="relevance_score:desc">Sırala: Alaka Düzeyi ↓</option>
+              <option value="cited_by_count:desc">Sırala: En Çok Atıf ↓</option>
+            </select>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-1.5 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <!-- Gestalt Visual Separator -->
+        <div class="h-4 w-[1px] bg-white/[0.08] shrink-0 hidden sm:block"></div>
+
+        <!-- GROUP 3: Format & View Density -->
+        <div class="flex items-center gap-1.5 shrink-0">
           <button 
             id="oaFilterBtn" 
             onclick="toggleOAFilter()" 
-            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition">
+            title="Sadece Ücretsiz Tam Metin (Open Access) PDF Makaleler"
+            class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition">
             <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-emerald)]"></span>
             <span>PDF</span>
           </button>
@@ -389,7 +397,7 @@
           <button 
             id="compactModeBtn" 
             onclick="toggleCompactView()" 
-            title="Kompakt Başlık Listesi / Standart Kart"
+            title="Kompakt Başlık Listesi / Standart Kart Görünümü"
             class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center transition">
             <i data-lucide="list" class="w-3.5 h-3.5"></i>
           </button>
@@ -397,10 +405,10 @@
 
       </div>
 
-      <!-- COLLAPSIBLE TAXONOMY, JOURNAL RAIL & CONCEPT INTERSECTION MATRIX -->
+      <!-- ROW 3 & 4: COLLAPSIBLE TAXONOMY, JOURNAL RAIL & INTERSECTION BAR -->
       <div id="collapsibleTaxonomy" class="space-y-1.5 pt-0.5">
         
-        <!-- 16 Psychology & Neuroscience Sub-disciplines -->
+        <!-- Unified Scope & Discipline Strip (Starts with Favori Dergilerim & Küresel) -->
         <div id="disciplineStrip" class="flex items-center gap-1.5 overflow-x-auto touch-scroll py-0.5"></div>
 
         <!-- Journal Switcher Strip -->
@@ -417,14 +425,14 @@
           <div id="journalStrip" class="flex items-center gap-1.5 overflow-x-auto touch-scroll flex-1"></div>
 
           <a id="activeJournalSiteBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden shrink-0 px-2 py-1 rounded-lg badge-q1-elite text-[10px] font-mono items-center gap-1 transition">
-            <span>Site</span>
+            <span>Resmi Site</span>
             <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
           </a>
         </div>
 
-        <!-- DUAL CONCEPT INTERSECTION MATRIX BAR (Section 3.4) -->
-        <div id="intersectionBar" class="hidden items-center gap-1.5 overflow-x-auto touch-scroll bg-[#6530ff]/[0.06] border border-[#6530ff]/30 rounded-xl px-2.5 py-1.5 text-[11px] font-mono">
-          <span class="text-[#a78bfa] shrink-0 flex items-center gap-1 pr-1 border-r border-white/[0.08]">
+        <!-- DUAL CONCEPT INTERSECTION MATRIX BAR (Warm Theme Compatible) -->
+        <div id="intersectionBar" class="hidden items-center gap-1.5 overflow-x-auto touch-scroll luxury-panel rounded-xl px-2.5 py-1.5 text-[11px] font-mono">
+          <span class="text-[var(--neon-violet)] shrink-0 flex items-center gap-1 pr-1.5 border-r border-white/[0.08] font-semibold">
             <i data-lucide="git-merge" class="w-3 h-3"></i>
             <span>Kesişim (AND):</span>
           </span>
@@ -439,14 +447,14 @@
   <!-- MAIN EDITORIAL WORKSPACE -->
   <main class="max-w-5xl mx-auto px-3 sm:px-4 pt-3.5 space-y-3.5">
 
-    <!-- Status Pills & Telemetry -->
+    <!-- Active Filter Breadcrumbs & Telemetry -->
     <div id="statusToolbar" class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono px-0.5">
       <div id="activePillsContainer" class="flex flex-wrap items-center gap-1.5"></div>
       <div id="resultsTelemetryText" class="text-[11px] text-slate-500 ml-auto tabular-nums"></div>
     </div>
 
-    <!-- CUSTOM RESEARCH COLLECTIONS / FOLDERS BAR (Section 3.3 - Visible in Kasam Mode) -->
-    <div id="vaultCollectionsPanel" class="hidden luxury-panel rounded-2xl p-4 space-y-3.5 border-[#6530ff]/40">
+    <!-- CUSTOM RESEARCH COLLECTIONS / FOLDERS BAR (Visible in Kasam Mode) -->
+    <div id="vaultCollectionsPanel" class="hidden luxury-panel rounded-2xl p-4 space-y-3.5">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <i data-lucide="folder-kanban" class="w-4 h-4 text-[var(--neon-violet)]"></i>
@@ -467,7 +475,6 @@
           </button>
         </div>
       </div>
-      <!-- Folder Pills -->
       <div id="collectionFoldersBar" class="flex items-center gap-1.5 overflow-x-auto touch-scroll pt-1 border-t border-white/[0.06]"></div>
     </div>
 
@@ -510,7 +517,6 @@
     id="inspectorDrawer" 
     class="fixed inset-x-0 bottom-0 sm:inset-y-0 sm:right-0 sm:left-auto z-50 w-full sm:max-w-2xl h-[88vh] sm:h-full rounded-t-3xl sm:rounded-none luxury-panel border-t sm:border-t-0 sm:border-l border-white/[0.12] shadow-2xl transform translate-y-full sm:translate-y-0 sm:translate-x-full transition-transform duration-300 flex flex-col">
     
-    <!-- Mobile Drag Handle Indicator -->
     <div class="sm:hidden pt-2.5 pb-1 flex justify-center" onclick="closeInspector()">
       <div class="w-10 h-1 rounded-full bg-white/20"></div>
     </div>
@@ -527,7 +533,7 @@
     <div id="inspectorBody" class="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5"></div>
   </aside>
 
-  <!-- Q1 JOURNAL DIRECTORY & LIVE OPENALEX VENUE DISCOVERY MODAL (Section 1.2) -->
+  <!-- Q1 JOURNAL DIRECTORY & LIVE OPENALEX VENUE DISCOVERY MODAL -->
   <div id="directoryModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4">
     <div class="luxury-panel rounded-t-3xl sm:rounded-2xl max-w-4xl w-full h-[90vh] sm:max-h-[85vh] flex flex-col shadow-2xl border border-white/[0.12]">
       <div class="p-4 sm:p-5 border-b border-white/[0.07] flex items-center justify-between">
@@ -554,9 +560,7 @@
       </div>
 
       <div class="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1 space-y-5">
-        <!-- Live OpenAlex API Venue Search Results -->
         <div id="liveVenueResultsBox" class="hidden space-y-2.5"></div>
-        <!-- Curated 16-Domain Q1 Grid -->
         <div id="directoryGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
       </div>
     </div>
@@ -566,13 +570,13 @@
   <nav class="sm:hidden fixed bottom-0 inset-x-0 z-30 luxury-header border-t border-white/[0.08] px-3 py-2 flex items-center justify-around text-[10px] font-mono">
     <button onclick="resetToHome()" class="flex flex-col items-center gap-1 text-[var(--neon-primary)]">
       <i data-lucide="compass" class="w-4 h-4"></i>
-      <span>Akış</span>
+      <span>Küresel</span>
     </button>
     <button onclick="toggleFavJournalsStream()" class="flex flex-col items-center gap-1 text-[#D2042D]">
       <i data-lucide="heart" class="w-4 h-4"></i>
       <span>Favoriler (<span id="mobFavCount">0</span>)</span>
     </button>
-    <button onclick="toggleIntersectionBar()" class="flex flex-col items-center gap-1 text-[#a78bfa]">
+    <button onclick="toggleIntersectionBar()" class="flex flex-col items-center gap-1 text-[var(--neon-violet)]">
       <i data-lucide="git-merge" class="w-4 h-4"></i>
       <span>Kesişim</span>
     </button>
@@ -630,22 +634,32 @@
       'siberpsikoloji': 'cyberpsychology human computer interaction'
     };
 
-    // 2. CONCEPT INTERSECTION MATRIX PRESETS (Section 3.4)
+    // 2. SERVER-SIDE (API) METHODOLOGY QUERIES (Fixes client-side empty filtering)
+    const API_METHOD_QUERIES = {
+      'META': '("meta-analysis" OR "systematic review")',
+      'RCT': '("randomized controlled" OR "experimental study" OR "clinical trial" OR "experiment")',
+      'NEURO': '(fMRI OR EEG OR ERP OR neuroimaging OR "prefrontal cortex" OR amygdala)',
+      'LONG': '(longitudinal OR "prospective cohort" OR "panel study" OR "follow-up")',
+      'PSYCHOM': '(psychometric OR "scale development" OR "confirmatory factor" OR "item response")'
+    };
+
+    // 3. CONCEPT INTERSECTION MATRIX PRESETS
     const INTERSECTION_PRESETS = [
-      { id: 'ai_algo', label: '+ Yapay Zeka & Algoritma', query: '"artificial intelligence" OR "large language model" OR "human-AI" OR algorithmic' },
-      { id: 'metacog', label: '+ Üstbiliş (Metacognition)', query: 'metacognition OR metacognitive OR "confidence judgment" OR "self-monitoring"' },
-      { id: 'moral', label: '+ Ahlak & Karar Verme', query: '"moral decision" OR "moral dilemma" OR "moral judgment" OR prosocial' },
-      { id: 'emotion_reg', label: '+ Duygu Düzenleme', query: '"emotion regulation" OR reappraisal OR "affective dynamics"' },
-      { id: 'trauma_stress', label: '+ Travma & Kronik Stres', query: 'trauma OR PTSD OR "adverse childhood" OR dissociation' },
-      { id: 'neuro_img', label: '+ Nörogörüntüleme (fMRI/EEG)', query: 'fMRI OR EEG OR neuroimaging OR "prefrontal cortex" OR amygdala' },
-      { id: 'attachment', label: '+ Bağlanma & İlişkiler', query: '"attachment style" OR "romantic relationship" OR interpersonal' }
+      { id: 'ai_algo', label: '+ Yapay Zeka & Algoritma', query: '("artificial intelligence" OR "large language model" OR "human-AI" OR algorithmic)' },
+      { id: 'metacog', label: '+ Üstbiliş (Metacognition)', query: '(metacognition OR metacognitive OR "confidence judgment" OR "self-monitoring")' },
+      { id: 'moral', label: '+ Ahlak & Karar Verme', query: '("moral decision" OR "moral dilemma" OR "moral judgment" OR prosocial)' },
+      { id: 'emotion_reg', label: '+ Duygu Düzenleme', query: '("emotion regulation" OR reappraisal OR "affective dynamics")' },
+      { id: 'trauma_stress', label: '+ Travma & Kronik Stres', query: '(trauma OR PTSD OR "adverse childhood" OR dissociation)' },
+      { id: 'neuro_img', label: '+ Nörogörüntüleme (fMRI/EEG)', query: '(fMRI OR EEG OR neuroimaging OR "prefrontal cortex" OR amygdala)' },
+      { id: 'attachment', label: '+ Bağlanma & İlişkiler', query: '("attachment style" OR "romantic relationship" OR interpersonal)' }
     ];
 
-    // 3. EXPANDED 16-DISCIPLINE Q1 JOURNAL TAXONOMY (Section 1.1)
+    // 4. UNIFIED 16-DISCIPLINE TAXONOMY (First item is Global Scholar Scope)
     const PSYCH_DOMAINS = [
       {
-        id: 'elite_all',
-        name: 'Genel Elit Psikoloji',
+        id: 'global_all',
+        name: 'Tüm Alanlar (Küresel)',
+        isGlobal: true,
         conceptId: 'C15744967',
         journals: [
           { name: 'Behavioral and Brain Sciences', issn: '0140-525X' },
@@ -872,16 +886,18 @@
     }));
 
     // APPLICATION STATE
-    let activeDomain = PSYCH_DOMAINS[0];
+    let activeDomain = PSYCH_DOMAINS[0]; // Starts on 'Tüm Alanlar (Küresel)'
     let activeJournal = null;
     let isFavJournalsStream = false;
-    let searchScope = 'scholar_global';
     let activeYearFilter = '2024+';
-    let activeIntersection = null; // {id, label, query}
+    let capFutureDates = false;
+    let activeIntersection = null;
     let onlyOA = false;
     let isCompactView = false;
     let isVaultMode = false;
-    let isWarmMode = localStorage.getItem('vibepsych_warm_mode') === 'true';
+
+    // Warm Mode is DEFAULT (true unless user explicitly saved 'cyber')
+    let isCyberMode = localStorage.getItem('vibepsych_theme') === 'cyber';
 
     let activeAuthorFilter = null;
     let activeSnowball = null;
@@ -893,7 +909,6 @@
     let currentArticles = [];
     let sourceCache = {};
 
-    // LocalStorage Persistent Collections & Favorites
     let favJournals = JSON.parse(localStorage.getItem('vibepsych_fav_journals') || '[]');
     let vaultList = JSON.parse(localStorage.getItem('vibepsych_vault') || '[]');
     let customCollections = JSON.parse(localStorage.getItem('vibepsych_collections') || '["Genel Okumalar", "Üstbiliş & AI", "Klinik & Terapi"]');
@@ -904,11 +919,11 @@
     let dirSearchTimer = null;
     let lastScrollY = 0;
 
-    // 4. INITIALIZATION
+    // 5. INITIALIZATION
     function initVibePsych() {
-      if (isWarmMode) {
-        document.body.classList.add('warm-mode');
-        document.getElementById('warmModeBtn').classList.add('neon-primary-active');
+      if (isCyberMode) {
+        document.body.classList.add('cyber-mode');
+        document.getElementById('themeToggleBtn').className = 'p-2 rounded-xl glass-pill hover:text-white transition';
       }
       lucide.createIcons();
       updateCounters();
@@ -955,22 +970,22 @@
       });
     }
 
-    // 5. CIRCADIAN WARM DARK MODE (Section 2.3)
-    function toggleWarmMode() {
-      isWarmMode = !isWarmMode;
-      document.body.classList.toggle('warm-mode', isWarmMode);
-      localStorage.setItem('vibepsych_warm_mode', String(isWarmMode));
-      const btn = document.getElementById('warmModeBtn');
-      if (isWarmMode) {
-        btn.classList.add('neon-primary-active');
-        showToast('Sıcak Gece Okuma Modu aktif edildi (Kehribar Spektrum).');
+    // 6. THEME SWITCHER (Default: Warm Amber Mode)
+    function toggleThemeMode() {
+      isCyberMode = !isCyberMode;
+      document.body.classList.toggle('cyber-mode', isCyberMode);
+      localStorage.setItem('vibepsych_theme', isCyberMode ? 'cyber' : 'warm');
+      const btn = document.getElementById('themeToggleBtn');
+      if (!isCyberMode) {
+        btn.className = 'p-2 rounded-xl neon-primary-active transition';
+        showToast('Sıcak Kehribar Okuma Modu aktif (Varsayılan).');
       } else {
-        btn.classList.remove('neon-primary-active');
-        showToast('Standart Obsidyen Neon Moduna geçildi.');
+        btn.className = 'p-2 rounded-xl glass-pill hover:text-white transition';
+        showToast('Soğuk Obsidyen Siyan Moduna geçildi.');
       }
     }
 
-    // 6. CONCEPT INTERSECTION MATRIX (Section 3.4)
+    // 7. CONCEPT INTERSECTION MATRIX
     function toggleIntersectionBar() {
       const bar = document.getElementById('intersectionBar');
       const btn = document.getElementById('matrixToggleBtn');
@@ -1017,19 +1032,19 @@
     }
 
     function promptCustomIntersection() {
-      const term = prompt('Mevcut akışla kesiştirmek (AND) istediğiniz ikinci kavramı yazın (örn: mindfulness, fMRI, loneliness):');
+      const term = prompt('Mevcut akışla kesiştirmek (AND) istediğiniz ikinci kavramı yazın:');
       if (!term || !term.trim()) return;
       const clean = term.trim();
       activeIntersection = {
         id: 'custom',
         label: `+ ${clean}`,
-        query: translateQuery(clean)
+        query: `(${translateQuery(clean)})`
       };
       renderIntersectionChips();
       resetAndFetch();
     }
 
-    // 7. FAVORITE JOURNALS & LIVE VENUE DISCOVERY (Section 1.2)
+    // 8. FAVORITE JOURNALS ENGINE (#D2042D)
     function isJournalFavorited(issn, name) {
       return favJournals.some(j => (issn && j.issn === issn) || j.name.toLowerCase() === (name || '').toLowerCase());
     }
@@ -1058,7 +1073,8 @@
         if (favJournals.length === 0) isFavJournalsStream = false;
         resetAndFetch();
       } else {
-        applyClientFilters();
+        renderCards(currentArticles);
+        lucide.createIcons();
       }
     }
 
@@ -1080,42 +1096,40 @@
     }
 
     function updateCounters() {
-      document.getElementById('favJournalsCount').textContent = favJournals.length;
       document.getElementById('vaultCountBadge').textContent = vaultList.length;
       document.getElementById('mobFavCount').textContent = favJournals.length;
       document.getElementById('mobVaultCount').textContent = vaultList.length;
-
-      const topFav = document.getElementById('topFavStreamBtn');
-      topFav.className = isFavJournalsStream
-        ? 'hidden sm:flex px-2.5 py-2 rounded-xl neon-crimson-active text-xs font-mono items-center gap-1.5 transition'
-        : 'hidden sm:flex px-2.5 py-2 rounded-xl glass-pill hover:border-[#D2042D]/50 text-xs font-mono items-center gap-1.5 transition';
     }
 
-    // 8. DISCIPLINE & JOURNAL RAILS
+    // 9. UNIFIED DISCIPLINE & JOURNAL STRIP RENDERERS (Zero Mode Error)
     function renderDisciplineStrip() {
       const strip = document.getElementById('disciplineStrip');
+      
+      // 1st Tab: Favori Dergilerim (#D2042D)
       let html = `
         <button 
           onclick="toggleFavJournalsStream()"
           class="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border flex items-center gap-1.5 shrink-0 ${
             isFavJournalsStream 
               ? 'neon-crimson-active' 
-              : 'bg-[#D2042D]/[0.07] title-ergonomic border-[#D2042D]/30 hover:border-[#D2042D]/60'
+              : 'bg-[#D2042D]/[0.08] title-ergonomic border-[#D2042D]/35 hover:border-[#D2042D]/70'
           }">
           <i data-lucide="heart" class="w-3.5 h-3.5 text-[#D2042D] ${isFavJournalsStream ? 'fill-[#D2042D]' : ''}"></i>
           <span>Favori Dergilerim (${favJournals.length})</span>
         </button>
       `;
 
+      // Subsequent Tabs: 'Tüm Alanlar (Küresel)' + 15 Specific Sub-Disciplines
       html += PSYCH_DOMAINS.map(d => {
         const active = !isVaultMode && !isFavJournalsStream && d.id === activeDomain.id;
         return `
           <button 
             onclick="selectDiscipline('${d.id}')"
-            class="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border shrink-0 ${
+            class="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border flex items-center gap-1.5 shrink-0 ${
               active ? 'neon-primary-active' : 'glass-pill hover:text-white'
             }">
-            ${d.name}
+            ${d.isGlobal ? `<i data-lucide="globe" class="w-3.5 h-3.5 text-[var(--neon-primary)]"></i>` : ''}
+            <span>${d.name}</span>
           </button>
         `;
       }).join('');
@@ -1149,6 +1163,10 @@
       }
 
       const poolActive = activeJournal === null;
+      const poolLabel = isFavJournalsStream
+        ? `Tüm Favoriler (${favJournals.length})`
+        : (activeDomain.isGlobal ? `Küresel Elit Havuz` : `Tüm ${activeDomain.name} Q1 (${list.length})`);
+
       let html = `
         <button 
           onclick="selectJournal(null)"
@@ -1157,7 +1175,7 @@
               ? (isFavJournalsStream ? 'neon-crimson-active' : 'neon-primary-active') 
               : 'glass-pill hover:text-white'
           }">
-          ${isFavJournalsStream ? `Tüm Favoriler (${favJournals.length})` : `Tüm Q1 Havuzu (${list.length})`}
+          ${poolLabel}
         </button>
       `;
 
@@ -1238,7 +1256,7 @@
       } catch (e) {}
     }
 
-    // 9. FILTER CONTROLS
+    // 10. INLINE FILTER CONTROLS
     function setYearFilter(yr) {
       activeYearFilter = yr;
       document.querySelectorAll('.yr-chip').forEach(btn => {
@@ -1249,11 +1267,19 @@
       resetAndFetch();
     }
 
+    function toggleCapFuture() {
+      capFutureDates = !capFutureDates;
+      document.getElementById('capDateBtn').className = capFutureDates
+        ? 'px-2 py-1 rounded-lg neon-primary-active flex items-center gap-1 transition ml-0.5'
+        : 'px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition ml-0.5';
+      resetAndFetch();
+    }
+
     function toggleOAFilter() {
       onlyOA = !onlyOA;
       document.getElementById('oaFilterBtn').className = onlyOA
-        ? 'px-2.5 py-1 rounded-lg badge-q1-elite flex items-center gap-1 transition'
-        : 'px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition';
+        ? 'px-2.5 py-1 rounded-lg badge-q1-elite flex items-center gap-1.5 transition'
+        : 'px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1.5 transition';
       resetAndFetch();
     }
 
@@ -1262,18 +1288,11 @@
       document.getElementById('compactModeBtn').className = isCompactView
         ? 'px-2 py-1 rounded-lg neon-primary-active flex items-center transition'
         : 'px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center transition';
-      applyClientFilters();
+      renderCards(isVaultMode ? getActiveVaultSubset() : currentArticles);
+      lucide.createIcons();
     }
 
-    // 10. SEARCH & AUTOCOMPLETE
-    function toggleSearchScope() {
-      searchScope = searchScope === 'scholar_global' ? 'contextual' : 'scholar_global';
-      const txt = document.getElementById('scopeToggleText');
-      txt.textContent = searchScope === 'scholar_global' ? 'Küresel' : 'Seçili Alan';
-      showToast(searchScope === 'scholar_global' ? 'Küresel Scholar Modu aktif.' : 'Seçili Alan/Dergi Modu aktif.');
-      if (document.getElementById('searchInput').value.trim().length > 0) executeSearch();
-    }
-
+    // 11. SEARCH & AUTOCOMPLETE
     function translateQuery(raw) {
       let q = raw.trim();
       const low = q.toLowerCase();
@@ -1290,7 +1309,8 @@
     function handleSearchInput() {
       const val = document.getElementById('searchInput').value.trim();
       document.getElementById('clearSearchBtn').classList.toggle('hidden', val.length === 0);
-      applyClientFilters();
+      renderCards(isVaultMode ? getActiveVaultSubset() : currentArticles);
+      lucide.createIcons();
 
       clearTimeout(typingTimer);
       if (val.length < 3) {
@@ -1356,7 +1376,7 @@
       resetAndFetch();
     }
 
-    // 11. OPENALEX FETCH ENGINE (WITH DUAL CONCEPT INTERSECTION)
+    // 12. CORE OPENALEX FETCH ENGINE (UNIFIED SCOPE + SERVER-SIDE METHODOLOGY + STRICT DATES)
     function resetAndFetch() {
       currentPage = 1;
       document.getElementById('fallbackNotice').classList.add('hidden');
@@ -1392,54 +1412,66 @@
       const effectiveQ = translateQuery(rawQ);
       const hasSearch = effectiveQ.length > 0;
       const sortVal = document.getElementById('sortSelect').value;
+      const methodKey = document.getElementById('methodSelect').value;
 
-      let filters = ['type:article|review'];
+      let filters = [methodKey === 'META' ? 'type:article|review' : 'type:article|review'];
 
-      // Strict Global Year Filter
+      // 1. STRICT GLOBAL DATE FILTER & FUTURE CAP
       if (!isFallback) {
         if (activeYearFilter === '2026') filters.push('from_publication_date:2026-01-01');
         else if (activeYearFilter === '2024+') filters.push('from_publication_date:2024-01-01');
         else if (activeYearFilter === '5yr') filters.push('from_publication_date:2021-01-01');
       }
 
+      if (capFutureDates) {
+        const today = new Date().toISOString().split('T')[0];
+        filters.push(`to_publication_date:${today}`);
+      }
+
       if (onlyOA) filters.push('is_oa:true');
 
-      // Venue / Author / Snowball / Intersection Logic
+      // 2. TRUE SCOPE RESOLUTION (No Mode Error: Whatever tab is active truly governs the query!)
       if (activeAuthorFilter) {
         filters.push(`author.id:${activeAuthorFilter.id}`);
       } else if (activeSnowball) {
         const shortId = activeSnowball.workId.replace('https://openalex.org/', '');
         filters.push(activeSnowball.mode === 'cites' ? `cites:${shortId}` : `related_to:${shortId}`);
       } else if (isFallback) {
-        // Global fallback
+        // Fallback: Search globally without ISSN restriction
       } else if (isFavJournalsStream) {
         const favIssns = favJournals.map(j => j.issn).filter(Boolean);
         if (activeJournal?.issn) filters.push(`primary_location.source.issn:${activeJournal.issn}`);
         else if (favIssns.length > 0) filters.push(`primary_location.source.issn:${favIssns.join('|')}`);
-      } else if (hasSearch && searchScope === 'scholar_global' && !activeIntersection) {
-        // Global Scholar search
-      } else {
-        if (activeJournal?.issn) {
-          filters.push(`primary_location.source.issn:${activeJournal.issn}`);
-        } else {
+      } else if (activeJournal?.issn) {
+        // Specific Journal Selected -> Always filter by that journal's ISSN
+        filters.push(`primary_location.source.issn:${activeJournal.issn}`);
+      } else if (activeDomain.isGlobal) {
+        // 'Tüm Alanlar (Küresel)' Selected ->
+        // If user is searching/filtering by method/intersection, search globally across all psychology/neuroscience!
+        // If user is just browsing with no query, show the elite interdisciplinary Q1 pool.
+        if (!hasSearch && !activeIntersection && methodKey === 'ALL') {
           const issnPool = activeDomain.journals.map(j => j.issn).join('|');
           filters.push(`primary_location.source.issn:${issnPool}`);
         }
+      } else {
+        // Specific Discipline Selected (e.g., Klinik Psikoloji) -> Filter by that discipline's Q1 journals!
+        const issnPool = activeDomain.journals.map(j => j.issn).join('|');
+        filters.push(`primary_location.source.issn:${issnPool}`);
       }
 
-      // Combine Search Query + Active Intersection Matrix Concept (Section 3.4)
-      let combinedSearch = '';
-      if (hasSearch && activeIntersection) {
-        combinedSearch = `(${effectiveQ}) AND (${activeIntersection.query})`;
-      } else if (hasSearch) {
-        combinedSearch = effectiveQ;
-      } else if (activeIntersection) {
-        combinedSearch = activeIntersection.query;
+      // 3. BUILD COMBINED SEARCH STRING (Query + Intersection Matrix + Server-Side Methodology)
+      const queryParts = [];
+      if (hasSearch) queryParts.push(`(${effectiveQ})`);
+      if (activeIntersection) queryParts.push(activeIntersection.query);
+      if (methodKey !== 'ALL' && API_METHOD_QUERIES[methodKey]) {
+        queryParts.push(API_METHOD_QUERIES[methodKey]);
       }
+
+      const finalSearchString = queryParts.join(' AND ');
 
       let apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=25&page=${currentPage}`;
-      if (combinedSearch && !activeAuthorFilter && !activeSnowball) {
-        apiUrl += `&search=${encodeURIComponent(combinedSearch)}`;
+      if (finalSearchString && !activeAuthorFilter && !activeSnowball) {
+        apiUrl += `&search=${encodeURIComponent(finalSearchString)}`;
       }
 
       try {
@@ -1448,15 +1480,17 @@
         const works = data.results || [];
         totalWorksCount = data.meta?.count || works.length;
 
-        if (works.length === 0 && !isFallback && (combinedSearch || activeJournal || isFavJournalsStream)) {
+        // Smart Fallback if narrow journal/discipline returned 0 results
+        if (works.length === 0 && !isFallback && (finalSearchString || activeJournal || !activeDomain.isGlobal || isFavJournalsStream)) {
           const fb = document.getElementById('fallbackNotice');
           document.getElementById('fallbackNoticeText').textContent = 
-            `Seçili dar havuzda kesişim bulunamadı; kapsam genişletilerek küresel literatür sonuçları getirildi.`;
+            `Seçili dar dergi havuzunda eşleşme bulunamadı; kısıtlama esnetilerek küresel literatür sonuçları getirildi.`;
           fb.classList.remove('hidden');
           await fetchLiterature(false, true);
           return;
         }
 
+        // Batch fetch Journal H-Index & Impact
         const missingIds = [...new Set(
           works
             .map(w => w.primary_location?.source?.id)
@@ -1492,9 +1526,12 @@
         }
 
         loader.classList.add('hidden');
-        renderStatusPills(rawQ, effectiveQ);
-        applyClientFilters();
+        renderStatusPills(rawQ, effectiveQ, methodKey);
+        document.getElementById('resultsTelemetryText').textContent =
+          `Sayfa ${currentPage} • ${currentArticles.length} gösterilen (Toplam: ${totalWorksCount.toLocaleString('tr-TR')})`;
+        renderCards(currentArticles);
         renderPagination();
+        lucide.createIcons();
 
       } catch (err) {
         loader.classList.add('hidden');
@@ -1574,7 +1611,7 @@
       return String(s).replace(/<[^>]+>/g, ' ').replace(/^Abstract[:\s]*/i, '').replace(/\s+/g, ' ').trim();
     }
 
-    // 12. HIGHLIGHTING & CARD RENDERING
+    // 13. HIGHLIGHTING & CARD RENDERING
     function getHighlightTokens() {
       const raw = document.getElementById('searchInput').value.trim();
       const inter = activeIntersection ? activeIntersection.query.replace(/OR|AND|"/g, ' ') : '';
@@ -1606,15 +1643,24 @@
       return { html, hits };
     }
 
-    function renderStatusPills(rawQ, transQ) {
+    function renderStatusPills(rawQ, transQ, methodKey) {
       const box = document.getElementById('activePillsContainer');
       const pills = [];
 
       if (isFavJournalsStream) {
         pills.push(`<span class="px-2.5 py-1 rounded-lg neon-crimson-active text-[11px] flex items-center gap-1.5"><span>♥ Favori Dergilerim</span><button onclick="toggleFavJournalsStream()">✕</button></span>`);
+      } else if (!activeDomain.isGlobal) {
+        pills.push(`<span class="px-2.5 py-1 rounded-lg glass-pill border-[var(--neon-primary)] text-[11px] flex items-center gap-1.5"><span>Disiplin: ${escapeHtml(activeDomain.name)}</span><button onclick="selectDiscipline('global_all')">✕</button></span>`);
+      }
+      if (activeJournal) {
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Dergi: ${escapeHtml(activeJournal.name)}</span><button onclick="selectJournal(null)">✕</button></span>`);
       }
       if (activeIntersection) {
         pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>Kesişim: ${escapeHtml(activeIntersection.label)}</span><button onclick="selectIntersection('${activeIntersection.id}')">✕</button></span>`);
+      }
+      if (methodKey && methodKey !== 'ALL') {
+        const methodText = document.getElementById('methodSelect').options[document.getElementById('methodSelect').selectedIndex].text;
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${escapeHtml(methodText)}</span><button onclick="document.getElementById('methodSelect').value='ALL';resetAndFetch();">✕</button></span>`);
       }
       if (activeAuthorFilter) {
         pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>Yazar: ${escapeHtml(activeAuthorFilter.name)}</span><button onclick="clearAuthorFilter()">✕</button></span>`);
@@ -1628,24 +1674,6 @@
       }
 
       box.innerHTML = pills.join('');
-    }
-
-    function applyClientFilters() {
-      const methodVal = document.getElementById('methodSelect').value;
-      const base = isVaultMode ? vaultList : currentArticles;
-
-      const filtered = base.filter(a => {
-        if (isVaultMode && activeVaultCollection !== 'ALL' && (a.folder || 'Genel Okumalar') !== activeVaultCollection) return false;
-        if (methodVal !== 'ALL' && !a.methods.includes(methodVal)) return false;
-        return true;
-      });
-
-      document.getElementById('resultsTelemetryText').textContent = isVaultMode
-        ? `Klasörde ${filtered.length} makale`
-        : `Sayfa ${currentPage} • ${filtered.length} gösterilen (Toplam: ${totalWorksCount.toLocaleString('tr-TR')})`;
-
-      renderCards(filtered);
-      lucide.createIcons();
     }
 
     function renderCards(articles) {
@@ -1723,7 +1751,7 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-primary)]"></span>
                   <span>Atıf: <strong class="title-ergonomic">${art.citations}</strong></span>
                 </span>
-                <span class="px-2 py-0.5 rounded-md glass-pill">${art.pubDate}</span>
+                <span class="px-2.5 py-0.5 rounded-md glass-pill">${art.pubDate}</span>
               </div>
             </div>
 
@@ -1742,18 +1770,18 @@
               </div>
             </div>
 
-            <!-- ERGONOMIC ABSTRACT PREVIEW (68ch max, soft silver) -->
+            <!-- ERGONOMIC ABSTRACT PREVIEW -->
             <p onclick="openInspector('${art.id}')" class="text-xs body-ergonomic ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
               ${absHL.html}
             </p>
 
-            <!-- GHOST ACTION BAR (Progressive Hover Reveal on Desktop to prevent visual crowding) -->
+            <!-- GHOST ACTION BAR -->
             <div class="ghost-actions flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono">
               <div class="flex flex-wrap items-center gap-1.5">
                 ${art.methods.map(m => `<span class="px-2 py-0.5 rounded-md glass-pill">${m}</span>`).join('')}
                 ${art.isOA ? `<span class="px-2 py-0.5 rounded-md badge-q1-elite">Açık Erişim PDF</span>` : ''}
                 ${isVaultMode && savedObj ? `
-                  <select onchange="changeArticleFolder('${art.id}', this.value)" class="glass-pill rounded-md px-2 py-0.5 text-[10px] bg-[#0a0d14] text-[#a78bfa]">
+                  <select onchange="changeArticleFolder('${art.id}', this.value)" class="themed-select rounded-md px-2 py-0.5 text-[10px]">
                     ${customCollections.map(c => `<option value="${escapeHtml(c)}" ${(savedObj.folder || 'Genel Okumalar') === c ? 'selected' : ''}>📁 ${escapeHtml(c)}</option>`).join('')}
                   </select>
                 ` : ''}
@@ -1791,7 +1819,7 @@
       }).join('');
     }
 
-    // 13. DIRECT OBSIDIAN URI PROTOCOL INTEGRATION (Section 3.2)
+    // 14. DIRECT OBSIDIAN URI PROTOCOL INTEGRATION
     function buildMarkdownContent(art) {
       const folderTag = (art.folder || 'Genel Okumalar').toLowerCase().replace(/\s+/g, '-');
       return `---
@@ -1836,7 +1864,7 @@ ${art.abstractText}
       showToast('Obsidian uygulaması tetiklendi...');
     }
 
-    // 14. CUSTOM RESEARCH COLLECTIONS / FOLDERS IN VAULT (Section 3.3)
+    // 15. CUSTOM RESEARCH COLLECTIONS / FOLDERS IN VAULT
     function renderVaultCollectionsBar() {
       const bar = document.getElementById('collectionFoldersBar');
       let html = `
@@ -1870,7 +1898,7 @@ ${art.abstractText}
     function selectVaultCollection(colName) {
       activeVaultCollection = colName;
       renderVaultCollectionsBar();
-      applyClientFilters();
+      renderVaultStream();
     }
 
     function promptNewCollection() {
@@ -1883,7 +1911,7 @@ ${art.abstractText}
       }
       activeVaultCollection = clean;
       renderVaultCollectionsBar();
-      applyClientFilters();
+      renderVaultStream();
       showToast(`"📁 ${clean}" klasörü oluşturuldu.`);
     }
 
@@ -1913,8 +1941,13 @@ ${art.abstractText}
       }
       localStorage.setItem('vibepsych_vault', JSON.stringify(vaultList));
       updateCounters();
-      if (isVaultMode) renderVaultCollectionsBar();
-      applyClientFilters();
+      if (isVaultMode) {
+        renderVaultCollectionsBar();
+        renderVaultStream();
+      } else {
+        renderCards(currentArticles);
+        lucide.createIcons();
+      }
     }
 
     function toggleVaultMode() {
@@ -1933,7 +1966,10 @@ ${art.abstractText}
 
     function renderVaultStream() {
       vaultList.forEach(a => articleMap.set(a.id, a));
-      applyClientFilters();
+      const subset = getActiveVaultSubset();
+      document.getElementById('resultsTelemetryText').textContent = `Klasörde ${subset.length} makale`;
+      renderCards(subset);
+      lucide.createIcons();
     }
 
     function getActiveVaultSubset() {
@@ -1969,14 +2005,14 @@ ${art.abstractText}
       URL.revokeObjectURL(url);
     }
 
-    // 15. DEEP INSPECTOR DRAWER / MOBILE BOTTOM SHEET
+    // 16. DEEP INSPECTOR DRAWER / MOBILE BOTTOM SHEET
     function openInspector(id) {
       const art = articleMap.get(id) || vaultList.find(v => v.id === id);
       if (!art) return;
 
       seenWorks.add(art.id);
       localStorage.setItem('vibepsych_seen_works', JSON.stringify([...seenWorks].slice(-500)));
-      applyClientFilters();
+      renderCards(isVaultMode ? getActiveVaultSubset() : currentArticles);
 
       const qBadge = document.getElementById('drawerQuartileBadge');
       qBadge.className = `text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-md ${art.qClass}`;
@@ -2007,7 +2043,6 @@ ${art.abstractText}
             </button>
           </div>
 
-          <!-- Ergonomic Segmented Abstract -->
           <div class="space-y-3">
             <div class="border-l-2 border-[var(--neon-primary)] bg-white/[0.02] pl-4 py-2.5 pr-3 rounded-r-xl">
               <span class="text-[10px] font-mono uppercase text-[var(--neon-primary)] block mb-1">Amaç & Kuramsal Çerçeve</span>
@@ -2015,7 +2050,7 @@ ${art.abstractText}
             </div>
             ${seg.method ? `
               <div class="border-l-2 border-[var(--neon-violet)] bg-white/[0.02] pl-4 py-2.5 pr-3 rounded-r-xl">
-                <span class="text-[10px] font-mono uppercase text-[#a78bfa] block mb-1">Metodoloji & Analiz</span>
+                <span class="text-[10px] font-mono uppercase text-[var(--neon-violet)] block mb-1">Metodoloji & Analiz</span>
                 <p class="text-xs body-ergonomic">${highlightText(seg.method).html}</p>
               </div>
             ` : ''}
@@ -2027,7 +2062,6 @@ ${art.abstractText}
             ` : ''}
           </div>
 
-          <!-- Snowballing -->
           <div class="pt-3 border-t border-white/[0.07] space-y-2">
             <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Kartopu Keşfi (Snowballing)</span>
             <div class="flex flex-wrap gap-2 font-mono text-xs">
@@ -2042,7 +2076,6 @@ ${art.abstractText}
             </div>
           </div>
 
-          <!-- Direct Obsidian URI, Copy & DOI -->
           <div class="pt-4 border-t border-white/[0.07] flex flex-wrap gap-2 font-mono text-xs">
             <button onclick="openInObsidianApp('${art.id}')" class="px-3.5 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -2084,7 +2117,7 @@ ${art.abstractText}
       return { bg: s.slice(0, k).join(' '), method: s.slice(k, k * 2).join(' '), res: s.slice(k * 2).join(' ') };
     }
 
-    // 16. LIVE OPENALEX VENUE DISCOVERY ENGINE IN DIRECTORY MODAL (Section 1.2)
+    // 17. LIVE OPENALEX VENUE DISCOVERY ENGINE IN DIRECTORY MODAL
     function openDirectoryModal() {
       document.getElementById('directoryModal').classList.remove('hidden');
       renderDirectoryGrid();
@@ -2223,7 +2256,7 @@ ${art.abstractText}
       selectJournal(idx >= 0 ? idx : null);
     }
 
-    // 17. HELPERS & EXPORTERS
+    // 18. HELPERS & EXPORTERS
     function pivotByAuthor(authorId, authorName) {
       if (!authorId) return;
       isVaultMode = false;
@@ -2290,6 +2323,7 @@ ${art.abstractText}
       activeSnowball = null;
       activeIntersection = null;
       activeJournal = null;
+      activeDomain = PSYCH_DOMAINS[0];
       document.getElementById('searchInput').value = '';
       document.getElementById('clearSearchBtn').classList.add('hidden');
       document.getElementById('methodSelect').value = 'ALL';
