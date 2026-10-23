@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>VibePsych</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide sürümü sabitlendi: @latest, GitHub Pages üzerinde habersiz kırılmalara yol açabilir -->
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -64,6 +65,11 @@
 
     * {
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Lucide ikonları: tasarım dili gereği 1.5px çizgi kalınlığı (createIcons attrs ile birlikte çift güvence) */
+    svg.lucide {
+      stroke-width: 1.5;
     }
 
     input[type="number"]::-webkit-inner-spin-button,
@@ -253,7 +259,7 @@
         <!-- Brand: VibePsych -->
         <button onclick="resetToHome()" class="flex items-center gap-2 group focus:outline-none shrink-0">
           <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.03] border border-white/[0.1] group-hover:border-[var(--neon-primary)] flex items-center justify-center transition">
-            <svg class="w-4 h-4 text-[var(--neon-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-4 h-4 text-[var(--neon-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 3v18"/>
               <path d="M5 7c0 5 3.5 7 7 7s7-2 7-7"/>
             </svg>
@@ -339,9 +345,7 @@
               id="favStreamBtn"
               onclick="toggleFavJournalsStream()"
               title="Favori Dergilerimdeki Makaleleri Göster"
-              class="px-2.5 py-1 rounded-lg transition border flex items-center gap-1 ${
-                false ? '' : 'bg-[#D2042D]/[0.08] title-ergonomic border-[#D2042D]/35 hover:border-[#D2042D]/70'
-              }">
+              class="px-2.5 py-1 rounded-lg transition border flex items-center gap-1 bg-[#D2042D]/[0.08] title-ergonomic border-[#D2042D]/35 hover:border-[#D2042D]/70">
               <i data-lucide="heart" id="favStreamIcon" class="w-3 h-3 text-[#D2042D]"></i>
               <span>Favoriler (<span id="favCountInline">0</span>)</span>
             </button>
@@ -373,11 +377,11 @@
 
             <span class="text-white/[0.1] hidden md:inline">|</span>
 
-            <!-- 3. Compact Year Presets + Custom Year Range -->
+            <!-- 3. Compact Year Presets + Custom Year Range (yıllar çalışma anında dinamik hesaplanır) -->
             <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">Tümü</button>
-            <button onclick="setYearFilter('2026')" data-yr="2026" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">2026</button>
+            <button onclick="setYearFilter('thisyear')" data-yr="thisyear" id="thisYearChip" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition tabular-nums">2026</button>
             <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip px-2 py-1 rounded-lg neon-primary-active transition">2024+</button>
-            <button onclick="setYearFilter('5yr')" data-yr="5yr" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">5 Yıl</button>
+            <button onclick="setYearFilter('5yr')" data-yr="5yr" id="fiveYearChip" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">5 Yıl</button>
 
             <!-- Compact Custom Year Range Input -->
             <div id="customYearBox" class="inline-flex items-center rounded-lg glass-pill px-1.5 py-0.5 gap-0.5 focus-within:border-[var(--neon-primary)] transition">
@@ -403,15 +407,16 @@
               <button 
                 onclick="applyCustomYearRange()" 
                 title="Özel Yıl Aralığını Uygula"
-                class="px-1 py-0.2 rounded bg-white/[0.06] hover:bg-[var(--neon-primary)] hover:text-black text-[10px] title-ergonomic transition">
-                ↵
+                aria-label="Özel Yıl Aralığını Uygula"
+                class="px-1 py-0.5 rounded bg-white/[0.06] hover:bg-[var(--neon-primary)] hover:text-black title-ergonomic transition flex items-center">
+                <i data-lucide="corner-down-left" class="w-3 h-3"></i>
               </button>
             </div>
 
             <button 
               id="capDateBtn" 
               onclick="toggleCapFuture()" 
-              title="İleri sayı tarihli (2027 vb.) Online First atamalarını bugüne sınırla"
+              title="İleri sayı tarihli (gelecek yıl vb.) Online First atamalarını bugüne sınırla"
               class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition">
               <span>≤Bugün</span>
             </button>
@@ -424,7 +429,7 @@
             <div class="relative flex items-center">
               <select id="methodSelect" onchange="resetAndFetch()" aria-label="Çalışma Metodolojisi" class="themed-select rounded-lg pl-2 pr-5 py-1 text-[11px] font-mono focus:outline-none focus:border-[var(--neon-primary)] appearance-none cursor-pointer">
                 <option value="ALL">Yöntem: Tümü</option>
-                <option value="LIT_REVIEW">Genel İnceleme (Review)</option>
+                <option value="LIT_REVIEW">Genel İnceleme (Review / Overview)</option>
                 <option value="META">Meta-Analiz & Sistematik</option>
                 <option value="RCT">Deneysel / RKÇ</option>
                 <option value="NEURO">fMRI / EEG</option>
@@ -438,7 +443,7 @@
             <div class="relative flex items-center">
               <select id="sortSelect" onchange="resetAndFetch()" aria-label="Sıralama Ölçütü" class="themed-select rounded-lg pl-2 pr-5 py-1 text-[11px] font-mono focus:outline-none focus:border-[var(--neon-primary)] appearance-none cursor-pointer">
                 <option value="publication_date:desc">En Güncel ↓</option>
-                <option value="relevance_score:desc">Alaka Düzeyi ↓</option>
+                <option value="relevance_score:desc">Alaka Düzeyi (BM25) ↓</option>
                 <option value="cited_by_count:desc">En Çok Atıf ↓</option>
               </select>
               <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-1.5 pointer-events-none"></i>
@@ -520,7 +525,7 @@
         <div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
           <button onclick="promptNewCollection()" class="px-2.5 py-1 rounded-lg glass-pill hover:border-[var(--neon-primary)] text-[var(--neon-primary)] flex items-center gap-1">
             <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
-            <span>+ Yeni Klasör</span>
+            <span>Yeni Klasör</span>
           </button>
           <button onclick="exportActiveCollectionAPA()" class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1">
             <i data-lucide="copy" class="w-3 h-3"></i>
@@ -558,8 +563,9 @@
     <!-- Pagination & Continuous Flow Footer -->
     <footer id="paginationBar" class="luxury-panel rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <button 
+        id="appendPageBtn"
         onclick="appendNextPage()" 
-        class="w-full sm:w-auto px-5 py-2.5 rounded-xl neon-primary-active text-xs font-mono font-medium flex items-center justify-center gap-2 transition">
+        class="w-full sm:w-auto px-5 py-2.5 rounded-xl neon-primary-active text-xs font-mono font-medium flex items-center justify-center gap-2 transition disabled:opacity-30 disabled:cursor-not-allowed">
         <i data-lucide="layers" class="w-3.5 h-3.5"></i>
         <span>Sonraki Sayfayı Akışa Ekle</span>
       </button>
@@ -596,7 +602,7 @@
       <div class="p-4 sm:p-5 border-b border-white/[0.07] flex items-center justify-between">
         <div>
           <h3 class="font-serif text-lg sm:text-xl title-ergonomic">Küresel Q1 İndeksi & Canlı Dergi Keşif Motoru</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Sabit Q1 havuzuna göz atın veya OpenAlex'teki 100.000+ dergi içinde canlı arama yapıp <span class="text-[#D2042D] font-mono">♥ Favori Dergilerinize</span> ekleyin.</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Sabit Q1 havuzuna göz atın veya OpenAlex'teki 100.000+ dergi içinde canlı arama yapıp <span class="text-[#D2042D] font-mono inline-flex items-center gap-1 align-middle"><i data-lucide="heart" class="w-3 h-3"></i>Favori Dergilerinize</span> ekleyin.</p>
         </div>
         <button onclick="closeDirectoryModal()" class="p-2 rounded-lg glass-pill hover:text-white">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -654,6 +660,47 @@
   </div>
 
   <script>
+    // 0. SHARED HELPERS (güvenli depolama, kaçış, ikon, tarih)
+    function loadJSON(key, fallback) {
+      try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return v ?? fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Inline onclick argümanları için güvenli kodlama: JSON.stringify + HTML kaçışı
+    // (tırnak, ters bölü vb. içeren dergi / yazar adları artık butonları bozmaz)
+    function jsArg(v) {
+      return escapeHtml(JSON.stringify(v ?? ''));
+    }
+
+    // Lucide ikon yer tutucusu (emoji yerine)
+    function ic(name, cls = 'w-3 h-3') {
+      return `<i data-lucide="${name}" class="${cls}"></i>`;
+    }
+
+    function refreshIcons() {
+      lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });
+    }
+
+    const CURRENT_YEAR = new Date().getFullYear();
+
+    function todayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
     // 1. TURKISH -> ENGLISH ACADEMIC PSYCHOLOGY BRIDGE
     const TR_EN_MAP = {
       'üstbiliş': 'metacognition',
@@ -690,6 +737,8 @@
       'bilişsel davranışçı': 'cognitive behavioral therapy cbt',
       'siberpsikoloji': 'cyberpsychology human computer interaction'
     };
+    // En uzun terim önce eşleşir ("ahlaki ikilem", "ahlak"tan önce)
+    const TR_KEYS_SORTED = Object.keys(TR_EN_MAP).sort((a, b) => b.length - a.length);
 
     // 2. SERVER-SIDE (API) METHODOLOGY QUERIES
     const API_METHOD_QUERIES = {
@@ -700,6 +749,14 @@
       'LONG': '(longitudinal OR "prospective cohort" OR "panel study" OR "follow-up")',
       'PSYCHOM': '(psychometric OR "scale development" OR "confirmatory factor" OR "item response")'
     };
+
+    // 2b. KÜRESEL PSİKOLOJİ KAPSAMI (OpenAlex Topics → Subfield ID'leri)
+    // Psikoloji (32xx), Sinirbilim (28xx), Psikiyatri & Ruh Sağlığı (2738), İnsan-Bilgisayar Etkileşimi (1709)
+    const PSYCH_SUBFIELDS = [
+      '3200', '3202', '3203', '3204', '3205', '3206', '3207',
+      '2802', '2803', '2804', '2805', '2806', '2807', '2808', '2809',
+      '2738', '1709'
+    ].join('|');
 
     // 3. UNIFIED 16-DISCIPLINE TAXONOMY
     const PSYCH_DOMAINS = [
@@ -951,21 +1008,30 @@
     let activeSnowball = null;
 
     let currentPage = 1;
+    let firstLoadedPage = 1;      // Akışa sayfa eklendiğinde gösterilen aralığın başı
+    let currentPageSize = 25;     // Sayfalama hesabı her zaman gerçek sayfa boyutunu kullanır
     let totalWorksCount = 0;
+    let fetchSeq = 0;             // Yarış koşulu koruması: yalnızca en son sorgu ekrana basılır
+    let fallbackActive = false;   // false | 'psych' | 'all' — aktif Smart Fallback seviyesi
+    let autoFillRuns = 0;         // Sadece Q1 modunda seyrek sayfalar için otomatik ek sayfa sayacı
+    const Q1_MIN_VISIBLE = 10;
+    const AUTO_FILL_MAX = 3;
+    const OPENALEX_MAX_RESULTS = 10000; // OpenAlex page × per-page sınırı
 
     let articleMap = new Map();
     let currentArticles = [];
     let sourceCache = {};
 
-    let favJournals = JSON.parse(localStorage.getItem('vibepsych_fav_journals') || '[]');
-    let vaultList = JSON.parse(localStorage.getItem('vibepsych_vault') || '[]');
-    let customCollections = JSON.parse(localStorage.getItem('vibepsych_collections') || '["Genel Okumalar", "Üstbiliş & AI", "Klinik & Terapi"]');
+    let favJournals = loadJSON('vibepsych_fav_journals', []);
+    let vaultList = loadJSON('vibepsych_vault', []);
+    let customCollections = loadJSON('vibepsych_collections', ['Genel Okumalar', 'Üstbiliş & AI', 'Klinik & Terapi']);
     let activeVaultCollection = 'ALL';
-    let seenWorks = new Set(JSON.parse(localStorage.getItem('vibepsych_seen_works') || '[]'));
+    let seenWorks = new Set(loadJSON('vibepsych_seen_works', []));
 
     let typingTimer = null;
     let dirSearchTimer = null;
     let lastScrollY = 0;
+    let toastTimer = null;
 
     // 4. INITIALIZATION
     function initVibePsych() {
@@ -973,7 +1039,17 @@
         document.body.classList.add('cyber-mode');
         document.getElementById('themeToggleBtn').className = 'p-1.5 sm:p-2 rounded-xl glass-pill hover:text-white transition';
       }
-      lucide.createIcons();
+
+      // Dinamik yıl etiketleri (sabit kodlanmış yıllar zamanla eskimesin)
+      document.getElementById('thisYearChip').textContent = CURRENT_YEAR;
+      document.getElementById('thisYearChip').title = `Yalnızca ${CURRENT_YEAR} yayınları`;
+      document.getElementById('fiveYearChip').title = `Son 5 takvim yılı (${CURRENT_YEAR - 4}–${CURRENT_YEAR})`;
+      ['customYearFrom', 'customYearTo'].forEach(id => {
+        document.getElementById(id).max = CURRENT_YEAR + 1;
+      });
+      document.getElementById('customYearTo').placeholder = CURRENT_YEAR;
+
+      refreshIcons();
       updateCounters();
       renderDisciplinePopoverItems();
       renderJournalStrip();
@@ -1021,7 +1097,7 @@
           closeDisciplinePopover();
           hideAutocomplete();
         }
-        if (tag !== 'input' && tag !== 'select' && !isVaultMode) {
+        if (tag !== 'input' && tag !== 'select' && tag !== 'textarea' && !isVaultMode) {
           if (e.key === '[') stepJournal(-1);
           if (e.key === ']') stepJournal(1);
         }
@@ -1084,17 +1160,18 @@
         const isCurrent = !isVaultMode && !isFavJournalsStream && d.id === activeDomain.id;
         return `
           <button 
-            onclick="selectDiscipline('${d.id}')"
+            onclick="selectDiscipline(${jsArg(d.id)})"
             class="w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition flex items-center justify-between border ${
               isCurrent 
                 ? 'neon-primary-active font-semibold' 
                 : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.06] text-slate-300 hover:text-white'
             }">
-            <span class="truncate pr-2">${d.isGlobal ? '🌐 ' : ''}${escapeHtml(d.name)}</span>
+            <span class="truncate pr-2 flex items-center gap-1.5">${d.isGlobal ? ic('globe', 'w-3.5 h-3.5 text-[var(--neon-primary)] shrink-0') : ''}<span class="truncate">${escapeHtml(d.name)}</span></span>
             <span class="text-[10px] opacity-65 shrink-0">${d.journals.length} Q1</span>
           </button>
         `;
       }).join('');
+      refreshIcons();
     }
 
     function selectDiscipline(id) {
@@ -1126,7 +1203,7 @@
         showToast(`"${removed}" favorilerden çıkarıldı.`);
       } else {
         favJournals.push({ issn: issn || '', name });
-        showToast(`♥ "${name}" Favori Dergilerinize eklendi.`);
+        showToast(`"${name}" Favori Dergilerinize eklendi.`);
       }
 
       localStorage.setItem('vibepsych_fav_journals', JSON.stringify(favJournals));
@@ -1147,7 +1224,7 @@
     function toggleFavJournalsStream() {
       closeDisciplinePopover();
       if (favJournals.length === 0) {
-        showToast('Önce dergilerin yanındaki kalp (♥) ikonuna dokunarak favori dergi listenizi oluşturun.');
+        showToast('Önce dergilerin yanındaki kalp ikonuna dokunarak favori dergi listenizi oluşturun.');
         openDirectoryModal();
         return;
       }
@@ -1169,14 +1246,14 @@
       document.getElementById('mobVaultCount').textContent = vaultList.length;
 
       const favBtn = document.getElementById('favStreamBtn');
-      const favIcon = document.getElementById('favStreamIcon');
       if (isFavJournalsStream) {
         favBtn.className = 'px-2.5 py-1 rounded-lg transition border flex items-center gap-1 neon-crimson-active';
-        if (favIcon) favIcon.classList.add('fill-[#D2042D]');
       } else {
         favBtn.className = 'px-2.5 py-1 rounded-lg transition border flex items-center gap-1 bg-[#D2042D]/[0.08] title-ergonomic border-[#D2042D]/35 hover:border-[#D2042D]/70';
-        if (favIcon) favIcon.classList.remove('fill-[#D2042D]');
       }
+      // Lucide <i>'yi <svg>'ye dönüştürdüğü için ikon her seferinde seçici ile bulunur
+      const favIcon = favBtn.querySelector('svg, i');
+      if (favIcon) favIcon.classList.toggle('fill-[#D2042D]', isFavJournalsStream);
     }
 
     // 8. JOURNAL STRIP RENDERER
@@ -1189,6 +1266,7 @@
         updateOfficialSiteLink(activeJournal.issn);
       } else {
         siteBtn.classList.add('hidden');
+        siteBtn.classList.remove('inline-flex');
       }
 
       const poolActive = activeJournal === null;
@@ -1204,7 +1282,7 @@
               ? (isFavJournalsStream ? 'neon-crimson-active' : 'neon-primary-active') 
               : 'glass-pill hover:text-white'
           }">
-          ${poolLabel}
+          ${escapeHtml(poolLabel)}
         </button>
       `;
 
@@ -1222,7 +1300,7 @@
               ${escapeHtml(j.name)}
             </button>
             <button 
-              onclick="toggleFavoriteJournal('${j.issn || ''}', '${j.name.replace(/'/g, "\\'")}', event)"
+              onclick="toggleFavoriteJournal(${jsArg(j.issn || '')}, ${jsArg(j.name)}, event)"
               class="px-1.5 py-1 hover:bg-white/[0.08] transition flex items-center">
               <i data-lucide="heart" class="w-3 h-3 ${isFav ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
             </button>
@@ -1231,7 +1309,7 @@
       });
 
       strip.innerHTML = html;
-      lucide.createIcons();
+      refreshIcons();
     }
 
     function selectJournal(idx) {
@@ -1276,7 +1354,7 @@
             impact_2yr: src.summary_stats?.['2yr_mean_citedness'] || 0,
             homepage_url: src.homepage_url || null
           };
-          if (src.homepage_url) {
+          if (src.homepage_url && activeJournal?.issn === issn) {
             btn.href = src.homepage_url;
             btn.classList.remove('hidden');
             btn.classList.add('inline-flex');
@@ -1286,19 +1364,22 @@
     }
 
     // 9. INLINE FILTER CONTROLS
-    function setYearFilter(yr) {
+    function setYearFilter(yr, skipFetch = false) {
       activeYearFilter = yr;
       if (yr !== 'custom') {
+        customYearFrom = null;
+        customYearTo = null;
         document.getElementById('customYearFrom').value = '';
         document.getElementById('customYearTo').value = '';
         document.getElementById('customYearBox').className = 'inline-flex items-center rounded-lg glass-pill px-1.5 py-0.5 gap-0.5 focus-within:border-[var(--neon-primary)] transition';
       }
       document.querySelectorAll('.yr-chip').forEach(btn => {
-        btn.className = btn.dataset.yr === yr
+        const base = btn.dataset.yr === 'thisyear' ? ' tabular-nums' : '';
+        btn.className = (btn.dataset.yr === yr
           ? 'yr-chip px-2 py-1 rounded-lg neon-primary-active transition'
-          : 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition';
+          : 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition') + base;
       });
-      resetAndFetch();
+      if (!skipFetch) resetAndFetch();
     }
 
     function applyCustomYearRange() {
@@ -1310,8 +1391,8 @@
         return;
       }
 
-      customYearFrom = (!isNaN(fromVal) && fromVal >= 1800 && fromVal <= 2035) ? fromVal : null;
-      customYearTo = (!isNaN(toVal) && toVal >= 1800 && toVal <= 2035) ? toVal : null;
+      customYearFrom = (!isNaN(fromVal) && fromVal >= 1800 && fromVal <= CURRENT_YEAR + 1) ? fromVal : null;
+      customYearTo = (!isNaN(toVal) && toVal >= 1800 && toVal <= CURRENT_YEAR + 1) ? toVal : null;
 
       if (customYearFrom && customYearTo && customYearFrom > customYearTo) {
         const temp = customYearFrom;
@@ -1321,9 +1402,15 @@
         document.getElementById('customYearTo').value = customYearTo;
       }
 
+      if (!customYearFrom && !customYearTo) {
+        showToast(`Geçerli bir yıl aralığı girin (1800–${CURRENT_YEAR + 1}).`);
+        return;
+      }
+
       activeYearFilter = 'custom';
       document.querySelectorAll('.yr-chip').forEach(btn => {
-        btn.className = 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition';
+        const base = btn.dataset.yr === 'thisyear' ? ' tabular-nums' : '';
+        btn.className = 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition' + base;
       });
       document.getElementById('customYearBox').className = 'inline-flex items-center rounded-lg neon-primary-active px-1.5 py-0.5 gap-0.5 transition';
       resetAndFetch();
@@ -1346,6 +1433,10 @@
         ? 'Sadece Q1 Modu Aktif: Yalnızca yüksek etki faktörlü Q1 dergiler listelenir.'
         : 'Tüm Dergiler Modu: Q2/Q3 ve tüm indeksli dergiler sonuçlara dahil edildi.');
       renderFilteredCards();
+      if (onlyQ1) {
+        autoFillRuns = 0;
+        maybeAutoFillQ1(fetchSeq);
+      }
     }
 
     function toggleOAFilter() {
@@ -1364,18 +1455,31 @@
       renderFilteredCards();
     }
 
+    function clearMethodFilter() {
+      document.getElementById('methodSelect').value = 'ALL';
+      resetAndFetch();
+    }
+
     // 10. SEARCH & AUTOCOMPLETE
+    // Tüm Türkçe terimler (yalnızca ilki değil) en uzundan kısaya çevrilir; sorgunun geri kalanının
+    // büyük/küçük harfi korunur. Yer tutucu kullanımı, çevirinin tekrar çevrilmesini (örn. "bipolar") engeller.
     function translateQuery(raw) {
-      let q = raw.trim();
-      const low = q.toLowerCase();
+      const q = String(raw || '').trim();
+      if (!q) return '';
+      const trLower = s => s.toLocaleLowerCase('tr-TR');
+      const low = trLower(q);
       if (TR_EN_MAP[low]) return TR_EN_MAP[low];
-      for (const [tr, en] of Object.entries(TR_EN_MAP)) {
-        if (low.includes(tr)) {
-          q = low.replace(tr, en);
-          break;
+
+      let out = q;
+      const repl = [];
+      for (const tr of TR_KEYS_SORTED) {
+        let idx;
+        while ((idx = trLower(out).indexOf(tr)) > -1) {
+          out = out.slice(0, idx) + `\u0000${repl.length}\u0000` + out.slice(idx + tr.length);
+          repl.push(TR_EN_MAP[tr]);
         }
       }
-      return q;
+      return out.replace(/\u0000(\d+)\u0000/g, (_, i) => repl[Number(i)]);
     }
 
     function handleSearchInput() {
@@ -1405,17 +1509,18 @@
         menu.innerHTML = `
           <div class="px-3.5 py-1.5 bg-black/60 text-[10px] font-mono text-[var(--neon-primary)] flex items-center justify-between">
             <span>Hızlı Eşleşmeler (Tam arama için Enter)</span>
-            ${trans !== query.trim() ? `<span class="text-[var(--neon-emerald)]">TR➔EN: ${escapeHtml(trans)}</span>` : ''}
+            ${trans !== query.trim() ? `<span class="text-[var(--neon-emerald)] inline-flex items-center gap-1">TR ${ic('arrow-right', 'w-2.5 h-2.5')} EN: ${escapeHtml(trans)}</span>` : ''}
           </div>
         ` + list.map(it => `
           <button 
-            onclick="pickAutocomplete('${escapeHtml(it.display_name).replace(/'/g, "\\'")}')"
+            onclick="pickAutocomplete(${jsArg(it.display_name)})"
             class="w-full text-left px-3.5 py-2 hover:bg-white/[0.06] transition flex items-center justify-between gap-3">
             <span class="text-xs title-ergonomic line-clamp-1 font-serif">${escapeHtml(it.display_name)}</span>
             <span class="text-[10px] font-mono text-slate-500 shrink-0">${escapeHtml(it.hint || '')}</span>
           </button>
         `).join('');
         menu.classList.remove('hidden');
+        refreshIcons();
       } catch (e) {
         hideAutocomplete();
       }
@@ -1423,6 +1528,7 @@
 
     function pickAutocomplete(title) {
       document.getElementById('searchInput').value = title;
+      document.getElementById('clearSearchBtn').classList.remove('hidden');
       hideAutocomplete();
       executeSearch();
     }
@@ -1449,24 +1555,72 @@
 
     // 11. CORE OPENALEX FETCH ENGINE
     function resetAndFetch() {
+      fetchSeq++;
       currentPage = 1;
+      firstLoadedPage = 1;
+      autoFillRuns = 0;
+      fallbackActive = false;
       document.getElementById('fallbackNotice').classList.add('hidden');
-      fetchLiterature(false, false);
+      fetchLiterature(false, false, fetchSeq);
     }
 
     function goToPage(p) {
-      if (p < 1) return;
+      if (p < 1 || p > getMaxPage()) return;
+      fetchSeq++;
       currentPage = p;
-      fetchLiterature(false, false);
+      firstLoadedPage = p;
+      autoFillRuns = 0;
+      fetchLiterature(false, fallbackActive, fetchSeq);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function appendNextPage() {
+      if (isVaultMode || currentPage >= getMaxPage()) return;
+      autoFillRuns = 0;
       currentPage += 1;
-      fetchLiterature(true, false);
+      fetchLiterature(true, fallbackActive, fetchSeq);
     }
 
-    async function fetchLiterature(appendMode = false, isFallback = false) {
+    function getMaxPage() {
+      return Math.max(1, Math.min(
+        Math.floor(OPENALEX_MAX_RESULTS / currentPageSize),
+        Math.ceil(totalWorksCount / currentPageSize)
+      ));
+    }
+
+    // Yıl filtreleri HER ZAMAN (Smart Fallback dahil) API düzeyinde uygulanır.
+    function buildDateFilters() {
+      const f = [];
+      let fromDate = null;
+      let toDate = null;
+
+      if (activeYearFilter === 'thisyear') fromDate = `${CURRENT_YEAR}-01-01`;
+      else if (activeYearFilter === '2024+') fromDate = '2024-01-01';
+      else if (activeYearFilter === '5yr') fromDate = `${CURRENT_YEAR - 4}-01-01`;
+      else if (activeYearFilter === 'custom') {
+        if (customYearFrom) fromDate = `${customYearFrom}-01-01`;
+        if (customYearTo) toDate = `${customYearTo}-12-31`;
+      }
+
+      if (capFutureDates) {
+        const today = todayISO();
+        if (!toDate || today < toDate) toDate = today;
+      }
+
+      if (fromDate) f.push(`from_publication_date:${fromDate}`);
+      if (toDate) f.push(`to_publication_date:${toDate}`);
+      return f;
+    }
+
+    /**
+     * @param {boolean} appendMode  Sonuçları mevcut akışa ekle
+     * @param {false|'psych'|'all'} fallbackLevel  Smart Fallback seviyesi:
+     *        'psych' → dergi/alan havuzu kaldırılır, psikoloji & sinirbilim konu kapsamı korunur
+     *        'all'   → konu kapsamı da kaldırılır (tüm disiplinler)
+     *        Her iki seviyede de yıl, yöntem, arama ve PDF filtreleri korunur.
+     * @param {number} seq  Yarış koşulu koruması için sorgu sıra numarası
+     */
+    async function fetchLiterature(appendMode = false, fallbackLevel = false, seq = fetchSeq) {
       document.getElementById('vaultCollectionsPanel').classList.toggle('hidden', !isVaultMode);
       if (isVaultMode) {
         renderVaultCollectionsBar();
@@ -1482,52 +1636,51 @@
       const rawQ = document.getElementById('searchInput').value.trim();
       const effectiveQ = translateQuery(rawQ);
       const hasSearch = effectiveQ.length > 0;
-      const sortVal = document.getElementById('sortSelect').value;
+      const sortSelect = document.getElementById('sortSelect');
       const methodKey = document.getElementById('methodSelect').value;
 
-      let filters = ['type:article|review'];
-
-      if (!isFallback) {
-        if (activeYearFilter === '2026') {
-          filters.push('from_publication_date:2026-01-01');
-        } else if (activeYearFilter === '2024+') {
-          filters.push('from_publication_date:2024-01-01');
-        } else if (activeYearFilter === '5yr') {
-          filters.push('from_publication_date:2021-01-01');
-        } else if (activeYearFilter === 'custom') {
-          if (customYearFrom) filters.push(`from_publication_date:${customYearFrom}-01-01`);
-          if (customYearTo) filters.push(`to_publication_date:${customYearTo}-12-31`);
-        }
-      }
-
-      if (capFutureDates) {
-        const today = new Date().toISOString().split('T')[0];
-        filters.push(`to_publication_date:${today}`);
-      }
-
+      const filters = ['type:article|review', ...buildDateFilters()];
       if (onlyOA) filters.push('is_oa:true');
+
+      // Kapsam: 'pool' (elit Q1 ISSN havuzu), 'journal' (tek dergi), 'psych' (psikoloji konu kapsamı), 'open' (kısıtsız)
+      let scope = 'open';
 
       if (activeAuthorFilter) {
         filters.push(`author.id:${activeAuthorFilter.id}`);
       } else if (activeSnowball) {
         const shortId = activeSnowball.workId.replace('https://openalex.org/', '');
         filters.push(activeSnowball.mode === 'cites' ? `cites:${shortId}` : `related_to:${shortId}`);
-      } else if (isFallback) {
-        // Fallback: Global
+      } else if (fallbackLevel === 'psych') {
+        filters.push(`topics.subfield.id:${PSYCH_SUBFIELDS}`);
+        scope = 'psych';
+      } else if (fallbackLevel === 'all') {
+        // Fallback: tüm disiplinler (yıl/yöntem/arama korunur)
       } else if (isFavJournalsStream) {
         const favIssns = favJournals.map(j => j.issn).filter(Boolean);
-        if (activeJournal?.issn) filters.push(`primary_location.source.issn:${activeJournal.issn}`);
-        else if (favIssns.length > 0) filters.push(`primary_location.source.issn:${favIssns.join('|')}`);
+        if (activeJournal?.issn) {
+          filters.push(`primary_location.source.issn:${activeJournal.issn}`);
+          scope = PRESTIGE_ISSNS.has(activeJournal.issn) ? 'pool' : 'journal';
+        } else if (favIssns.length > 0) {
+          filters.push(`primary_location.source.issn:${favIssns.join('|')}`);
+          scope = favIssns.every(i => PRESTIGE_ISSNS.has(i)) ? 'pool' : 'journal';
+        }
       } else if (activeJournal?.issn) {
         filters.push(`primary_location.source.issn:${activeJournal.issn}`);
+        scope = PRESTIGE_ISSNS.has(activeJournal.issn) ? 'pool' : 'journal';
       } else if (activeDomain.isGlobal) {
         if (!hasSearch && methodKey === 'ALL') {
           const issnPool = activeDomain.journals.map(j => j.issn).join('|');
           filters.push(`primary_location.source.issn:${issnPool}`);
+          scope = 'pool';
+        } else {
+          // Küresel arama: tüm psikoloji / sinirbilim / psikiyatri / HCI literatürü (fizik vb. sızmaz)
+          filters.push(`topics.subfield.id:${PSYCH_SUBFIELDS}`);
+          scope = 'psych';
         }
       } else {
         const issnPool = activeDomain.journals.map(j => j.issn).join('|');
         filters.push(`primary_location.source.issn:${issnPool}`);
+        scope = 'pool';
       }
 
       const queryParts = [];
@@ -1537,27 +1690,52 @@
       }
 
       const finalSearchString = queryParts.join(' AND ');
-      const pageSize = (activeDomain.isGlobal && hasSearch && onlyQ1) ? 40 : 25;
+      const willSendSearch = Boolean(finalSearchString) && !activeAuthorFilter && !activeSnowball;
+
+      // OpenAlex, arama terimi olmadan relevance_score sıralamasını 400 hatasıyla reddeder
+      let sortVal = sortSelect.value;
+      if (sortVal.startsWith('relevance_score') && !willSendSearch) {
+        sortVal = 'publication_date:desc';
+        sortSelect.value = sortVal;
+        if (!appendMode) showToast('Alaka Düzeyi sıralaması bir arama terimi gerektirir; En Güncel sıralamaya geçildi.');
+      }
+
+      // Q1 süzgeci istemci tarafında çalıştığından, açık kapsamlarda daha büyük sayfa çekilir
+      if (!appendMode) currentPageSize = (onlyQ1 && scope !== 'pool') ? 50 : 25;
+      const pageSize = currentPageSize;
 
       let apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=${pageSize}&page=${currentPage}`;
-      if (finalSearchString && !activeAuthorFilter && !activeSnowball) {
+      if (willSendSearch) {
         apiUrl += `&search=${encodeURIComponent(finalSearchString)}`;
       }
 
       try {
         const res = await fetch(apiUrl);
+        if (seq !== fetchSeq) return;
+        if (!res.ok) {
+          let msg = '';
+          try { msg = (await res.json()).message || ''; } catch (e) {}
+          throw new Error(msg || `HTTP ${res.status}`);
+        }
         const data = await res.json();
+        if (seq !== fetchSeq) return;
         const works = data.results || [];
-        totalWorksCount = data.meta?.count || works.length;
 
-        if (works.length === 0 && !isFallback && (finalSearchString || activeJournal || !activeDomain.isGlobal || isFavJournalsStream)) {
+        // SMART FALLBACK: yalnızca kısıtlı kapsamda ve gerçek "0 sonuç" durumunda (HTTP hatasında değil)
+        if (works.length === 0 && !appendMode && fallbackLevel !== 'all' &&
+            !activeAuthorFilter && !activeSnowball && scope !== 'open') {
+          const nextLevel = scope === 'psych' ? 'all' : 'psych';
           const fb = document.getElementById('fallbackNotice');
-          document.getElementById('fallbackNoticeText').textContent = 
-            `Seçili dar dergi havuzunda eşleşme bulunamadı; kısıtlama esnetilerek küresel literatür sonuçları getirildi.`;
+          document.getElementById('fallbackNoticeText').textContent = nextLevel === 'psych'
+            ? 'Seçili dergi havuzunda eşleşme bulunamadı; yıl ve yöntem filtreleri korunarak arama tüm psikoloji ve sinirbilim literatürüne genişletildi.'
+            : 'Psikoloji ve sinirbilim kapsamında eşleşme bulunamadı; yıl ve yöntem filtreleri korunarak arama tüm disiplinlere genişletildi.';
           fb.classList.remove('hidden');
-          await fetchLiterature(false, true);
+          await fetchLiterature(false, nextLevel, seq);
           return;
         }
+
+        totalWorksCount = data.meta?.count ?? works.length;
+        if (!appendMode) fallbackActive = fallbackLevel;
 
         const missingIds = [...new Set(
           works
@@ -1567,17 +1745,22 @@
         )];
 
         if (missingIds.length > 0) {
-          const sRes = await fetch(`https://api.openalex.org/sources?filter=openalex_id:${missingIds.slice(0, 40).join('|')}&per-page=40`);
-          const sData = await sRes.json();
-          (sData.results || []).forEach(src => {
-            const info = {
-              h_index: src.summary_stats?.h_index || 0,
-              impact_2yr: src.summary_stats?.['2yr_mean_citedness'] || 0,
-              homepage_url: src.homepage_url || null
-            };
-            sourceCache[src.id] = info;
-            if (src.issn_l) sourceCache[src.issn_l] = info;
-          });
+          try {
+            const sRes = await fetch(`https://api.openalex.org/sources?filter=openalex_id:${missingIds.slice(0, 50).join('|')}&per-page=50`);
+            const sData = await sRes.json();
+            (sData.results || []).forEach(src => {
+              const info = {
+                h_index: src.summary_stats?.h_index || 0,
+                impact_2yr: src.summary_stats?.['2yr_mean_citedness'] || 0,
+                homepage_url: src.homepage_url || null
+              };
+              sourceCache[src.id] = info;
+              if (src.issn_l) sourceCache[src.issn_l] = info;
+            });
+          } catch (e) {
+            // Dergi metrikleri alınamazsa makaleler yine de gösterilir
+          }
+          if (seq !== fetchSeq) return;
         }
 
         const processed = works
@@ -1597,10 +1780,30 @@
         renderStatusPills(rawQ, effectiveQ, methodKey);
         renderFilteredCards();
         renderPagination();
+        maybeAutoFillQ1(seq);
 
       } catch (err) {
+        if (seq !== fetchSeq) return;
         loader.classList.add('hidden');
-        container.innerHTML = `<div class="luxury-panel rounded-2xl p-8 text-center text-xs font-mono text-[#D2042D]">Bağlantı hatası: ${escapeHtml(err.message)}</div>`;
+        if (appendMode) {
+          currentPage = Math.max(firstLoadedPage, currentPage - 1);
+          showToast(`Sonraki sayfa yüklenemedi: ${err.message}`);
+          renderPagination();
+        } else {
+          container.innerHTML = `<div class="luxury-panel rounded-2xl p-8 text-center text-xs font-mono text-[#D2042D]">Sorgu hatası: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+    }
+
+    // Sadece Q1 açıkken sayfada çok az Q1 makale kaldıysa, en fazla AUTO_FILL_MAX ek sayfa otomatik eklenir
+    function maybeAutoFillQ1(seq) {
+      if (isVaultMode || !onlyQ1 || seq !== fetchSeq) return;
+      if (currentArticles.length === 0) return;
+      const visible = currentArticles.filter(a => a.isQ1).length;
+      if (visible < Q1_MIN_VISIBLE && autoFillRuns < AUTO_FILL_MAX && currentPage < getMaxPage()) {
+        autoFillRuns++;
+        currentPage += 1;
+        fetchLiterature(true, fallbackActive, seq);
       }
     }
 
@@ -1642,10 +1845,17 @@
       if (/psychometric|confirmatory factor|cronbach|item response|scale/.test(textCorpus)) methods.push('Psikometri / Ölçek');
       if (methods.length === 0) methods.push('Araştırma');
 
-      const authorObjs = (w.authorships || []).slice(0, 4).map(a => ({
+      const authorships = w.authorships || [];
+      const authorObjs = authorships.slice(0, 4).map(a => ({
         id: a.author?.id ? a.author.id.replace('https://openalex.org/', '') : '',
         name: a.author?.display_name || ''
       })).filter(a => a.name);
+
+      // APA 7 için yazar listesi: ≤20 yazarın tamamı; 21+ ise ilk 19 + son yazar (kasada şişme olmasın)
+      const allNames = authorships.map(a => a.author?.display_name).filter(Boolean);
+      const apaAuthors = allNames.length <= 20 ? allNames : [...allNames.slice(0, 19), allNames[allNames.length - 1]];
+
+      const biblio = w.biblio || {};
 
       return {
         id: w.id,
@@ -1665,7 +1875,12 @@
         doi: w.doi || '',
         authorObjs,
         authors: authorObjs.map(a => a.name),
-        totalAuthors: (w.authorships || []).length,
+        apaAuthors,
+        totalAuthors: authorships.length,
+        volume: biblio.volume || '',
+        issue: biblio.issue || '',
+        firstPage: biblio.first_page || '',
+        lastPage: biblio.last_page || '',
         abstractText: absText,
         methods,
         folder: 'Genel Okumalar'
@@ -1698,15 +1913,12 @@
       )];
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
     function highlightText(text) {
       const safe = escapeHtml(text || '');
       const tokens = getHighlightTokens();
       if (tokens.length === 0) return { html: safe, hits: 0 };
-      const pattern = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+      // Token'lar da kaçışlanır ki "&" vb. içeren aramalar kaçışlanmış metinle eşleşsin
+      const pattern = tokens.map(t => escapeHtml(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
       const rx = new RegExp(`(${pattern})`, 'gi');
       let hits = 0;
       const html = safe.replace(rx, m => {
@@ -1716,37 +1928,45 @@
       return { html, hits };
     }
 
+    function pillCloseBtn(onclickCode) {
+      return `<button onclick="${onclickCode}" aria-label="Filtreyi kaldır" class="opacity-70 hover:opacity-100 flex items-center">${ic('x', 'w-3 h-3')}</button>`;
+    }
+
     function renderStatusPills(rawQ, transQ, methodKey) {
       const box = document.getElementById('activePillsContainer');
       const pills = [];
 
       if (isFavJournalsStream) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-crimson-active text-[11px] flex items-center gap-1.5"><span>♥ Favori Dergilerim</span><button onclick="toggleFavJournalsStream()">✕</button></span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-crimson-active text-[11px] flex items-center gap-1.5">${ic('heart', 'w-3 h-3 fill-current')}<span>Favori Dergilerim</span>${pillCloseBtn('toggleFavJournalsStream()')}</span>`);
       } else if (!activeDomain.isGlobal) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg glass-pill border-[var(--neon-primary)] text-[11px] flex items-center gap-1.5"><span>Alan: ${escapeHtml(activeDomain.name)}</span><button onclick="selectDiscipline('global_all')">✕</button></span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg glass-pill border-[var(--neon-primary)] text-[11px] flex items-center gap-1.5"><span>Alan: ${escapeHtml(activeDomain.name)}</span>${pillCloseBtn(`selectDiscipline(${jsArg('global_all')})`)}</span>`);
       }
       if (activeJournal) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Dergi: ${escapeHtml(activeJournal.name)}</span><button onclick="selectJournal(null)">✕</button></span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Dergi: ${escapeHtml(activeJournal.name)}</span>${pillCloseBtn('selectJournal(null)')}</span>`);
       }
       if (activeYearFilter === 'custom' && (customYearFrom || customYearTo)) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Yıl: ${customYearFrom || '...'} – ${customYearTo || 'Güncel'}</span><button onclick="setYearFilter('2024+')">✕</button></span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5 tabular-nums"><span>Yıl: ${customYearFrom || '...'} – ${customYearTo || 'Güncel'}</span>${pillCloseBtn(`setYearFilter(${jsArg('2024+')})`)}</span>`);
       }
       if (methodKey && methodKey !== 'ALL') {
-        const methodText = document.getElementById('methodSelect').options[document.getElementById('methodSelect').selectedIndex].text;
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${escapeHtml(methodText)}</span><button onclick="document.getElementById('methodSelect').value='ALL';resetAndFetch();">✕</button></span>`);
+        const sel = document.getElementById('methodSelect');
+        const methodText = sel.options[sel.selectedIndex].text;
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${escapeHtml(methodText)}</span>${pillCloseBtn('clearMethodFilter()')}</span>`);
       }
       if (activeAuthorFilter) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>Yazar: ${escapeHtml(activeAuthorFilter.name)}</span><button onclick="clearAuthorFilter()">✕</button></span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>Yazar: ${escapeHtml(activeAuthorFilter.name)}</span>${pillCloseBtn('clearAuthorFilter()')}</span>`);
       }
       if (activeSnowball) {
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${activeSnowball.mode === 'cites' ? 'Atıf Yapanlar' : 'Benzerler'}</span><button onclick="clearSnowball()">✕</button></span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${activeSnowball.mode === 'cites' ? 'Atıf Yapanlar' : 'Benzerler'}</span>${pillCloseBtn('clearSnowball()')}</span>`);
       }
       if (rawQ) {
-        const lbl = transQ !== rawQ ? `"${rawQ}" ➔ ${transQ}` : `"${rawQ}"`;
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Arama: ${escapeHtml(lbl)}</span><button onclick="clearSearch()">✕</button></span>`);
+        const lbl = transQ !== rawQ
+          ? `"${escapeHtml(rawQ)}" ${ic('arrow-right', 'w-3 h-3 inline-block align-[-2px]')} ${escapeHtml(transQ)}`
+          : `"${escapeHtml(rawQ)}"`;
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Arama: ${lbl}</span>${pillCloseBtn('clearSearch()')}</span>`);
       }
 
       box.innerHTML = pills.join('');
+      refreshIcons();
     }
 
     function renderFilteredCards() {
@@ -1756,12 +1976,15 @@
         return true;
       });
 
+      const pageLabel = currentPage > firstLoadedPage ? `${firstLoadedPage}–${currentPage}` : `${currentPage}`;
       document.getElementById('resultsTelemetryText').textContent = isVaultMode
         ? `Klasörde ${filtered.length} makale`
-        : `Sayfa ${currentPage} • ${filtered.length} gösterilen ${onlyQ1 ? '(Sadece Q1)' : '(Tüm İndeks)'} • Toplam: ${totalWorksCount.toLocaleString('tr-TR')}`;
+        : `Sayfa ${pageLabel} • ${filtered.length} gösterilen / ${currentArticles.length} yüklenen ${onlyQ1 ? '(Sadece Q1)' : '(Tüm İndeks)'} • Toplam: ${totalWorksCount.toLocaleString('tr-TR')}`;
+
+      document.getElementById('paginationBar').classList.toggle('hidden', isVaultMode);
 
       renderCards(filtered);
-      lucide.createIcons();
+      refreshIcons();
     }
 
     function renderCards(articles) {
@@ -1771,7 +1994,7 @@
           <div class="luxury-panel rounded-2xl p-12 text-center space-y-3">
             <p class="font-serif text-lg title-ergonomic">Bu kriterlere uygun yayın bulunamadı.</p>
             <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
-              ${onlyQ1 ? `<button onclick="toggleQ1Only()" class="px-4 py-2 rounded-xl glass-pill hover:text-white text-xs font-mono">Sadece Q1 Filtresini Kapat (Q2/Q3 Göster)</button>` : ''}
+              ${onlyQ1 && !isVaultMode ? `<button onclick="toggleQ1Only()" class="px-4 py-2 rounded-xl glass-pill hover:text-white text-xs font-mono">Sadece Q1 Filtresini Kapat (Q2/Q3 Göster)</button>` : ''}
               <button onclick="resetToHome()" class="px-4 py-2 rounded-xl neon-primary-active text-xs font-mono">Tüm Filtreleri Sıfırla</button>
             </div>
           </div>
@@ -1790,12 +2013,12 @@
 
         if (isCompactView) {
           return `
-            <article onclick="openInspector('${art.id}')" class="luxury-card ${isSeen ? 'seen-article' : ''} rounded-xl px-4 py-3 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <article onclick="openInspector(${jsArg(art.id)})" class="luxury-card ${isSeen ? 'seen-article' : ''} rounded-xl px-4 py-3 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div class="space-y-1 min-w-0 flex-1">
                 <div class="flex items-center gap-2 text-[11px] font-mono">
-                  <span class="px-2 py-0.2 rounded font-semibold ${art.qClass}">${art.quartile}</span>
+                  <span class="px-2 py-0.5 rounded font-semibold ${art.qClass}">${art.quartile}</span>
                   <span class="title-ergonomic truncate">${escapeHtml(art.journalName)}</span>
-                  <span class="text-slate-500 tabular-nums">• ${art.pubDate}</span>
+                  <span class="text-slate-500 tabular-nums">• ${escapeHtml(art.pubDate)}</span>
                 </div>
                 <h2 class="font-serif text-base font-medium title-ergonomic truncate">${titleHL.html}</h2>
               </div>
@@ -1818,12 +2041,12 @@
                 </span>
                 <div class="inline-flex items-center gap-1">
                   <button 
-                    onclick="filterByCardJournal('${art.journalName.replace(/'/g, "\\'")}', '${art.issn}')"
+                    onclick="filterByCardJournal(${jsArg(art.journalName)}, ${jsArg(art.issn)})"
                     class="title-ergonomic hover:text-[var(--neon-primary)] font-medium transition text-left">
                     ${escapeHtml(art.journalName)}
                   </button>
                   <button 
-                    onclick="toggleFavoriteJournal('${art.issn}', '${art.journalName.replace(/'/g, "\\'")}', event)"
+                    onclick="toggleFavoriteJournal(${jsArg(art.issn)}, ${jsArg(art.journalName)}, event)"
                     class="p-1 rounded hover:bg-white/[0.06] transition">
                     <i data-lucide="heart" class="w-3.5 h-3.5 ${isFavVenue ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
                   </button>
@@ -1831,7 +2054,7 @@
               </div>
 
               <div class="flex flex-wrap items-center gap-1.5 tabular-nums">
-                ${isSeen ? `<span class="px-2 py-0.5 rounded-md glass-pill text-[10px]">✓ İncelendi</span>` : ''}
+                ${isSeen ? `<span class="px-2 py-0.5 rounded-md glass-pill text-[10px] flex items-center gap-1">${ic('check', 'w-3 h-3')}<span>İncelendi</span></span>` : ''}
                 ${art.hIndex ? `
                   <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-violet)]"></span>
@@ -1842,18 +2065,18 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-primary)]"></span>
                   <span>Atıf: <strong class="title-ergonomic">${art.citations}</strong></span>
                 </span>
-                <span class="px-2.5 py-0.5 rounded-md glass-pill">${art.pubDate}</span>
+                <span class="px-2.5 py-0.5 rounded-md glass-pill">${escapeHtml(art.pubDate)}</span>
               </div>
             </div>
 
             <!-- EDITORIAL SERIF TITLE & AUTHORS -->
             <div class="space-y-1">
-              <h2 onclick="openInspector('${art.id}')" class="font-serif text-lg sm:text-xl font-medium title-ergonomic hover:text-[var(--neon-primary)] transition cursor-pointer leading-snug">
+              <h2 onclick="openInspector(${jsArg(art.id)})" class="font-serif text-lg sm:text-xl font-medium title-ergonomic hover:text-[var(--neon-primary)] transition cursor-pointer leading-snug">
                 ${titleHL.html}
               </h2>
               <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
                 ${art.authorObjs.map(au => `
-                  <button onclick="pivotByAuthor('${au.id}', '${au.name.replace(/'/g, "\\'")}')" class="hover:text-[var(--neon-primary)] hover:underline transition">
+                  <button onclick="pivotByAuthor(${jsArg(au.id)}, ${jsArg(au.name)})" class="hover:text-[var(--neon-primary)] hover:underline transition">
                     ${escapeHtml(au.name)}
                   </button>
                 `).join('<span class="text-slate-600">•</span>')}
@@ -1862,25 +2085,25 @@
             </div>
 
             <!-- ERGONOMIC ABSTRACT PREVIEW -->
-            <p onclick="openInspector('${art.id}')" class="text-xs body-ergonomic ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
+            <p onclick="openInspector(${jsArg(art.id)})" class="text-xs body-ergonomic ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
               ${absHL.html}
             </p>
 
             <!-- GHOST ACTION BAR -->
             <div class="ghost-actions flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono">
               <div class="flex flex-wrap items-center gap-1.5">
-                ${art.methods.map(m => `<span class="px-2 py-0.5 rounded-md glass-pill">${m}</span>`).join('')}
+                ${art.methods.map(m => `<span class="px-2 py-0.5 rounded-md glass-pill">${escapeHtml(m)}</span>`).join('')}
                 ${art.isOA ? `<span class="px-2 py-0.5 rounded-md badge-q1-elite">Açık Erişim PDF</span>` : ''}
                 ${isVaultMode && savedObj ? `
-                  <select onchange="changeArticleFolder('${art.id}', this.value)" class="themed-select rounded-md px-2 py-0.5 text-[10px]">
-                    ${customCollections.map(c => `<option value="${escapeHtml(c)}" ${(savedObj.folder || 'Genel Okumalar') === c ? 'selected' : ''}>📁 ${escapeHtml(c)}</option>`).join('')}
+                  <select onchange="changeArticleFolder(${jsArg(art.id)}, this.value)" aria-label="Klasör" class="themed-select rounded-md px-2 py-0.5 text-[10px]">
+                    ${customCollections.map(c => `<option value="${escapeHtml(c)}" ${(savedObj.folder || 'Genel Okumalar') === c ? 'selected' : ''}>Klasör: ${escapeHtml(c)}</option>`).join('')}
                   </select>
                 ` : ''}
               </div>
 
               <div class="flex items-center gap-1.5">
                 <button 
-                  onclick="openInObsidianApp('${art.id}')" 
+                  onclick="openInObsidianApp(${jsArg(art.id)})" 
                   title="Doğrudan Obsidian Uygulamasında Yeni Not Olarak Aç"
                   class="px-2.5 py-1 rounded-lg glass-pill hover:border-[var(--neon-violet)] hover:text-white transition flex items-center gap-1">
                   <i data-lucide="sparkles" class="w-3 h-3 text-[var(--neon-violet)]"></i>
@@ -1888,7 +2111,7 @@
                 </button>
 
                 <button 
-                  onclick="toggleVaultArticle('${art.id}')" 
+                  onclick="toggleVaultArticle(${jsArg(art.id)})" 
                   class="px-2.5 py-1 rounded-lg border transition flex items-center gap-1 ${
                     isSaved ? 'neon-violet-active' : 'glass-pill hover:text-white'
                   }">
@@ -1897,7 +2120,7 @@
                 </button>
 
                 <button 
-                  onclick="openInspector('${art.id}')" 
+                  onclick="openInspector(${jsArg(art.id)})" 
                   class="px-3 py-1 rounded-lg glass-pill hover:border-[var(--neon-primary)] title-ergonomic transition flex items-center gap-1">
                   <span>İncele</span>
                   <i data-lucide="arrow-right" class="w-3 h-3"></i>
@@ -1911,20 +2134,22 @@
     }
 
     // 13. DIRECT OBSIDIAN URI PROTOCOL INTEGRATION
+    // YAML değerleri JSON.stringify ile kaçışlanır (JSON dizgileri geçerli YAML çift tırnaklı dizgileridir)
     function buildMarkdownContent(art) {
       const folderTag = (art.folder || 'Genel Okumalar').toLowerCase().replace(/\s+/g, '-');
+      const y = v => JSON.stringify(String(v ?? ''));
       return `---
-title: "${art.title.replace(/"/g, '\\"')}"
-authors: [${art.authors.map(a => `"${a}"`).join(', ')}]
-journal: "${art.journalName}"
-issn: "${art.issn}"
-year: ${art.pubYear}
-date: "${art.pubDate}"
-quartile: "${art.quartile}"
+title: ${y(art.title)}
+authors: [${(art.apaAuthors?.length ? art.apaAuthors : art.authors).map(a => y(a)).join(', ')}]
+journal: ${y(art.journalName)}
+issn: ${y(art.issn)}
+year: ${art.pubYear || '""'}
+date: ${y(art.pubDate)}
+quartile: ${y(art.quartile)}
 journal_h_index: ${art.hIndex || 0}
 citations: ${art.citations}
-collection: "${art.folder || 'Genel Okumalar'}"
-doi: "${art.doi}"
+collection: ${y(art.folder || 'Genel Okumalar')}
+doi: ${y(art.doi)}
 tags:
   - literature-note
   - vibepsych/${activeDomain.id}
@@ -1936,6 +2161,7 @@ tags:
 - **Dergi:** ${art.journalName} (${art.quartile} | H-Index: ${art.hIndex || 'N/A'})
 - **Yayın Tarihi:** ${art.pubDate} | **Atıf:** ${art.citations}
 - **DOI:** ${art.doi}
+- **APA 7:** ${buildApaReference(art).text}
 
 ## Özet (Abstract)
 ${art.abstractText}
@@ -1973,17 +2199,19 @@ ${art.abstractText}
         const active = activeVaultCollection === col;
         html += `
           <button 
-            onclick="selectVaultCollection('${col.replace(/'/g, "\\'")}')"
+            onclick="selectVaultCollection(${jsArg(col)})"
             class="px-3 py-1 rounded-lg text-xs font-mono whitespace-nowrap transition flex items-center gap-1.5 ${
               active ? 'neon-violet-active' : 'glass-pill hover:text-white'
             }">
-            <span>📁 ${escapeHtml(col)}</span>
+            ${ic('folder', 'w-3.5 h-3.5 shrink-0')}
+            <span>${escapeHtml(col)}</span>
             <span class="text-[10px] opacity-75">(${count})</span>
           </button>
         `;
       });
 
       bar.innerHTML = html;
+      refreshIcons();
     }
 
     function selectVaultCollection(colName) {
@@ -2003,7 +2231,7 @@ ${art.abstractText}
       activeVaultCollection = clean;
       renderVaultCollectionsBar();
       renderVaultStream();
-      showToast(`"📁 ${clean}" klasörü oluşturuldu.`);
+      showToast(`"${clean}" klasörü oluşturuldu.`);
     }
 
     function changeArticleFolder(artId, newFolder) {
@@ -2012,7 +2240,7 @@ ${art.abstractText}
         item.folder = newFolder;
         localStorage.setItem('vibepsych_vault', JSON.stringify(vaultList));
         renderVaultCollectionsBar();
-        showToast(`Makale "📁 ${newFolder}" klasörüne taşındı.`);
+        showToast(`Makale "${newFolder}" klasörüne taşındı.`);
       }
     }
 
@@ -2027,7 +2255,7 @@ ${art.abstractText}
           const targetFolder = (isVaultMode && activeVaultCollection !== 'ALL') ? activeVaultCollection : customCollections[0];
           art.folder = targetFolder;
           vaultList.unshift(art);
-          showToast(`Makale "📁 ${targetFolder}" klasörüne kaydedildi.`);
+          showToast(`Makale "${targetFolder}" klasörüne kaydedildi.`);
         }
       }
       localStorage.setItem('vibepsych_vault', JSON.stringify(vaultList));
@@ -2048,9 +2276,13 @@ ${art.abstractText}
       renderDisciplinePopoverItems();
       document.getElementById('vaultCollectionsPanel').classList.toggle('hidden', !isVaultMode);
       if (isVaultMode) {
+        fetchSeq++; // Uçuştaki sorgular kasa görünümünün üzerine yazmasın
+        document.getElementById('loadingBox').classList.add('hidden');
+        document.getElementById('activePillsContainer').innerHTML = '';
         renderVaultCollectionsBar();
         renderVaultStream();
       } else {
+        renderJournalStrip();
         resetAndFetch();
       }
     }
@@ -2066,23 +2298,31 @@ ${art.abstractText}
         : vaultList.filter(v => (v.folder || 'Genel Okumalar') === activeVaultCollection);
     }
 
-    function exportActiveCollectionAPA() {
+    async function exportActiveCollectionAPA() {
       const list = getActiveVaultSubset();
-      if (list.length === 0) return;
-      const apa = list.map(art => {
-        const au = art.authors.length > 0 ? art.authors.join(', ') : 'Yazar Belirtilmemiş';
-        return `${au} (${art.pubYear}). ${art.title}. ${art.journalName}. ${art.doi}`;
-      }).join('\n\n');
-      navigator.clipboard.writeText(apa);
-      showToast(`${list.length} makale APA 7 kaynakça listesi olarak kopyalandı.`);
+      if (list.length === 0) {
+        showToast('Bu klasörde dışa aktarılacak makale yok.');
+        return;
+      }
+      // APA 7 kaynakçası: ilk yazar soyadına göre alfabetik, asılı girintili (Word/Docs'a yapıştırmada korunur)
+      const refs = list.map(buildApaReference).sort((a, b) => a.text.localeCompare(b.text, 'tr'));
+      const text = refs.map(r => r.text).join('\n\n');
+      const html = refs.map(r => `<p style="padding-left:0.5in;text-indent:-0.5in;margin:0 0 12px 0;">${r.html}</p>`).join('');
+      const ok = await copyRich(text, html);
+      showToast(ok
+        ? `${list.length} makale APA 7 kaynakça listesi olarak kopyalandı.`
+        : 'Panoya kopyalama başarısız oldu (tarayıcı izni gerekli olabilir).');
     }
 
     function downloadActiveCollectionMD() {
       const list = getActiveVaultSubset();
-      if (list.length === 0) return;
+      if (list.length === 0) {
+        showToast('Bu klasörde indirilecek makale yok.');
+        return;
+      }
       const colTitle = activeVaultCollection === 'ALL' ? 'Tüm_Kasa' : activeVaultCollection.replace(/\s+/g, '_');
-      const content = `# VibePsych Araştırma Klasörü: ${activeVaultCollection}\n\n` +
-        list.map(art => `## ${art.title}\n- **Klasör:** ${art.folder || 'Genel Okumalar'}\n- **Yazarlar:** ${art.authors.join(', ')}\n- **Dergi:** ${art.journalName} (${art.quartile} | H-Index: ${art.hIndex || 'N/A'})\n- **Tarih:** ${art.pubDate} | **Atıf:** ${art.citations}\n- **DOI:** ${art.doi}\n\n### Özet\n${art.abstractText}\n\n---\n`).join('\n');
+      const content = `# VibePsych Araştırma Klasörü: ${activeVaultCollection === 'ALL' ? 'Tüm Kasa' : activeVaultCollection}\n\n` +
+        list.map(art => `## ${art.title}\n- **Klasör:** ${art.folder || 'Genel Okumalar'}\n- **Yazarlar:** ${(art.apaAuthors?.length ? art.apaAuthors : art.authors).join(', ')}\n- **Dergi:** ${art.journalName} (${art.quartile} | H-Index: ${art.hIndex || 'N/A'})\n- **Tarih:** ${art.pubDate} | **Atıf:** ${art.citations}\n- **DOI:** ${art.doi}\n- **APA 7:** ${buildApaReference(art).text}\n\n### Özet\n${art.abstractText}\n\n---\n`).join('\n');
 
       const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -2112,17 +2352,17 @@ ${art.abstractText}
 
       document.getElementById('inspectorBody').innerHTML = `
         <div class="space-y-5">
-          <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400">
-            <span>Tarih: <strong class="title-ergonomic">${art.pubDate}</strong></span>
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400 tabular-nums">
+            <span>Tarih: <strong class="title-ergonomic">${escapeHtml(art.pubDate)}</strong></span>
             <span>Atıf: <strong class="text-[var(--neon-primary)]">${art.citations}</strong> ${art.impact2yr ? `• 2yr IF: <strong class="text-[var(--neon-emerald)]">${art.impact2yr}</strong>` : ''}</span>
           </div>
 
           <h2 class="font-serif text-xl sm:text-2xl title-ergonomic leading-snug">${highlightText(art.title).html}</h2>
 
           <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-b border-white/[0.07] pb-4">
-            <p class="text-xs text-slate-300">${escapeHtml(art.authors.join(', '))}</p>
+            <p class="text-xs text-slate-300">${escapeHtml(art.authors.join(', '))}${art.totalAuthors > art.authors.length ? ` <span class="font-mono text-slate-500">+${art.totalAuthors - art.authors.length}</span>` : ''}</p>
             <button 
-              onclick="toggleFavoriteJournal('${art.issn}', '${art.journalName.replace(/'/g, "\\'")}', event); openInspector('${art.id}')"
+              onclick="toggleFavoriteJournal(${jsArg(art.issn)}, ${jsArg(art.journalName)}, event); openInspector(${jsArg(art.id)})"
               class="px-2.5 py-1 rounded-lg text-[11px] font-mono border transition flex items-center gap-1.5 ${
                 isFavVenue ? 'neon-crimson-active' : 'glass-pill hover:border-[#D2042D]/50'
               }">
@@ -2153,11 +2393,11 @@ ${art.abstractText}
           <div class="pt-3 border-t border-white/[0.07] space-y-2">
             <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Kartopu Keşfi (Snowballing)</span>
             <div class="flex flex-wrap gap-2 font-mono text-xs">
-              <button onclick="triggerSnowball('${art.id}', 'cites', '${art.title.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
+              <button onclick="triggerSnowball(${jsArg(art.id)}, 'cites', ${jsArg(art.title)})" class="px-3 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
                 <i data-lucide="git-branch" class="w-3.5 h-3.5"></i>
                 <span>Atıf Yapanlar (${art.citations})</span>
               </button>
-              <button onclick="triggerSnowball('${art.id}', 'related', '${art.title.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
+              <button onclick="triggerSnowball(${jsArg(art.id)}, 'related', ${jsArg(art.title)})" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[var(--neon-primary)]"></i>
                 <span>Benzer Çalışmalar</span>
               </button>
@@ -2165,21 +2405,22 @@ ${art.abstractText}
           </div>
 
           <div class="pt-4 border-t border-white/[0.07] flex flex-wrap gap-2 font-mono text-xs">
-            <button onclick="openInObsidianApp('${art.id}')" class="px-3.5 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
+            <button onclick="openInObsidianApp(${jsArg(art.id)})" class="px-3.5 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               <span>Obsidian'da Aç</span>
             </button>
-            <button onclick="copyObsidian('${art.id}')" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
+            <button onclick="copyObsidian(${jsArg(art.id)})" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
               <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
               <span>.MD Kopyala</span>
             </button>
-            <button onclick="copyAPA('${art.id}')" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
+            <button onclick="copyAPA(${jsArg(art.id)})" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
               <i data-lucide="quote" class="w-3.5 h-3.5"></i>
               <span>APA 7</span>
             </button>
             ${art.doi ? `
-              <a href="${art.doi}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl neon-primary-active flex items-center gap-1.5 ml-auto">
-                <span>DOI ↗</span>
+              <a href="${escapeHtml(normalizeDoi(art.doi))}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl neon-primary-active flex items-center gap-1.5 ml-auto">
+                <span>DOI</span>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
               </a>
             ` : ''}
           </div>
@@ -2189,7 +2430,7 @@ ${art.abstractText}
       document.getElementById('inspectorOverlay').classList.remove('hidden');
       const drawer = document.getElementById('inspectorDrawer');
       drawer.classList.remove('translate-y-full', 'sm:translate-x-full');
-      lucide.createIcons();
+      refreshIcons();
     }
 
     function closeInspector() {
@@ -2198,11 +2439,33 @@ ${art.abstractText}
       drawer.classList.add('translate-y-full', 'sm:translate-x-full');
     }
 
+    // Yapılandırılmış başlıkları (Methods:/Results:) veya metodolojik/bulgu ipucu kelimelerini
+    // yakalayan anlamsal özet bölümleyici; ipucu yoksa dengeli 3'lü cümle bölümlemesine düşer.
     function splitAbstract(t) {
-      const s = t.split(/(?<=[.!?])\s+/);
+      const s = t.split(/(?<=[.!?])\s+/).filter(Boolean);
       if (s.length <= 3) return { bg: t, method: null, res: null };
-      const k = Math.ceil(s.length / 3);
-      return { bg: s.slice(0, k).join(' '), method: s.slice(k, k * 2).join(' '), res: s.slice(k * 2).join(' ') };
+
+      const methodRx = /\b(methods?|methodology|design|participants?|sample|recruited|data were|we conducted|we examined|we tested|we analyzed|measured|administered|assigned|randomized|questionnaire|scale|fmri|eeg|erp|regression|anova|meta-analysis|systematic review|search strategy|databases?)\b/i;
+      const resRx = /\b(results?|findings?|conclusions?|implications?|showed|revealed|demonstrated|indicated|found that|we found|significant|associated with|predicted|correlated|mediated|moderated|in conclusion|these findings|overall,)\b/i;
+
+      let mIdx = -1;
+      for (let i = 1; i < s.length - 1; i++) {
+        if (methodRx.test(s[i])) { mIdx = i; break; }
+      }
+      let rIdx = -1;
+      const rStart = mIdx > 0 ? mIdx + 1 : Math.max(1, Math.floor(s.length / 3));
+      for (let i = rStart; i < s.length; i++) {
+        if (resRx.test(s[i])) { rIdx = i; break; }
+      }
+
+      const k1 = mIdx > 0 ? mIdx : Math.ceil(s.length / 3);
+      const k2 = (rIdx > k1 && rIdx < s.length) ? rIdx : Math.min(s.length - 1, Math.max(k1 + 1, Math.ceil((s.length * 2) / 3)));
+
+      return {
+        bg: s.slice(0, k1).join(' '),
+        method: s.slice(k1, k2).join(' ') || null,
+        res: s.slice(k2).join(' ') || null
+      };
     }
 
     // 16. LIVE OPENALEX VENUE DISCOVERY ENGINE IN DIRECTORY MODAL
@@ -2246,8 +2509,8 @@ ${art.abstractText}
 
         liveBox.innerHTML = `
           <div class="bg-white/[0.02] border border-[var(--neon-primary)]/40 rounded-xl p-4 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-mono text-[var(--neon-primary)] font-semibold">🌐 OpenAlex Canlı Dergi Keşfi (100.000+ Dizin Sonuçları)</span>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-mono text-[var(--neon-primary)] font-semibold flex items-center gap-1.5">${ic('globe', 'w-3.5 h-3.5')}<span>OpenAlex Canlı Dergi Keşfi (100.000+ Dizin Sonuçları)</span></span>
               <span class="text-[10px] font-mono text-slate-400">Kalp ikonuna basarak Favorilerinize sabitleyebilirsiniz</span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -2259,11 +2522,11 @@ ${art.abstractText}
                 const fav = isJournalFavorited(issn, name);
                 return `
                   <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-black/40 border border-white/[0.07] text-xs font-mono">
-                    <button onclick="closeDirectoryModal(); filterByCardJournal('${name.replace(/'/g, "\\'")}', '${issn}')" class="text-left min-w-0 flex-1">
+                    <button onclick="closeDirectoryModal(); filterByCardJournal(${jsArg(name)}, ${jsArg(issn)})" class="text-left min-w-0 flex-1">
                       <div class="title-ergonomic hover:text-[var(--neon-primary)] truncate">${escapeHtml(name)}</div>
-                      <div class="text-[10px] text-slate-400">ISSN: ${issn} • H-Index: ${h} • 2yr IF: ${if2}</div>
+                      <div class="text-[10px] text-slate-400 tabular-nums">ISSN: ${escapeHtml(issn)} • H-Index: ${h} • 2yr IF: ${if2}</div>
                     </button>
-                    <button onclick="toggleFavoriteJournal('${issn}', '${name.replace(/'/g, "\\'")}', event); searchLiveOpenAlexVenues('${query.replace(/'/g, "\\'")}')" class="p-1.5 rounded hover:bg-white/[0.08] shrink-0">
+                    <button onclick="toggleFavoriteJournal(${jsArg(issn)}, ${jsArg(name)}, event); searchLiveOpenAlexVenues(${jsArg(query)})" class="p-1.5 rounded hover:bg-white/[0.08] shrink-0">
                       <i data-lucide="heart" class="w-4 h-4 ${fav ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-400 hover:text-[#D2042D]'}"></i>
                     </button>
                   </div>
@@ -2272,7 +2535,7 @@ ${art.abstractText}
             </div>
           </div>
         `;
-        lucide.createIcons();
+        refreshIcons();
       } catch (e) {
         liveBox.classList.add('hidden');
       }
@@ -2287,18 +2550,18 @@ ${art.abstractText}
         html += `
           <div class="md:col-span-2 bg-[#D2042D]/[0.06] border border-[#D2042D]/30 rounded-xl p-4 space-y-2.5">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-mono font-semibold text-[#D2042D]">♥ Favori Dergilerim (${favJournals.length})</span>
-              <button onclick="closeDirectoryModal(); if(!isFavJournalsStream) toggleFavJournalsStream();" class="text-[11px] font-mono title-ergonomic underline">
-                Tüm Favori Akışını Aç →
+              <span class="text-xs font-mono font-semibold text-[#D2042D] flex items-center gap-1.5">${ic('heart', 'w-3.5 h-3.5 fill-current')}<span>Favori Dergilerim (${favJournals.length})</span></span>
+              <button onclick="closeDirectoryModal(); if(!isFavJournalsStream) toggleFavJournalsStream();" class="text-[11px] font-mono title-ergonomic underline flex items-center gap-1">
+                <span>Tüm Favori Akışını Aç</span>${ic('arrow-right', 'w-3 h-3')}
               </button>
             </div>
             <div class="flex flex-wrap gap-1.5">
               ${favJournals.map(j => `
                 <div class="inline-flex items-center rounded-lg neon-crimson-active text-[11px] font-mono overflow-hidden">
-                  <button onclick="closeDirectoryModal(); filterByCardJournal('${j.name.replace(/'/g, "\\'")}', '${j.issn}')" class="pl-2.5 pr-1.5 py-1">
+                  <button onclick="closeDirectoryModal(); filterByCardJournal(${jsArg(j.name)}, ${jsArg(j.issn)})" class="pl-2.5 pr-1.5 py-1">
                     ${escapeHtml(j.name)}
                   </button>
-                  <button onclick="toggleFavoriteJournal('${j.issn}', '${j.name.replace(/'/g, "\\'")}', event)" class="px-1.5 py-1 hover:bg-black/30">✕</button>
+                  <button onclick="toggleFavoriteJournal(${jsArg(j.issn)}, ${jsArg(j.name)}, event)" aria-label="Favorilerden çıkar" class="px-1.5 py-1 hover:bg-black/30 flex items-center">${ic('x', 'w-3 h-3')}</button>
                 </div>
               `).join('')}
             </div>
@@ -2311,16 +2574,16 @@ ${art.abstractText}
         if (matched.length === 0) return '';
         return `
           <div class="bg-white/[0.02] border border-white/[0.07] rounded-xl p-4 space-y-2.5">
-            <h4 class="font-serif text-base title-ergonomic border-b border-white/[0.06] pb-1.5">${d.name}</h4>
+            <h4 class="font-serif text-base title-ergonomic border-b border-white/[0.06] pb-1.5">${escapeHtml(d.name)}</h4>
             <div class="space-y-1">
               ${matched.map(j => {
                 const fav = isJournalFavorited(j.issn, j.name);
                 return `
                   <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] transition text-xs font-mono">
-                    <button onclick="pickJournalFromModal('${d.id}', '${j.issn}')" class="title-ergonomic hover:text-[var(--neon-primary)] truncate text-left flex-1">
+                    <button onclick="pickJournalFromModal(${jsArg(d.id)}, ${jsArg(j.issn)})" class="title-ergonomic hover:text-[var(--neon-primary)] truncate text-left flex-1">
                       ${escapeHtml(j.name)}
                     </button>
-                    <button onclick="toggleFavoriteJournal('${j.issn}', '${j.name.replace(/'/g, "\\'")}', event)" class="p-1 rounded hover:bg-white/[0.08] shrink-0">
+                    <button onclick="toggleFavoriteJournal(${jsArg(j.issn)}, ${jsArg(j.name)}, event)" class="p-1 rounded hover:bg-white/[0.08] shrink-0">
                       <i data-lucide="heart" class="w-3.5 h-3.5 ${fav ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
                     </button>
                   </div>
@@ -2332,7 +2595,7 @@ ${art.abstractText}
       }).join('');
 
       grid.innerHTML = html;
-      lucide.createIcons();
+      refreshIcons();
     }
 
     function pickJournalFromModal(domId, issn) {
@@ -2341,6 +2604,7 @@ ${art.abstractText}
       isFavJournalsStream = false;
       activeDomain = PSYCH_DOMAINS.find(d => d.id === domId) || PSYCH_DOMAINS[0];
       const idx = activeDomain.journals.findIndex(j => j.issn === issn);
+      updateCounters();
       renderDisciplinePopoverItems();
       selectJournal(idx >= 0 ? idx : null);
     }
@@ -2362,6 +2626,8 @@ ${art.abstractText}
     function filterByCardJournal(name, issn) {
       if (!issn) return;
       isVaultMode = false;
+      activeAuthorFilter = null;
+      activeSnowball = null;
       activeJournal = { name, issn };
       renderJournalStrip();
       resetAndFetch();
@@ -2380,29 +2646,142 @@ ${art.abstractText}
       resetAndFetch();
     }
 
-    function copyAPA(id) {
-      const art = articleMap.get(id) || vaultList.find(v => v.id === id);
-      if (!art) return;
-      const au = art.authors.length > 0 ? art.authors.join(', ') : 'Yazar Belirtilmemiş';
-      navigator.clipboard.writeText(`${au} (${art.pubYear}). ${art.title}. ${art.journalName}. ${art.doi}`);
-      showToast('APA 7 atıf kopyalandı.');
+    // 17b. APA 7 REFERANS MOTORU
+    // Biçim: Soyad, A. B., Soyad, C., & Soyad, D. (Yıl). Başlık. *Dergi*, *Cilt*(Sayı), sayfa. https://doi.org/...
+    const NAME_PARTICLES = new Set(['van', 'von', 'de', 'der', 'den', 'da', 'di', 'du', 'del', 'della', 'dos', 'das', 'la', 'le', 'ten', 'ter', 'bin', 'al', 'el']);
+
+    function apaInitials(given) {
+      return String(given || '')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(tok => tok.split('-')
+          .map(p => {
+            const c = p.replace(/[^\p{L}]/gu, '')[0];
+            return c ? `${c.toUpperCase()}.` : '';
+          })
+          .filter(Boolean)
+          .join('-'))
+        .filter(Boolean)
+        .join(' ');
     }
 
-    function copyObsidian(id) {
+    function apaName(full) {
+      const clean = String(full || '').replace(/\s+/g, ' ').trim();
+      if (!clean) return '';
+      if (clean.includes(',')) {
+        const [fam, giv] = clean.split(',', 2);
+        const ini = apaInitials(giv);
+        return ini ? `${fam.trim()}, ${ini}` : fam.trim();
+      }
+      const parts = clean.split(' ');
+      if (parts.length === 1) return parts[0];
+      let i = parts.length - 1;
+      while (i > 1 && NAME_PARTICLES.has(parts[i - 1].toLowerCase())) i--;
+      const family = parts.slice(i).join(' ');
+      const ini = apaInitials(parts.slice(0, i).join(' '));
+      return ini ? `${family}, ${ini}` : family;
+    }
+
+    function apaAuthorList(art) {
+      const source = (art.apaAuthors && art.apaAuthors.length) ? art.apaAuthors : (art.authors || []);
+      const names = source.map(apaName).filter(Boolean);
+      const total = art.totalAuthors || names.length;
+      if (names.length === 0) return '';
+      if (names.length === 1 && total <= 1) return names[0];
+      // 21+ yazar: ilk 19, üç nokta, son yazar (APA 7 §9.8)
+      if (total > 20 && names.length === 20) {
+        return `${names.slice(0, 19).join(', ')}, . . . ${names[19]}`;
+      }
+      // Eski kasa kayıtları yalnızca ilk 4 yazarı içerir: eksik liste uydurulmaz
+      if (names.length < total) {
+        return `${names.join(', ')}, et al.`;
+      }
+      return `${names.slice(0, -1).join(', ')}, & ${names[names.length - 1]}`;
+    }
+
+    function normalizeDoi(doi) {
+      const d = String(doi || '').trim();
+      if (!d) return '';
+      if (/^https?:\/\//i.test(d)) return d.replace(/^http:\/\/(dx\.)?doi\.org\//i, 'https://doi.org/');
+      if (/^10\./.test(d)) return `https://doi.org/${d}`;
+      return d;
+    }
+
+    function buildApaReference(art) {
+      const authors = apaAuthorList(art);
+      const year = art.pubYear ? String(art.pubYear) : 'n.d.';
+      const title = String(art.title || '').trim();
+      const titlePart = /[.?!]$/.test(title) ? title : `${title}.`;
+      const journal = art.journalName || '';
+      const vol = art.volume || '';
+      const iss = art.issue || '';
+      const pages = art.firstPage
+        ? (art.lastPage && art.lastPage !== art.firstPage ? `${art.firstPage}–${art.lastPage}` : art.firstPage)
+        : '';
+      const doi = normalizeDoi(art.doi);
+
+      let srcText = journal;
+      let srcHtml = `<i>${escapeHtml(journal)}</i>`;
+      if (vol) { srcText += `, ${vol}`; srcHtml += `, <i>${escapeHtml(vol)}</i>`; }
+      if (iss) { srcText += `(${iss})`; srcHtml += `(${escapeHtml(iss)})`; }
+      if (pages) { srcText += `, ${pages}`; srcHtml += `, ${escapeHtml(pages)}`; }
+
+      // Yazarsız eserde başlık yazar konumuna geçer
+      const lead = authors ? `${authors} (${year}). ${titlePart}` : `${titlePart} (${year}).`;
+
+      const text = `${lead} ${srcText}.${doi ? ` ${doi}` : ''}`;
+      const html = `${escapeHtml(lead)} ${srcHtml}.${doi ? ` <a href="${escapeHtml(doi)}">${escapeHtml(doi)}</a>` : ''}`;
+      return { text, html };
+    }
+
+    // Zengin metin (italik dergi/cilt) + düz metin; ClipboardItem yoksa düz metne düşer
+    async function copyRich(text, html) {
+      try {
+        if (window.ClipboardItem && navigator.clipboard?.write) {
+          await navigator.clipboard.write([new ClipboardItem({
+            'text/plain': new Blob([text], { type: 'text/plain' }),
+            'text/html': new Blob([html], { type: 'text/html' })
+          })]);
+          return true;
+        }
+      } catch (e) {}
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function copyAPA(id) {
       const art = articleMap.get(id) || vaultList.find(v => v.id === id);
       if (!art) return;
-      navigator.clipboard.writeText(buildMarkdownContent(art));
-      showToast('Obsidian (.md) notu panoya kopyalandı.');
+      const ref = buildApaReference(art);
+      const ok = await copyRich(ref.text, `<p>${ref.html}</p>`);
+      showToast(ok ? 'APA 7 atıf kopyalandı.' : 'Panoya kopyalama başarısız oldu.');
+    }
+
+    async function copyObsidian(id) {
+      const art = articleMap.get(id) || vaultList.find(v => v.id === id);
+      if (!art) return;
+      try {
+        await navigator.clipboard.writeText(buildMarkdownContent(art));
+        showToast('Obsidian (.md) notu panoya kopyalandı.');
+      } catch (e) {
+        showToast('Panoya kopyalama başarısız oldu.');
+      }
     }
 
     function renderPagination() {
-      const maxP = Math.min(400, Math.ceil(totalWorksCount / 25) || 1);
+      const maxP = getMaxPage();
       document.getElementById('paginationControls').innerHTML = `
-        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg glass-pill disabled:opacity-30">«</button>
-        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30">‹ Önceki</button>
+        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} aria-label="İlk sayfa" class="px-2.5 py-1.5 rounded-lg glass-pill disabled:opacity-30 flex items-center">${ic('chevrons-left', 'w-3.5 h-3.5')}</button>
+        <button onclick="goToPage(${firstLoadedPage - 1})" ${firstLoadedPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30 flex items-center gap-1">${ic('chevron-left', 'w-3.5 h-3.5')}<span>Önceki</span></button>
         <span class="px-3 py-1.5 rounded-lg neon-primary-active tabular-nums">${currentPage} / ${maxP}</span>
-        <button onclick="goToPage(${currentPage + 1})" ${currentPage >= maxP ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30">Sonraki ›</button>
+        <button onclick="goToPage(${currentPage + 1})" ${currentPage >= maxP ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30 flex items-center gap-1"><span>Sonraki</span>${ic('chevron-right', 'w-3.5 h-3.5')}</button>
       `;
+      document.getElementById('appendPageBtn').disabled = currentPage >= maxP;
+      refreshIcons();
     }
 
     function resetToHome() {
@@ -2413,13 +2792,11 @@ ${art.abstractText}
       activeSnowball = null;
       activeJournal = null;
       activeDomain = PSYCH_DOMAINS[0];
-      customYearFrom = null;
-      customYearTo = null;
       document.getElementById('searchInput').value = '';
       document.getElementById('clearSearchBtn').classList.add('hidden');
       document.getElementById('methodSelect').value = 'ALL';
       document.getElementById('sortSelect').value = 'publication_date:desc';
-      setYearFilter('2024+');
+      setYearFilter('2024+', true); // Çift sorguyu önlemek için fetch burada atlanır
       updateCounters();
       renderDisciplinePopoverItems();
       renderJournalStrip();
@@ -2430,7 +2807,8 @@ ${art.abstractText}
       const t = document.getElementById('toast');
       document.getElementById('toastText').textContent = msg;
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 2600);
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.add('hidden'), 2600);
     }
 
     window.addEventListener('DOMContentLoaded', initVibePsych);
