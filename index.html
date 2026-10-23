@@ -2245,6 +2245,7 @@ ${art.abstractText}
         v: 1,
         papers: [],
         links: [],
+        folders: ['Genel Okumalar'],
         types: [
           { id: 'destek', name: 'Destekler', color: 'var(--l-destek)' },
           { id: 'curut', name: 'Çürütür', color: 'var(--l-curut)' },
@@ -2255,7 +2256,7 @@ ${art.abstractText}
         ],
         themes: [{ id: ATLAS_UID(), name: 'Benim çalışmamla ilişkisi' }],
         view: null,
-        ui: { screen: 'okuma', paperId: null, theme: 'dark', tone: 'dark', zoom: 1, space: 'calisma', pen: 'bulgu' }
+        ui: { screen: 'okuma', paperId: null, theme: 'dark', tone: 'dark', zoom: 1, space: 'calisma', folder: '', pen: 'bulgu' }
       };
     }
 
@@ -2319,8 +2320,17 @@ ${art.abstractText}
     }
 
     function upsertAtlasPaper(art, st) {
+      st.folders = Array.isArray(st.folders) ? st.folders : ['Genel Okumalar'];
+      const targetFolder = art.folder || (activeVaultFolder !== 'ALL' ? activeVaultFolder : 'Genel Okumalar');
+      if (targetFolder && !st.folders.includes(targetFolder)) {
+        st.folders.push(targetFolder);
+      }
+
       const existing = findInAtlas(art, st);
-      if (existing) return { paper: existing, added: false };
+      if (existing) {
+        if (!existing.folder && targetFolder) existing.folder = targetFolder;
+        return { paper: existing, added: false };
+      }
 
       const space = st.ui?.space || 'calisma';
       const vis = (st.papers || []).filter(p => (p.space || 'calisma') === space);
@@ -2354,6 +2364,7 @@ ${art.abstractText}
         hl: [],
         hasPdf: false,
         space,
+        folder: targetFolder,
         status: 'okunacak',
         summary: '',
         surprise: '',
