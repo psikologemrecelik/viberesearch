@@ -247,31 +247,23 @@
     }
 
     /* Cross-Interface Smooth Transition & Persistent Single-Page Atlas Stage */
-    @view-transition { navigation: auto; }
     html { background-color: #080706; }
-    #appModeSeg { view-transition-name: mode-switch; }
-    body {
-      animation: vpEnter 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-      transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1), transform 0.16s cubic-bezier(0.4, 0, 1, 1), filter 0.16s ease;
-    }
-    body.vp-leaving {
-      opacity: 0;
-      transform: translateX(-14px) scale(0.992);
-      filter: blur(2px);
-      pointer-events: none;
-    }
     #atlasStageWrap {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
       z-index: 80;
-      background: #0d0f13;
+      background: #090b12;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateX(20px) scale(0.994);
-      transition: opacity 0.19s cubic-bezier(0.22, 1, 0.36, 1),
-                  transform 0.19s cubic-bezier(0.22, 1, 0.36, 1),
-                  visibility 0s linear 0.19s;
+      transform: translateX(18px) scale(0.995);
+      transition: opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+                  visibility 0s linear 0.18s;
       will-change: transform, opacity;
     }
     #atlasStageFrame {
@@ -279,7 +271,7 @@
       height: 100%;
       border: 0;
       display: block;
-      background: #0d0f13;
+      background: #090b12;
     }
     body.atlas-stage-open {
       overflow: hidden !important;
@@ -288,24 +280,20 @@
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: translateX(0) scale(1);
-      transition: opacity 0.19s cubic-bezier(0.22, 1, 0.36, 1),
-                  transform 0.19s cubic-bezier(0.22, 1, 0.36, 1),
+      transform: none;
+      transition: opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
                   visibility 0s linear 0s;
     }
-    @keyframes vpEnter {
-      from { opacity: 0; transform: translateX(-12px) scale(0.994); }
-      to   { opacity: 1; transform: translateX(0) scale(1); }
-    }
     @media (prefers-reduced-motion: reduce) {
-      body, body.vp-leaving, #atlasStageWrap, body.atlas-stage-open #atlasStageWrap {
+      #atlasStageWrap, body.atlas-stage-open #atlasStageWrap {
         animation: none !important;
         transition: none !important;
         transform: none !important;
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html" />
+  <link rel="prefetch" href="atlas.html?v=5" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -2375,7 +2363,7 @@ ${art.abstractText}
 
     function upsertAtlasPaper(art, st) {
       st.folders = Array.isArray(st.folders) ? st.folders : ['Genel Okumalar'];
-      const targetFolder = art.folder || (activeVaultFolder !== 'ALL' ? activeVaultFolder : 'Genel Okumalar');
+      const targetFolder = art.folder || ((isVaultMode && activeVaultCollection !== 'ALL') ? activeVaultCollection : 'Genel Okumalar');
       if (targetFolder && !st.folders.includes(targetFolder)) {
         st.folders.push(targetFolder);
       }
@@ -2443,14 +2431,21 @@ ${art.abstractText}
       if (!frame.dataset.booting) {
         frame.dataset.booting = '1';
         frame.addEventListener('load', () => {
-          atlasFrameReady = true;
           const win = frame.contentWindow;
+          try {
+            if (win && win.location && /index\.html/i.test(win.location.pathname)) {
+              frame.src = 'atlas.html?v=5';
+              showVibeFromAtlas();
+              return;
+            }
+          } catch (e) {}
+          atlasFrameReady = true;
           while (atlasReadyQueue.length) {
             const fn = atlasReadyQueue.shift();
             try { fn(win); } catch (e) {}
           }
-        }, { once: true });
-        frame.src = 'atlas.html';
+        });
+        frame.src = 'atlas.html?v=5';
       }
     }
 

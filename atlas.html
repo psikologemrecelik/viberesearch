@@ -358,16 +358,14 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
   .maphint{max-width:calc(100% - 24px)}
   .row2{grid-template-columns:1fr}
 }
-@view-transition{navigation:auto}
-#appModeSeg{view-transition-name:mode-switch}
 #appModeSeg button{display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s,box-shadow .15s}
 .fbar{display:inline-flex;align-items:center;gap:4px;padding:2px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
 .fsel{border:0;background:var(--surface-2);color:var(--fg);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:500;max-width:170px;outline:none;cursor:pointer}
 .frow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
 .frow b{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#app{animation:atlasEnter .22s cubic-bezier(.22,1,.36,1) both;transition:opacity .16s cubic-bezier(.4,0,1,1),transform .16s cubic-bezier(.4,0,1,1),filter .16s ease}
-#app.atlas-leaving{opacity:0;transform:translateX(14px) scale(.992);filter:blur(2px);pointer-events:none}
-@keyframes atlasEnter{from{opacity:0;transform:translateX(12px) scale(.994)}to{opacity:1;transform:translateX(0) scale(1)}}
+.notepane,.pdfscroll,.mx,.srbody{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#app{transition:opacity .16s ease}
+#app.atlas-leaving{opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
 <link rel="prefetch" href="index.html">
@@ -689,7 +687,8 @@ function movePaperToFolder(pOrId,folderName){
 function openFolders(){
   $('#fNewIn').value='';
   drawFoldersDlg();
-  $('#dlgFolders').showModal();
+  const d=$('#dlgFolders');
+  if(!d.open){ try{ d.showModal(); }catch(e){ d.setAttribute('open',''); } }
   $('#fNewIn').focus();
 }
 function drawFoldersDlg(){
@@ -710,6 +709,7 @@ function drawFoldersDlg(){
       +'<button type="button" class="btn sm danger" data-fd="'+i+'">Sil</button></div>';
   }).join(''):'<div class="hint">Henüz klasör yok.</div>';
 }
+renderFolderFilter();
 $('#btnFolders').onclick=openFolders;
 $('#fClose').onclick=()=>$('#dlgFolders').close();
 $('#fNewBtn').onclick=()=>{
@@ -789,6 +789,7 @@ function goScreen(n){
   if(n==='matris') renderMatrix();
   if(n==='ara') renderSearch();
 }
+$$('.tab').forEach(t=>t.onclick=()=>goScreen(t.dataset.screen));
 
 /* ---------- Makale işlemleri ---------- */
 function freePos(){ const l=vis(); if(!l.length) return {x:0,y:0}; const cx=l.reduce((a,p)=>a+p.x,0)/l.length, cy=l.reduce((a,p)=>a+p.y,0)/l.length; return {x:cx+(Math.random()-.5)*200,y:cy+(Math.random()-.5)*160}; }
@@ -815,6 +816,7 @@ if(pdfjs) pdfjs.GlobalWorkerOptions.workerSrc=WORKER;
 function loadWorkerGlobal(){ return new Promise(res=>{ if(window.pdfjsWorker) return res(); const s=document.createElement('script'); s.src=WORKER; s.onload=res; s.onerror=res; document.head.append(s); }); }
 const R={doc:null,pid:null,pages:[],scale:1,obs:null,tok:0,laidOut:false};
 function showDrop(on,title,msg){ $('#drop').hidden=!on; if(on){ $('#dropT').textContent=title||'Bu makalenin PDF\'ini bırak'; $('#dropP').textContent=msg||'PDF yalnızca bu tarayıcıda saklanır, hiçbir yere gönderilmez.'; $('#btnPick').hidden=!!msg; } if(on) $('#pages').innerHTML=''; }
+$('#drop').addEventListener('wheel',e=>{ const np=$('#notePane'); if(np) np.scrollTop+=e.deltaY; },{passive:true});
 function teardown(){ R.tok++; if(R.obs) R.obs.disconnect(); R.doc=null; R.pages=[]; $('#pages').innerHTML=''; $('#pgInd').textContent='–'; hideSel(); }
 function ensurePdf(){ const p=P(); if(!p||R.pid!==p.id||!R.laidOut) openPdf(); }
 async function openPdf(){
@@ -1355,9 +1357,10 @@ function switchToVibe(){
   }
   const vb=$('#goVibeBtn'), ab=$('#stayAtlasBtn');
   if(vb&&ab){ vb.setAttribute('aria-pressed','true'); ab.setAttribute('aria-pressed','false'); }
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ location.href='index.html'; return; }
+  const go=()=>{ try{ window.top.location.href='index.html'; }catch(e){ location.href='index.html'; } };
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ go(); return; }
   $('#app').classList.add('atlas-leaving');
-  setTimeout(()=>{ location.href='index.html'; },155);
+  setTimeout(go,155);
 }
 window.addEventListener('pageshow',()=>{ $('#app').classList.remove('atlas-leaving'); });
 $('#goVibeBtn').onclick=switchToVibe;
