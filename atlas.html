@@ -608,14 +608,15 @@ if(exIds.size){
   S.links=(S.links||[]).filter(l=>!exIds.has(l.from)&&!exIds.has(l.to));
   try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){}
 }
+const ALL_FOLDERS='', NO_FOLDER='__none__';
 S.ui=S.ui||{}; S.types=S.types&&S.types.length?S.types:DEF_TYPES.map(t=>({...t})); S.themes=S.themes||[]; S.links=S.links||[];
 S.folders=Array.isArray(S.folders)?S.folders:[];
 try{ const vc=JSON.parse(localStorage.getItem('vibepsych_collections')||'[]'); if(Array.isArray(vc)) vc.forEach(c=>{ if(c&&typeof c==='string'&&!S.folders.includes(c)) S.folders.push(c); }); }catch(e){}
 if(!S.folders.length) S.folders=['Genel Okumalar'];
 S.papers.forEach(p=>{ p.space=p.space||'calisma'; p.folder=p.folder||''; if(p.folder&&!S.folders.includes(p.folder)) S.folders.push(p.folder); p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; });
-S.ui.space=S.ui.space||'calisma'; S.ui.pen=S.ui.pen||'bulgu'; S.ui.folder=S.ui.folder||'';
-if(S.ui.folder&&S.ui.folder!=='__none__'&&!S.folders.includes(S.ui.folder)) S.ui.folder='';
-const matchFolder=p=>!S.ui.folder||(S.ui.folder==='__none__'?!p.folder:p.folder===S.ui.folder);
+S.ui.space=S.ui.space||'calisma'; S.ui.pen=S.ui.pen||'bulgu'; S.ui.folder=S.ui.folder||ALL_FOLDERS;
+if(S.ui.folder&&S.ui.folder!==NO_FOLDER&&!S.folders.includes(S.ui.folder)) S.ui.folder=ALL_FOLDERS;
+const matchFolder=p=>!S.ui.folder||(S.ui.folder===NO_FOLDER?!p.folder:p.folder===S.ui.folder);
 const vis=()=>S.papers.filter(p=>p.space===S.ui.space&&matchFolder(p));
 if(!S.papers.find(p=>p.id===S.ui.paperId)) S.ui.paperId=vis()[0]&&vis()[0].id||S.papers[0]&&S.papers[0].id||null;
 let saveT=null;
@@ -673,7 +674,8 @@ function folderOpts(curVal,includeNew){
   if(includeNew) h+='<option value="__new__">+ Yeni klasör oluştur…</option>';
   return h;
 }
-function movePaperToFolder(p,folderName){
+function movePaperToFolder(pOrId,folderName){
+  const p=typeof pOrId==='string'?byId(pOrId):pOrId;
   if(!p) return;
   const clean=folderName?ensureFolder(folderName):'';
   p.folder=clean;
@@ -780,7 +782,7 @@ function goScreen(n){
   S.ui.screen=n; save();
   SCREENS.forEach(s=>{ $('#view-'+VIEWID[s]).hidden=(s!==n); });
   $$('.tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.screen===n)));
-  try{ history.replaceState(null,'','#'+n); }catch(e){}
+  if(!window.parent||window.parent===window){ try{ history.replaceState(null,'','#'+n); }catch(e){} }
   if(n!=='harita') stopLoop();
   if(n==='okuma'){ renderNote(); ensurePdf(); }
   if(n==='harita'){ renderMap(); if(!S.view) fitMap(); else applyView(); }
