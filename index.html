@@ -246,7 +246,7 @@
       pointer-events: none;
     }
 
-    /* Cross-Interface Smooth Transition & Shared Top-Left Switcher */
+    /* Cross-Interface Smooth Transition & Persistent Single-Page Atlas Stage */
     @view-transition { navigation: auto; }
     html { background-color: #080706; }
     #appModeSeg { view-transition-name: mode-switch; }
@@ -260,12 +260,49 @@
       filter: blur(2px);
       pointer-events: none;
     }
+    #atlasStageWrap {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: #0d0f13;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateX(20px) scale(0.994);
+      transition: opacity 0.19s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.19s cubic-bezier(0.22, 1, 0.36, 1),
+                  visibility 0s linear 0.19s;
+      will-change: transform, opacity;
+    }
+    #atlasStageFrame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #0d0f13;
+    }
+    body.atlas-stage-open {
+      overflow: hidden !important;
+    }
+    body.atlas-stage-open #atlasStageWrap {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(0) scale(1);
+      transition: opacity 0.19s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.19s cubic-bezier(0.22, 1, 0.36, 1),
+                  visibility 0s linear 0s;
+    }
     @keyframes vpEnter {
       from { opacity: 0; transform: translateX(-12px) scale(0.994); }
       to   { opacity: 1; transform: translateX(0) scale(1); }
     }
     @media (prefers-reduced-motion: reduce) {
-      body, body.vp-leaving { animation: none !important; transition: none !important; transform: none !important; }
+      body, body.vp-leaving, #atlasStageWrap, body.atlas-stage-open #atlasStageWrap {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+      }
     }
   </style>
   <link rel="prefetch" href="atlas.html" />
@@ -691,6 +728,11 @@
   <div id="toast" class="fixed bottom-16 sm:bottom-6 right-4 left-4 sm:left-auto z-50 hidden luxury-panel border-[var(--neon-primary)] title-ergonomic px-4 py-2.5 rounded-xl text-xs font-mono shadow-2xl flex items-center gap-2">
     <span class="w-2 h-2 rounded-full bg-[var(--neon-primary)] shrink-0"></span>
     <span id="toastText" class="truncate"></span>
+  </div>
+
+  <!-- PERSISTENT OKUMA ATLASI STAGE (Zero-Reload Single-Page Layer) -->
+  <div id="atlasStageWrap" aria-hidden="true">
+    <iframe id="atlasStageFrame" title="Okuma Atlası" allow="clipboard-read; clipboard-write"></iframe>
   </div>
 
   <script>
@@ -1126,7 +1168,11 @@
       window.addEventListener('keydown', (e) => {
         if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'a') {
           e.preventDefault();
-          switchToAtlas('atlas.html');
+          if (document.body.classList.contains('atlas-stage-open')) {
+            showVibeFromAtlas();
+          } else {
+            switchToAtlas();
+          }
           return;
         }
         const tag = document.activeElement?.tagName?.toLowerCase();
@@ -1141,6 +1187,14 @@
           if (e.key === ']') stepJournal(1);
         }
       });
+
+      const urlPaper = new URLSearchParams(window.location.search).get('paper');
+      if (window.location.hash === '#atlas' || urlPaper) {
+        switchToAtlas(urlPaper || 'atlas.html');
+      } else {
+        const idleLoad = window.requestIdleCallback || ((fn) => setTimeout(fn, 350));
+        idleLoad(() => ensureAtlasFrameLoaded());
+      }
     }
 
     // 5. THEME SWITCHER
@@ -2375,28 +2429,131 @@ ${art.abstractText}
       return { paper: p, added: true };
     }
 
-    function switchToAtlas(targetUrl = 'atlas.html') {
-      const vb = document.getElementById('modeBtnVibe');
-      const ab = document.getElementById('topAtlasBtn');
-      if (vb && ab) {
-        vb.setAttribute('aria-pressed', 'false');
-        vb.className = 'px-2.5 py-1.5 rounded-[10px] text-slate-400 flex items-center gap-1.5 text-xs sm:text-sm tracking-tight transition-all duration-150';
-        ab.setAttribute('aria-pressed', 'true');
-        ab.className = 'px-2.5 py-1.5 rounded-[10px] bg-white/[0.09] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] text-white flex items-center gap-1.5 text-xs font-medium transition-all duration-150';
-      }
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        window.location.href = targetUrl;
+    let atlasFrameReady = false;
+    let atlasReadyQueue = [];
+
+    function ensureAtlasFrameLoaded(cb) {
+      const frame = document.getElementById('atlasStageFrame');
+      if (!frame) return;
+      if (atlasFrameReady && frame.contentWindow && frame.contentWindow.__atlas) {
+        if (cb) cb(frame.contentWindow);
         return;
       }
-      document.body.classList.add('vp-leaving');
-      setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 155);
+      if (cb) atlasReadyQueue.push(cb);
+      if (!frame.dataset.booting) {
+        frame.dataset.booting = '1';
+        frame.addEventListener('load', () => {
+          atlasFrameReady = true;
+          const win = frame.contentWindow;
+          while (atlasReadyQueue.length) {
+            const fn = atlasReadyQueue.shift();
+            try { fn(win); } catch (e) {}
+          }
+        }, { once: true });
+        frame.src = 'atlas.html';
+      }
     }
+
+    function extractPaperIdFromArg(arg) {
+      if (!arg || arg === 'atlas.html') return null;
+      const m = /[?&]paper=([^&#]+)/.exec(String(arg));
+      if (m) return decodeURIComponent(m[1]);
+      if (!/\.html/i.test(String(arg))) return String(arg);
+      return null;
+    }
+
+    function setModeSegButtons(inAtlas) {
+      const vb = document.getElementById('modeBtnVibe');
+      const ab = document.getElementById('topAtlasBtn');
+      if (!vb || !ab) return;
+      if (inAtlas) {
+        vb.setAttribute('aria-pressed', 'false');
+        vb.className = 'px-2.5 py-1.5 rounded-[10px] text-slate-400 hover:text-white flex items-center gap-1.5 text-xs sm:text-sm tracking-tight transition-all duration-150';
+        ab.setAttribute('aria-pressed', 'true');
+        ab.className = 'px-2.5 py-1.5 rounded-[10px] bg-white/[0.09] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] text-white flex items-center gap-1.5 text-xs font-medium transition-all duration-150';
+      } else {
+        vb.setAttribute('aria-pressed', 'true');
+        vb.className = 'px-2.5 py-1.5 rounded-[10px] bg-white/[0.09] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] flex items-center gap-1.5 text-xs sm:text-sm tracking-tight title-ergonomic transition-all duration-150';
+        ab.setAttribute('aria-pressed', 'false');
+        ab.className = 'px-2.5 py-1.5 rounded-[10px] text-slate-400 hover:text-white flex items-center gap-1.5 text-xs font-medium transition-all duration-150';
+      }
+    }
+
+    function switchToAtlas(targetOrPaperId = 'atlas.html') {
+      const focusPaperId = extractPaperIdFromArg(targetOrPaperId);
+      setModeSegButtons(true);
+      const wrap = document.getElementById('atlasStageWrap');
+      if (wrap) wrap.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('atlas-stage-open');
+      try {
+        if (window.location.hash !== '#atlas') {
+          history.replaceState(null, '', window.location.pathname + '#atlas');
+        }
+      } catch (e) {}
+
+      ensureAtlasFrameLoaded((win) => {
+        try {
+          if (win && win.__atlas && win.__atlas.activateFromVibe) {
+            win.__atlas.activateFromVibe(focusPaperId);
+          }
+          if (win) win.focus();
+        } catch (e) {}
+      });
+    }
+
+    function showVibeFromAtlas() {
+      const frame = document.getElementById('atlasStageFrame');
+      try {
+        if (frame && frame.contentWindow && frame.contentWindow.__atlas && frame.contentWindow.__atlas.suspendForVibe) {
+          frame.contentWindow.__atlas.suspendForVibe();
+        }
+      } catch (e) {}
+      document.body.classList.remove('atlas-stage-open');
+      const wrap = document.getElementById('atlasStageWrap');
+      if (wrap) wrap.setAttribute('aria-hidden', 'true');
+      setModeSegButtons(false);
+      try {
+        if (window.location.hash === '#atlas') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } catch (e) {}
+      customCollections = loadJSON('vibepsych_collections', customCollections);
+      updateCounters();
+      if (isVaultMode) renderVaultCollectionsBar();
+      renderFilteredCards();
+      window.focus();
+    }
+
+    window.__vibeShell = {
+      showVibe: showVibeFromAtlas,
+      onAtlasSave: () => {
+        customCollections = loadJSON('vibepsych_collections', customCollections);
+        updateCounters();
+        if (isVaultMode) renderVaultCollectionsBar();
+        renderFilteredCards();
+      }
+    };
+
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash === '#atlas') {
+        if (!document.body.classList.contains('atlas-stage-open')) switchToAtlas();
+      } else if (document.body.classList.contains('atlas-stage-open')) {
+        showVibeFromAtlas();
+      }
+    });
 
     window.addEventListener('pageshow', () => {
       document.body.classList.remove('vp-leaving');
     });
+
+    function notifyAtlasFrameSync(focusPaperId) {
+      const frame = document.getElementById('atlasStageFrame');
+      try {
+        if (atlasFrameReady && frame && frame.contentWindow && frame.contentWindow.__atlas) {
+          frame.contentWindow.__atlas.syncFromStorage(focusPaperId);
+        }
+      } catch (e) {}
+    }
 
     function sendToAtlas(id, openNow = false) {
       const art = articleMap.get(id) || vaultList.find(v => v.id === id);
@@ -2412,9 +2569,11 @@ ${art.abstractText}
       renderFilteredCards();
 
       if (openNow) {
-        switchToAtlas(`atlas.html?paper=${encodeURIComponent(paper.id)}`);
+        closeInspector();
+        switchToAtlas(paper.id);
         return;
       }
+      notifyAtlasFrameSync();
       showToast(added
         ? 'Makale Okuma Atlası\'na eklendi ("Atlas\'ta Aç" ile doğrudan gidebilirsiniz).'
         : 'Makale zaten Okuma Atlası\'nda kayıtlı.');
@@ -2439,6 +2598,7 @@ ${art.abstractText}
         st.ui.paperId = lastPaper.id;
       }
       saveAtlasState(st);
+      notifyAtlasFrameSync();
       updateCounters();
       renderFilteredCards();
       showToast(addedCount > 0
