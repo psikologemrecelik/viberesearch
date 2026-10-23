@@ -358,13 +358,28 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
   .maphint{max-width:calc(100% - 24px)}
   .row2{grid-template-columns:1fr}
 }
+@view-transition{navigation:auto}
+#appModeSeg{view-transition-name:mode-switch}
+#appModeSeg button{display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s,box-shadow .15s}
+#app{animation:atlasEnter .22s cubic-bezier(.22,1,.36,1) both;transition:opacity .16s cubic-bezier(.4,0,1,1),transform .16s cubic-bezier(.4,0,1,1),filter .16s ease}
+#app.atlas-leaving{opacity:0;transform:translateX(14px) scale(.992);filter:blur(2px);pointer-events:none}
+@keyframes atlasEnter{from{opacity:0;transform:translateX(12px) scale(.994)}to{opacity:1;transform:translateX(0) scale(1)}}
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
+<link rel="prefetch" href="index.html">
 
 <div id="app">
   <header class="top panel">
-    <div class="brand"><span class="mark"></span><span class="bn">Okuma Atlası</span></div>
-    <a class="btn btnnew" href="index.html" title="VibePsych Literatür Keşfine Dön" style="text-decoration:none"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m14.8 9.2-2 5.6-5.6 2 2-5.6 5.6-2Z"/></svg><span class="lbl">Literatür Keşfi</span></a>
+    <div class="seg" id="appModeSeg" role="group" aria-label="Uygulama Modu">
+      <button type="button" id="goVibeBtn" aria-pressed="false" title="VibePsych Literatür Keşfine Geç (Alt+A)">
+        <svg class="ico" style="width:14px;height:14px;color:#F59E0B" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7c0 5 3.5 7 7 7s7-2 7-7"/></svg>
+        <span>VibePsych</span>
+      </button>
+      <button type="button" id="stayAtlasBtn" aria-pressed="true" title="Okuma Atlası (Alt+A)">
+        <span class="mark" style="width:12px;height:12px;border-radius:4px"></span>
+        <span class="bn">Okuma Atlası</span>
+      </button>
+    </div>
     <div class="seg" id="spaceSeg" role="group" aria-label="Alan"><button data-sp="calisma" aria-pressed="true">Çalışma</button><button data-sp="kesif" aria-pressed="false">Keşif</button></div>
     <nav class="tabs" role="tablist" aria-label="Ekranlar">
       <button class="tab" role="tab" data-screen="okuma">Okuma</button>
@@ -1154,8 +1169,19 @@ $('#addOk').onclick=async()=>{
 };
 
 /* ---------- Komut paleti ---------- */
+function switchToVibe(){
+  try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){}
+  const vb=$('#goVibeBtn'), ab=$('#stayAtlasBtn');
+  if(vb&&ab){ vb.setAttribute('aria-pressed','true'); ab.setAttribute('aria-pressed','false'); }
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ location.href='index.html'; return; }
+  $('#app').classList.add('atlas-leaving');
+  setTimeout(()=>{ location.href='index.html'; },155);
+}
+window.addEventListener('pageshow',()=>{ $('#app').classList.remove('atlas-leaving'); });
+$('#goVibeBtn').onclick=switchToVibe;
 const pal={mode:'all',items:[],idx:0};
 function actions(){ return [
+  {k:'Mod',label:'VibePsych Literatür Keşfine Geç (Alt+A)',run:switchToVibe},
   {k:'Ekran',label:'Okuma',run:()=>goScreen('okuma')},{k:'Ekran',label:'Harita',run:()=>goScreen('harita')},{k:'Ekran',label:'Matris',run:()=>goScreen('matris')},{k:'Ekran',label:'Ara (özetler, notlar, PDF metni)',run:()=>goScreen('ara')},{k:'Komut',label:'Yalnızca bulguları göster/gizle (harita)',run:()=>{ goScreen('harita'); $('#mFind').click(); }},
   {k:'Komut',label:'Yeni makale ekle',run:()=>{ goScreen('okuma'); openAdd(); }},
   {k:'Komut',label:'Haritayı sığdır',run:()=>{ goScreen('harita'); fitMap(); }},
@@ -1185,6 +1211,7 @@ $('#palList').addEventListener('click',e=>{ const b=e.target.closest('.pal-it');
 function runPal(i){ const it=pal.items[i]; if(!it) return; $('#dlgPal').close(); it.run(); }
 $('#btnPal').onclick=()=>openPalette('all');
 document.addEventListener('keydown',e=>{
+  if(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.key.toLowerCase()==='a'){ e.preventDefault(); switchToVibe(); return; }
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); openPalette('all'); return; }
   if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='f'){ e.preventDefault(); goScreen('ara'); return; }
   if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='f'&&S.ui.screen==='okuma'&&!document.querySelector('dialog[open]')){ e.preventDefault(); openFindBar(); return; }
