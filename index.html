@@ -322,6 +322,16 @@
             <span id="vaultCountBadge" class="text-[11px] font-semibold title-ergonomic">0</span>
           </button>
 
+          <a 
+            href="atlas.html" 
+            id="topAtlasBtn"
+            title="Okuma Atlası: PDF İşaretleme, Bağlantı Haritası ve Sentez Matrisi"
+            class="hidden sm:flex px-2.5 py-1.5 rounded-xl neon-primary-active hover:opacity-95 text-xs font-mono items-center gap-1.5 transition">
+            <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-[var(--neon-primary)]"></i>
+            <span class="hidden lg:inline">Okuma Atlası</span>
+            <span id="atlasCountBadge" class="text-[11px] font-semibold title-ergonomic">0</span>
+          </a>
+
           <button 
             onclick="toggleThemeMode()" 
             id="themeToggleBtn"
@@ -535,6 +545,10 @@
             <i data-lucide="download" class="w-3 h-3"></i>
             <span>Toplu .MD İndir</span>
           </button>
+          <button onclick="sendCollectionToAtlas()" class="px-2.5 py-1 rounded-lg neon-primary-active flex items-center gap-1" title="Bu klasördeki tüm makaleleri Okuma Atlası'na gönder">
+            <i data-lucide="book-open-check" class="w-3 h-3"></i>
+            <span>Klasörü Atlas'a Aktar</span>
+          </button>
         </div>
       </div>
       <div id="collectionFoldersBar" class="flex items-center gap-1.5 overflow-x-auto touch-scroll pt-1 border-t border-white/[0.06]"></div>
@@ -651,6 +665,10 @@
       <i data-lucide="folder-heart" class="w-4 h-4"></i>
       <span>Kasam (<span id="mobVaultCount">0</span>)</span>
     </button>
+    <a href="atlas.html" class="flex flex-col items-center gap-1 text-[var(--neon-primary)]">
+      <i data-lucide="book-open-check" class="w-4 h-4"></i>
+      <span>Atlas (<span id="mobAtlasCount">0</span>)</span>
+    </a>
   </nav>
 
   <!-- TOAST -->
@@ -1240,10 +1258,15 @@
     }
 
     function updateCounters() {
+      const atlasCnt = getAtlasPaperCount();
       document.getElementById('vaultCountBadge').textContent = vaultList.length;
       document.getElementById('favCountInline').textContent = favJournals.length;
       document.getElementById('mobFavCount').textContent = favJournals.length;
       document.getElementById('mobVaultCount').textContent = vaultList.length;
+      const ab = document.getElementById('atlasCountBadge');
+      if (ab) ab.textContent = atlasCnt;
+      const mab = document.getElementById('mobAtlasCount');
+      if (mab) mab.textContent = atlasCnt;
 
       const favBtn = document.getElementById('favStreamBtn');
       if (isFavJournalsStream) {
@@ -2008,6 +2031,7 @@
         const hits = titleHL.hits + absHL.hits;
         const savedObj = vaultList.find(v => v.id === art.id);
         const isSaved = Boolean(savedObj);
+        const inAtlas = Boolean(findInAtlas(art));
         const isSeen = seenWorks.has(art.id);
         const isFavVenue = isJournalFavorited(art.issn, art.journalName);
 
@@ -2103,6 +2127,16 @@
 
               <div class="flex items-center gap-1.5">
                 <button 
+                  onclick="sendToAtlas(${jsArg(art.id)}, ${inAtlas ? 'true' : 'false'})" 
+                  title="${inAtlas ? 'Bu makaleyi Okuma Atlası içinde aç' : 'Künyeyi Okuma Atlası çalışmana ekle'}"
+                  class="px-2.5 py-1 rounded-lg border transition flex items-center gap-1 ${
+                    inAtlas ? 'neon-primary-active' : 'glass-pill hover:border-[var(--neon-primary)] hover:text-white'
+                  }">
+                  <i data-lucide="book-open-check" class="w-3 h-3 text-[var(--neon-primary)]"></i>
+                  <span>${inAtlas ? "Atlas'ta Aç" : "Atlas'a Al"}</span>
+                </button>
+
+                <button 
                   onclick="openInObsidianApp(${jsArg(art.id)})" 
                   title="Doğrudan Obsidian Uygulamasında Yeni Not Olarak Aç"
                   class="px-2.5 py-1 rounded-lg glass-pill hover:border-[var(--neon-violet)] hover:text-white transition flex items-center gap-1">
@@ -2180,6 +2214,194 @@ ${art.abstractText}
       window.location.href = uri;
       showToast('Obsidian uygulaması tetiklendi...');
     }
+
+    // 13b. OKUMA ATLASI BRIDGE (Shared localStorage['okuma-atlasi-v1'])
+    const ATLAS_LS_KEY = 'okuma-atlasi-v1';
+    const ATLAS_UID = () => Math.random().toString(36).slice(2, 9);
+
+    function createAtlasSeed() {
+      const mk = (o) => Object.assign({
+        id: ATLAS_UID(), title: '', authors: '', year: '', journal: '', doi: '',
+        question: '', method: '', sample: '', measures: '', finding: '', limits: '',
+        relation: '', tags: [], themes: {}, hl: [], hasPdf: false, example: true,
+        space: 'calisma', status: '', summary: '', surprise: '', x: 0, y: 0
+      }, o);
+      const haidt = mk({ title: 'The emotional dog and its rational tail: A social intuitionist approach to moral judgment', authors: 'Haidt, J.', year: '2001', journal: 'Psychological Review', question: 'Ahlaki yargı akıl yürütmeyle mi, sezgiyle mi oluşur?', method: 'Kuramsal', finding: 'Ahlaki yargılar çoğunlukla hızlı sezgilerle oluşur; akıl yürütme çoğu zaman bu yargıyı sonradan gerekçelendirmek için çalışır.', tags: ['ahlaki yargı', 'sezgi'], x: 60, y: 90 });
+      const g01 = mk({ title: 'An fMRI investigation of emotional engagement in moral judgment', authors: 'Greene, J. D.; Sommerville, R. B.; Nystrom, L. E.; Darley, J. M.; Cohen, J. D.', year: '2001', journal: 'Science', method: 'Deneysel', finding: 'Kişisel ahlaki ikilemler, kişisel olmayanlara kıyasla duyguyla ilişkili beyin bölgelerini daha çok etkinleştirir.', tags: ['ahlaki yargı', 'ikili süreç'], x: 480, y: 0 });
+      const g08 = mk({ title: 'Cognitive load selectively interferes with utilitarian moral judgment', authors: 'Greene, J. D.; Morelli, S. A.; Lowenberg, K.; Nystrom, L. E.; Cohen, J. D.', year: '2008', journal: 'Cognition', question: 'Bilişsel yük faydacı yargıyı mı, faydacı olmayan yargıyı mı etkiler?', method: 'Deneysel', finding: 'Bilişsel yük, faydacı ahlaki yargıları yavaşlatır; faydacı olmayan yargıları yavaşlatmaz.', tags: ['ikili süreç'], x: 900, y: 110 });
+      const bon = mk({ title: 'The social dilemma of autonomous vehicles', authors: 'Bonnefon, J.-F.; Shariff, A.; Rahwan, I.', year: '2016', journal: 'Science', method: 'Deneysel', finding: 'İnsanlar yolcuyu feda eden faydacı otonom araçları ilke olarak onaylar, ama kendileri yolcuyu koruyan araçları satın almak ister.', tags: ['yapay zekâ', 'ahlaki yargı'], x: 250, y: 350 });
+      const big = mk({ title: 'People are averse to machines making moral decisions', authors: 'Bigman, Y. E.; Gray, K.', year: '2018', journal: 'Cognition', method: 'Deneysel', finding: 'İnsanlar sonuç aynı olsa bile ahlaki kararları makinelerin vermesinden kaçınır.', tags: ['yapay zekâ'], x: 690, y: 370 });
+      const L = (a, b, t, r) => ({ id: ATLAS_UID(), from: a.id, to: b.id, type: t, reason: r });
+      return {
+        v: 1,
+        papers: [haidt, g01, g08, bon, big],
+        links: [
+          L(g01, haidt, 'destek', 'Ahlaki yargıda duygusal sürecin rolüne sinirsel kanıt sunar.'),
+          L(g08, g01, 'genislet', 'Bilişsel yük manipülasyonuyla ikili süreç açıklamasını davranışsal olarak sınar.'),
+          L(big, bon, 'yapi', 'İkisi de makinelerin ahlaki kararlarına yönelik insan tutumlarını inceler.')
+        ],
+        types: [
+          { id: 'destek', name: 'Destekler', color: 'var(--l-destek)' },
+          { id: 'curut', name: 'Çürütür', color: 'var(--l-curut)' },
+          { id: 'genislet', name: 'Genişletir', color: 'var(--l-genislet)' },
+          { id: 'yontem', name: 'Yöntemini kullanır', color: 'var(--l-yontem)' },
+          { id: 'yapi', name: 'Aynı yapıyı ölçer', color: 'var(--l-yapi)' },
+          { id: 'kuram', name: 'Kuramsal çerçeve', color: 'var(--l-kuram)' }
+        ],
+        themes: [{ id: ATLAS_UID(), name: 'Benim çalışmamla ilişkisi' }],
+        view: null,
+        ui: { screen: 'okuma', paperId: haidt.id, theme: 'dark', tone: 'dark', zoom: 1, space: 'calisma', pen: 'bulgu' }
+      };
+    }
+
+    function getAtlasState() {
+      try {
+        const raw = localStorage.getItem(ATLAS_LS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.papers)) return parsed;
+        }
+      } catch (e) {}
+      return createAtlasSeed();
+    }
+
+    function saveAtlasState(st) {
+      try {
+        localStorage.setItem(ATLAS_LS_KEY, JSON.stringify(st));
+      } catch (e) {}
+    }
+
+    function getAtlasPaperCount() {
+      const st = getAtlasState();
+      return Array.isArray(st.papers) ? st.papers.length : 0;
+    }
+
+    function cleanAtlasDoi(doi) {
+      return String(doi || '').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+    }
+
+    function findInAtlas(art, stOpt) {
+      if (!art) return null;
+      const st = stOpt || getAtlasState();
+      const cDoi = cleanAtlasDoi(art.doi).toLowerCase();
+      const cTitle = String(art.title || '').trim().toLowerCase();
+      return (st.papers || []).find(p =>
+        (p.openalexId && p.openalexId === art.id) ||
+        (cDoi && p.doi && cleanAtlasDoi(p.doi).toLowerCase() === cDoi) ||
+        (cTitle && p.title && String(p.title).trim().toLowerCase() === cTitle)
+      ) || null;
+    }
+
+    function mapAtlasMethod(methods) {
+      const m = (methods || []).join(' ');
+      if (/Meta-Analiz/i.test(m)) return 'Meta-analiz';
+      if (/Genel İnceleme/i.test(m)) return 'Derleme';
+      if (/Deneysel|Nörogörüntüleme/i.test(m)) return 'Deneysel';
+      if (/Boylamasına/i.test(m)) return 'Boylamsal';
+      if (/Psikometri/i.test(m)) return 'Ölçek geliştirme';
+      return '';
+    }
+
+    function upsertAtlasPaper(art, st) {
+      const existing = findInAtlas(art, st);
+      if (existing) return { paper: existing, added: false };
+
+      const space = st.ui?.space || 'calisma';
+      const vis = (st.papers || []).filter(p => (p.space || 'calisma') === space);
+      const cx = vis.length ? vis.reduce((a, p) => a + (p.x || 0), 0) / vis.length : 200;
+      const cy = vis.length ? vis.reduce((a, p) => a + (p.y || 0), 0) / vis.length : 180;
+
+      const authorSource = (art.apaAuthors && art.apaAuthors.length) ? art.apaAuthors : (art.authors || []);
+      const formattedAuthors = authorSource.map(apaName).filter(Boolean).join('; ');
+      const tags = [];
+      if (!activeDomain.isGlobal && activeDomain.name) {
+        tags.push(activeDomain.name.split('/')[0].trim().toLowerCase());
+      }
+
+      const p = {
+        id: ATLAS_UID(),
+        openalexId: art.id,
+        title: art.title || '',
+        authors: formattedAuthors,
+        year: String(art.pubYear || ''),
+        journal: art.journalName || '',
+        doi: cleanAtlasDoi(art.doi),
+        question: '',
+        method: mapAtlasMethod(art.methods),
+        sample: '',
+        measures: '',
+        finding: '',
+        limits: '',
+        relation: '',
+        tags,
+        themes: {},
+        hl: [],
+        hasPdf: false,
+        space,
+        status: 'okunacak',
+        summary: '',
+        surprise: '',
+        x: Math.round(cx + (Math.random() - 0.5) * 220),
+        y: Math.round(cy + (Math.random() - 0.5) * 170)
+      };
+      st.papers.push(p);
+      return { paper: p, added: true };
+    }
+
+    function sendToAtlas(id, openNow = false) {
+      const art = articleMap.get(id) || vaultList.find(v => v.id === id);
+      if (!art) return;
+      const st = getAtlasState();
+      const { paper, added } = upsertAtlasPaper(art, st);
+      st.ui = st.ui || {};
+      st.ui.paperId = paper.id;
+      st.ui.space = paper.space || 'calisma';
+      st.ui.screen = 'okuma';
+      saveAtlasState(st);
+      updateCounters();
+      renderFilteredCards();
+
+      if (openNow) {
+        window.location.href = `atlas.html?paper=${encodeURIComponent(paper.id)}`;
+        return;
+      }
+      showToast(added
+        ? 'Makale Okuma Atlası\'na eklendi ("Atlas\'ta Aç" ile doğrudan gidebilirsiniz).'
+        : 'Makale zaten Okuma Atlası\'nda kayıtlı.');
+    }
+
+    function sendCollectionToAtlas() {
+      const list = getActiveVaultSubset();
+      if (list.length === 0) {
+        showToast('Bu klasörde aktarılacak makale yok.');
+        return;
+      }
+      const st = getAtlasState();
+      let addedCount = 0;
+      let lastPaper = null;
+      list.forEach(art => {
+        const res = upsertAtlasPaper(art, st);
+        if (res.added) addedCount++;
+        lastPaper = res.paper;
+      });
+      if (lastPaper) {
+        st.ui = st.ui || {};
+        st.ui.paperId = lastPaper.id;
+      }
+      saveAtlasState(st);
+      updateCounters();
+      renderFilteredCards();
+      showToast(addedCount > 0
+        ? `${addedCount} yeni makale Okuma Atlası'na aktarıldı.`
+        : 'Klasördeki tüm makaleler zaten Okuma Atlası\'nda mevcut.');
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === ATLAS_LS_KEY) {
+        updateCounters();
+        renderFilteredCards();
+      }
+    });
 
     // 14. CUSTOM RESEARCH COLLECTIONS / FOLDERS IN VAULT
     function renderVaultCollectionsBar() {
@@ -2405,6 +2627,10 @@ ${art.abstractText}
           </div>
 
           <div class="pt-4 border-t border-white/[0.07] flex flex-wrap gap-2 font-mono text-xs">
+            <button onclick="sendToAtlas(${jsArg(art.id)}, true)" class="px-3.5 py-2 rounded-xl neon-primary-active flex items-center gap-1.5">
+              <i data-lucide="book-open-check" class="w-3.5 h-3.5"></i>
+              <span>Okuma Atlası'nda Aç</span>
+            </button>
             <button onclick="openInObsidianApp(${jsArg(art.id)})" class="px-3.5 py-2 rounded-xl neon-violet-active flex items-center gap-1.5">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               <span>Obsidian'da Aç</span>
