@@ -382,7 +382,6 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
         <span class="bn">Okuma Atlası</span>
       </button>
     </div>
-    <div class="seg" id="spaceSeg" role="group" aria-label="Alan"><button data-sp="calisma" aria-pressed="true">Çalışma</button><button data-sp="kesif" aria-pressed="false">Keşif</button></div>
     <div class="fbar" id="folderBar" title="Klasöre göre filtrele veya klasörleri yönet">
       <select class="fsel" id="folderFilter" aria-label="Klasör filtresi"></select>
       <button class="btn sm" id="btnFolders" type="button" title="Klasörleri yönet / Yeni klasör">Klasörler</button>
@@ -611,11 +610,11 @@ S.ui=S.ui||{}; S.types=S.types&&S.types.length?S.types:DEF_TYPES.map(t=>({...t})
 S.folders=Array.isArray(S.folders)?S.folders:[];
 try{ const vc=JSON.parse(localStorage.getItem('vibepsych_collections')||'[]'); if(Array.isArray(vc)) vc.forEach(c=>{ if(c&&typeof c==='string'&&!S.folders.includes(c)) S.folders.push(c); }); }catch(e){}
 if(!S.folders.length) S.folders=['Genel Okumalar'];
-S.papers.forEach(p=>{ p.space=p.space||'calisma'; p.folder=p.folder||''; if(p.folder&&!S.folders.includes(p.folder)) S.folders.push(p.folder); p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; });
-S.ui.space=S.ui.space||'calisma'; S.ui.pen=S.ui.pen||'bulgu'; S.ui.folder=S.ui.folder||ALL_FOLDERS;
+S.papers.forEach(p=>{ if(p.space==='kesif'&&!p.folder) p.folder='Keşif'; p.space='calisma'; p.folder=p.folder||''; if(p.folder&&!S.folders.includes(p.folder)) S.folders.push(p.folder); p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; });
+S.ui.space='calisma'; S.ui.pen=S.ui.pen||'bulgu'; S.ui.folder=S.ui.folder||ALL_FOLDERS;
 if(S.ui.folder&&S.ui.folder!==NO_FOLDER&&!S.folders.includes(S.ui.folder)) S.ui.folder=ALL_FOLDERS;
 const matchFolder=p=>!S.ui.folder||(S.ui.folder===NO_FOLDER?!p.folder:p.folder===S.ui.folder);
-const vis=()=>S.papers.filter(p=>p.space===S.ui.space&&matchFolder(p));
+const vis=()=>S.papers.filter(matchFolder);
 if(!S.papers.find(p=>p.id===S.ui.paperId)) S.ui.paperId=vis()[0]&&vis()[0].id||S.papers[0]&&S.papers[0].id||null;
 let saveT=null;
 function syncVibeCols(){
@@ -644,11 +643,10 @@ function ensureFolder(name){
 }
 function renderFolderFilter(){
   const sel=$('#folderFilter'); if(!sel) return;
-  const spPapers=S.papers.filter(p=>p.space===S.ui.space);
-  const noneCnt=spPapers.filter(p=>!p.folder).length;
-  let html='<option value="">Tüm klasörler ('+spPapers.length+')</option>';
+  const noneCnt=S.papers.filter(p=>!p.folder).length;
+  let html='<option value="">Tüm klasörler ('+S.papers.length+')</option>';
   S.folders.forEach(f=>{
-    const cnt=spPapers.filter(p=>p.folder===f).length;
+    const cnt=S.papers.filter(p=>p.folder===f).length;
     html+='<option value="'+esc(f)+'"'+(S.ui.folder===f?' selected':'')+'>'+esc(f)+' ('+cnt+')</option>';
   });
   if(noneCnt>0||S.ui.folder==='__none__'){
@@ -659,7 +657,7 @@ function renderFolderFilter(){
 function setFolder(f){
   S.ui.folder=f||'';
   const cur=P();
-  if(!cur||cur.space!==S.ui.space||!matchFolder(cur)){
+  if(!cur||!matchFolder(cur)){
     const f0=vis()[0]; S.ui.paperId=f0?f0.id:null;
   }
   M.sel=null; M.selLink=null; M.linkFrom=null; M.hover=null; MX.tag=null;
@@ -699,11 +697,9 @@ function drawFoldersDlg(){
     $('#fMoveLbl').textContent='Açık makaleyi taşı ('+shortLabel(p)+')';
     mc.innerHTML=['', ...S.folders].map(f=>'<button type="button" class="chip" data-mv="'+esc(f)+'" aria-pressed="'+((p.folder||'')===f)+'">'+esc(f||'Klasörsüz')+'</button>').join('');
   } else mb.hidden=true;
-  const spPapers=S.papers.filter(x=>x.space===S.ui.space);
   $('#fList').innerHTML=S.folders.length?S.folders.map((f,i)=>{
     const cnt=S.papers.filter(x=>x.folder===f).length;
-    const spCnt=spPapers.filter(x=>x.folder===f).length;
-    return '<div class="frow"><b>'+esc(f)+' <small>('+spCnt+(cnt!==spCnt?' / toplam '+cnt:'')+' makale)</small></b>'
+    return '<div class="frow"><b>'+esc(f)+' <small>('+cnt+' makale)</small></b>'
       +'<button type="button" class="btn sm" data-ff="'+esc(f)+'">'+(S.ui.folder===f?'Seçili':'Filtrele')+'</button>'
       +'<button type="button" class="btn sm" data-fr="'+i+'">Ad değiştir</button>'
       +'<button type="button" class="btn sm danger" data-fd="'+i+'">Sil</button></div>';
@@ -962,14 +958,8 @@ function goToHl(id){
 function setMob(m){ const v=$('#view-read'); v.classList.toggle('show-pdf',m==='pdf'); v.classList.toggle('show-notes',m==='notes'); $$('#mobSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m))); }
 $('#mobSeg').onclick=e=>{ const b=e.target.closest('button'); if(b) setMob(b.dataset.m); };
 
-/* ---------- Alanlar ---------- */
-function setSpace(sp){
-  S.ui.space=sp; document.documentElement.setAttribute('data-space',sp);
-  $$('#spaceSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sp===sp)));
-  const cur=P(); if(!cur||cur.space!==sp||!matchFolder(cur)){ const f=vis()[0]; S.ui.paperId=f?f.id:null; }
-  M.sel=null; M.selLink=null; M.linkFrom=null; M.hover=null; MX.tag=null; save(); renderFolderFilter(); updateSw(); goScreen(S.ui.screen);
-}
-$('#spaceSeg').onclick=e=>{ const b=e.target.closest('button'); if(b&&b.dataset.sp!==S.ui.space) setSpace(b.dataset.sp); };
+/* ---------- Alanlar (Klasör sistemine birleştirildi) ---------- */
+function setSpace(){ }
 
 /* ---------- PDF araçları: not iğnesi, alan yakalama ---------- */
 function renderPens(){ $('#pens').innerHTML=KINDS.map(k=>'<button class="k-'+k.id+'" data-pen="'+k.id+'" aria-pressed="'+(S.ui.pen===k.id)+'" aria-label="'+k.name+'" title="'+k.name+'"></button>').join(''); }
@@ -1069,9 +1059,8 @@ function extraAct(act,b,p){
 /* ---------- Not paneli ---------- */
 function renderNote(){
   const el=$('#notePane'); const p=P();
-  if(!p){ el.innerHTML='<div class="empty">'+(S.ui.space==='kesif'?'Keşif alanında henüz makale yok. Çalışmanla ilgisiz merak ettiğin bir makaleyi buraya ekle.':'Henüz makale yok.')+'<br><br><button class="btn primary" data-act="add">Makale ekle</button></div>'; return; }
+  if(!p){ el.innerHTML='<div class="empty">'+(S.ui.folder&&S.ui.folder!==ALL_FOLDERS?'Bu klasörde henüz makale yok.':'Henüz makale yok.')+'<br><br><button class="btn primary" data-act="add">Makale ekle</button></div>'; return; }
   if(SUM.on){ renderSummary(p,el); return; }
-  const kes=p.space==='kesif';
   const kindSec=s=>{ let extra='';
     if(s.kind==='yontem') extra='<div class="row2"><select class="in" data-f="method" aria-label="Yöntem türü"><option value="">Yöntem türü</option>'+METHODS.map(m=>'<option'+(p.method===m?' selected':'')+'>'+m+'</option>').join('')+'</select><input class="in" data-f="sample" placeholder="Örneklem (n, özellik)" value="'+esc(p.sample)+'"></div><input class="in" data-f="measures" placeholder="Ölçekler / ölçümler" value="'+esc(p.measures)+'">';
     if(s.kind==='sinir') extra='<textarea class="in" data-f="limits" rows="2" placeholder="Kendi sınırlılık notun">'+esc(p.limits)+'</textarea>';
@@ -1084,17 +1073,15 @@ function renderNote(){
    +'<div class="row3"><input class="in" data-f="authors" placeholder="Yazarlar (Soyad, A.; Soyad, B.)" value="'+esc(p.authors)+'"><input class="in" data-f="year" inputmode="numeric" placeholder="Yıl" value="'+esc(p.year)+'"></div>'
    +'<div class="row2"><input class="in" data-f="journal" placeholder="Dergi" value="'+esc(p.journal)+'"><div class="doi"><input class="in" data-f="doi" placeholder="DOI" value="'+esc(p.doi)+'"><button class="btn" data-act="doi">Çek</button></div></div><div class="row2">'+status+fSel+'</div></div>';
   const findSec='<section class="sec"><h3>Ana bulgu <small>tek cümle, haritada yakınlaştırınca görünür</small></h3><textarea class="find" data-f="finding" rows="2" placeholder="Bu makalenin ana bulgusunu kendi cümlenle yaz">'+esc(p.finding)+'</textarea></section>';
-  let mid;
-  if(kes) mid='<section class="sec"><h3>Beni ne şaşırttı? <small>serbest, bir iki satır yeter</small></h3><textarea class="in" data-f="surprise" rows="2" placeholder="Bu makalede ilgimi çeken ne oldu?">'+esc(p.surprise)+'</textarea></section>'+findSec
-    +'<section class="sec"><h3>Kartlar <small data-cnt="*"></small></h3><div class="cards" data-kind="*"></div></section>';
-  else mid=findSec+'<section class="sec"><h3>Araştırma sorusu</h3><textarea class="in" data-f="question" rows="2" placeholder="Makale neyi sorguluyor?">'+esc(p.question)+'</textarea></section>'
+  const surpSec=p.surprise&&p.surprise.trim()?'<section class="sec"><h3>Beni ne şaşırttı?</h3><textarea class="in" data-f="surprise" rows="2" placeholder="Bu makalede ilgimi çeken ne oldu?">'+esc(p.surprise)+'</textarea></section>':'';
+  const mid=findSec+surpSec+'<section class="sec"><h3>Araştırma sorusu</h3><textarea class="in" data-f="question" rows="2" placeholder="Makale neyi sorguluyor?">'+esc(p.question)+'</textarea></section>'
     +SECTIONS.map(kindSec).join('')+'<section class="sec"><h3>Benim çalışmamla ilişkisi</h3><textarea class="in" data-f="relation" rows="2" placeholder="Bu makale benim çalışmamda nerede duracak?">'+esc(p.relation)+'</textarea></section>';
   el.innerHTML=ptabsHtml(p)+'<div class="inner">'+head+mid
    +'<section class="sec"><h3>Etiketler</h3><div class="chips" id="tagBox"></div></section>'
-   +'<section class="sec"><h3>Bağlantılar <small>('+links.length+(kes?', isteğe bağlı':'')+')</small></h3>'
+   +'<section class="sec"><h3>Bağlantılar <small>('+links.length+')</small></h3>'
    +links.map(l=>{ const o=byId(l.from===p.id?l.to:l.from); const t=typeOf(l.type); return '<button class="lkrow" data-act="lk" data-id="'+l.id+'"><b><i class="dot" style="--dc:'+t.color+'"></i>'+esc(t.name)+' <span>'+(l.from===p.id?'→':'←')+' '+esc(o?shortLabel(o):'?')+'</span></b><span>'+esc(l.reason)+'</span></button>'; }).join('')
    +'<div><button class="btn sm" data-act="lkadd">+ Bağlantı ekle</button></div></section>'
-   +'<div style="display:flex;gap:16px;flex-wrap:wrap"><button class="delpaper" data-act="movespace">'+(kes?'Çalışmama taşı':'Keşfe taşı')+'</button><button class="delpaper" data-act="rmpdf" '+(p.hasPdf?'':'hidden')+'>PDF\'i kaldır</button><button class="delpaper" data-act="delpaper">Makaleyi sil</button></div>'
+   +'<div style="display:flex;gap:16px;flex-wrap:wrap"><button class="delpaper" data-act="rmpdf" '+(p.hasPdf?'':'hidden')+'>PDF\'i kaldır</button><button class="delpaper" data-act="delpaper">Makaleyi sil</button></div>'
    +'</div>';
   $$('textarea',el).forEach(autosize); renderCards(); renderTags();
 }
@@ -1288,13 +1275,13 @@ function runSearch(){
   box.innerHTML=arr.map(g=>{ const open=SR.open.has(g.p.id), show=open?g.hits:g.hits.slice(0,8);
     const rows=show.map(h=>{ const i=SR.flat.push(h)-1; return '<button class="shit" data-i="'+i+'"><span class="src">'+esc(h.src)+'</span><span class="sn">'+snip(h.text,h.pos,h.len)+'</span></button>'; }).join('');
     const more=g.hits.length>show.length?'<div><button class="btn sm" data-more="'+g.p.id+'">+'+(g.hits.length-show.length)+' eşleşme daha</button></div>':'';
-    return '<section class="sgroup"><header class="shead" data-pap="'+g.p.id+'"><b>'+esc(shortLabel(g.p))+'</b><span class="stt">'+esc(g.p.title||'Adsız makale')+'</span>'+(g.p.space==='kesif'?'<span class="chip">Keşif</span>':'')+'<span class="scnt">'+g.hits.length+'</span></header>'+rows+more+'</section>'; }).join('');
+    return '<section class="sgroup"><header class="shead" data-pap="'+g.p.id+'"><b>'+esc(shortLabel(g.p))+'</b><span class="stt">'+esc(g.p.title||'Adsız makale')+'</span>'+(g.p.folder?'<span class="chip">'+esc(g.p.folder)+'</span>':'')+'<span class="scnt">'+g.hits.length+'</span></header>'+rows+more+'</section>'; }).join('');
   box.scrollTop=keep;
 }
 async function waitPdf(pid){ for(let i=0;i<150;i++){ if(R.pid===pid&&R.laidOut) return true; await new Promise(r=>setTimeout(r,60)); } return false; }
 async function openHit(h){
   if(!h) return; const p=byId(h.pid); if(!p) return;
-  if(p.space!==S.ui.space){ S.ui.space=p.space; document.documentElement.setAttribute('data-space',p.space); $$('#spaceSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sp===p.space))); }
+  if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(p)) S.ui.folder=ALL_FOLDERS;
   S.ui.paperId=p.id; const term=SR.q.trim();
   if(h.kind==='pdf'){ goScreen('okuma'); updateSw(); renderNote(); if(await waitPdf(p.id)) setFind(term,{page:h.page,idx:h.idx}); return; }
   if(h.field==='theme'){ $('#mxq').value=term; goScreen('matris'); return; }
@@ -1315,7 +1302,7 @@ $('#srScope').onclick=e=>{ const b=e.target.closest('[data-sc]'); if(!b) return;
 $('#srBody').onclick=e=>{
   const b=e.target.closest('.shit'); if(b){ openHit(SR.flat[+b.dataset.i]); return; }
   const m=e.target.closest('[data-more]'); if(m){ SR.open.add(m.dataset.more); runSearch(); return; }
-  const h=e.target.closest('.shead'); if(h){ const p=byId(h.dataset.pap); if(p){ if(p.space!==S.ui.space) setSpace(p.space); S.ui.paperId=p.id; goScreen('okuma'); updateSw(); renderNote(); openPdf(); } }
+  const h=e.target.closest('.shead'); if(h){ const p=byId(h.dataset.pap); if(p){ if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(p)) S.ui.folder=ALL_FOLDERS; S.ui.paperId=p.id; renderFolderFilter(); goScreen('okuma'); updateSw(); renderNote(); openPdf(); } }
 };
 function renderSearch(){ $('#srQ').value=SR.q; updIdxSt(); runSearch(); indexAll(); setTimeout(()=>$('#srQ').focus(),40); }
 
@@ -1373,12 +1360,11 @@ function actions(){ return [
   {k:'Komut',label:'Yeni makale ekle',run:()=>{ goScreen('okuma'); openAdd(); }},
   {k:'Komut',label:'Haritayı sığdır',run:()=>{ goScreen('harita'); fitMap(); }},
   {k:'Tema',label:'Koyu tema',run:()=>setTheme('dark')},{k:'Tema',label:'Açık tema',run:()=>setTheme('light')},{k:'Tema',label:'Saate göre otomatik tema',run:()=>setTheme('auto')},
-  {k:'Alan',label:'Çalışma alanı',run:()=>setSpace('calisma')},{k:'Alan',label:'Keşif alanı (çalışmayla ilgisiz okumalar)',run:()=>setSpace('kesif')},
   {k:'Veri',label:'Yedekle veya içe aktar',run:()=>openData()}]; }
 function openPalette(mode){ pal.mode=mode||'all'; $('#palQ').value=''; $('#palQ').placeholder=pal.mode==='papers'?'Makale ara':'Makale ara veya bir komut yaz'; buildPal(); $('#dlgPal').showModal(); $('#palQ').focus(); }
 function buildPal(){
   const q=tr($('#palQ').value.trim());
-  const papers=S.papers.map(p=>({k:p.space==='kesif'?'Keşif':'Makale',label:p.title||'Adsız makale',hint:(p.folder?'['+p.folder+'] · ':'')+shortLabel(p),run:()=>{ if(p.space!==S.ui.space) setSpace(p.space); if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(p)) setFolder(p.folder||NO_FOLDER); goScreen('okuma'); selectPaper(p.id); }}));
+  const papers=S.papers.map(p=>({k:p.folder||'Makale',label:p.title||'Adsız makale',hint:(p.folder?'['+p.folder+'] · ':'')+shortLabel(p),run:()=>{ if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(p)) setFolder(p.folder||NO_FOLDER); goScreen('okuma'); selectPaper(p.id); }}));
   let items=pal.mode==='papers'?papers:papers.concat(actions());
   if(q) items=items.filter(i=>tr(i.label+' '+(i.hint||'')+' '+i.k).includes(q));
   pal.items=items; pal.idx=0; drawPal();
@@ -1444,7 +1430,7 @@ const lvl=k=>k<.42?0:k<1.2?1:2;
 const VP=k=>(S.ui.findOnly&&k>=.3)?{c:1,o:0,f:1,lv:2}:{c:cardo(k),o:1-sstep(.36,.6,k),f:sstep(1.05,1.4,k),lv:lvl(k)};
 const cardo=k=>sstep(.42,.72,k);
 const LINK_L=500;
-const visLink=l=>{ const a=byId(l.from),b=byId(l.to); return !!(a&&b&&a.space===S.ui.space&&b.space===S.ui.space&&matchFolder(a)&&matchFolder(b)); };
+const visLink=l=>{ const a=byId(l.from),b=byId(l.to); return !!(a&&b&&matchFolder(a)&&matchFolder(b)); };
 const DUST=Array.from({length:42},()=>({x:Math.random(),y:Math.random(),z:.3+Math.random()*.9,a:.05+Math.random()*.18,r:.6+Math.random()*1.3,v:.3+Math.random()*.7}));
 function dirty(){ M.dirty=true; }
 function readColors(){ const cs=getComputedStyle(document.documentElement); M.accent=cs.getPropertyValue('--accent').trim()||'#8fa4ff'; M.colors={}; }
@@ -1744,7 +1730,7 @@ function importData(txt){
   if(!d||!Array.isArray(d.papers)) return toast('Bu bir Okuma Atlası yedeği değil');
   const have=new Set(S.papers.map(p=>p.id)); let n=0;
   (d.folders||[]).forEach(f=>ensureFolder(f));
-  d.papers.forEach(p=>{ if(!have.has(p.id)){ p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; p.space=p.space||'calisma'; p.folder=p.folder||''; if(p.folder) ensureFolder(p.folder); p.hasPdf=false; S.papers.push(p); n++; } });
+  d.papers.forEach(p=>{ if(!have.has(p.id)){ p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; if(p.space==='kesif'&&!p.folder) p.folder='Keşif'; p.space='calisma'; p.folder=p.folder||''; if(p.folder) ensureFolder(p.folder); p.hasPdf=false; S.papers.push(p); n++; } });
   (d.types||[]).forEach(t=>{ if(!S.types.find(x=>x.id===t.id)) S.types.push(t); });
   (d.themes||[]).forEach(t=>{ if(!S.themes.find(x=>x.id===t.id)) S.themes.push(t); });
   const lh=new Set(S.links.map(l=>l.id)); (d.links||[]).forEach(l=>{ if(!lh.has(l.id)&&byId(l.from)&&byId(l.to)) S.links.push(l); });
@@ -1801,10 +1787,10 @@ function buildVault(){
   const names=baseNames(), files=[];
   S.papers.forEach(p=>{
     const sub=p.folder&&safeName(p.folder)?safeName(p.folder)+'/':'';
-    files.push({path:(p.space==='kesif'?'Keşif':'Makaleler')+'/'+sub+names.get(p.id)+'.md',content:paperMd(p,names)});
+    files.push({path:'Makaleler/'+sub+names.get(p.id)+'.md',content:paperMd(p,names)});
   });
   files.push({path:'Bağlantılar.md',content:linksMd(names)},{path:'Özetler.md',content:summariesMd(names)},{path:'Matris.md',content:matrixMd(names)});
-  files.push({path:'OKU-BENİ.md',content:'# Okuma Atlası klasörü\n\nBu klasör Okuma Atlası uygulaması tarafından yazılır. Makale notların, özetlerin ve bağlantıların her değişiklikte buraya Markdown olarak kaydedilir.\n\n- `Makaleler/` ve `Keşif/`: her makale için bir not (klasöre atanmışsa alt klasörde)\n- `Bağlantılar.md`: makaleler arası tüm bağlantılar, türüne göre\n- `Özetler.md`: kendi özetlerinin tek dosyada toplamı\n- `Matris.md`: sentez matrisi\n- `Görseller/`: PDF\'ten kestiğin alanlar\n- `.atlas/`: tam yedek (state.json), günlük yedekler ve PDF dosyaları. Silme.\n\nKlasörü Obsidian\'la da açabilirsin, bağlantılar `[[...]]` biçiminde yazılır.\n\n**Önemli:** Notları uygulamadan düzenle. Burada elle yaptığın değişikliklerin üzerine bir sonraki kayıtta yazılır.\n'});
+  files.push({path:'OKU-BENİ.md',content:'# Okuma Atlası klasörü\n\nBu klasör Okuma Atlası uygulaması tarafından yazılır. Makale notların, özetlerin ve bağlantıların her değişiklikte buraya Markdown olarak kaydedilir.\n\n- `Makaleler/`: her makale için bir not (klasöre atanmışsa alt klasörde)\n- `Bağlantılar.md`: makaleler arası tüm bağlantılar, türüne göre\n- `Özetler.md`: kendi özetlerinin tek dosyada toplamı\n- `Matris.md`: sentez matrisi\n- `Görseller/`: PDF\'ten kestiğin alanlar\n- `.atlas/`: tam yedek (state.json), günlük yedekler ve PDF dosyaları. Silme.\n\nKlasörü Obsidian\'la da açabilirsin, bağlantılar `[[...]]` biçiminde yazılır.\n\n**Önemli:** Notları uygulamadan düzenle. Burada elle yaptığın değişikliklerin üzerine bir sonraki kayıtta yazılır.\n'});
   return {files,pdfIds:S.papers.filter(p=>p.hasPdf).map(p=>p.id),imgIds:S.papers.flatMap(p=>p.hl.filter(h=>h.type==='area').map(h=>h.id))};
 }
 function updVaultUi(){
@@ -1861,7 +1847,6 @@ function syncFromStorage(focusId){
       if(tgtId&&byId(tgtId)){
         const p=byId(tgtId);
         if(S.ui.paperId!==p.id||focusId){ S.ui.paperId=p.id; changed=true; }
-        if(p.space&&p.space!==S.ui.space){ S.ui.space=p.space; document.documentElement.setAttribute('data-space',S.ui.space); $$('#spaceSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sp===S.ui.space))); changed=true; }
         if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(p)){ S.ui.folder=ALL_FOLDERS; changed=true; }
       }
     }
@@ -1888,15 +1873,13 @@ function suspendForVibe(){
   stopLoop();
 }
 const qPap=new URLSearchParams(location.search).get('paper');
-if(qPap){ const qp=byId(qPap); if(qp){ S.ui.paperId=qp.id; S.ui.space=qp.space||'calisma'; if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(qp)) S.ui.folder=ALL_FOLDERS; S.ui.screen='okuma'; save(); } try{ history.replaceState(null,'',location.pathname+(location.hash||'#okuma')); }catch(e){} }
+if(qPap){ const qp=byId(qPap); if(qp){ S.ui.paperId=qp.id; if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(qp)) S.ui.folder=ALL_FOLDERS; S.ui.screen='okuma'; save(); } try{ history.replaceState(null,'',location.pathname+(location.hash||'#okuma')); }catch(e){} }
 window.addEventListener('storage',()=>syncFromStorage());
 $$('.tab').forEach(t=>t.onclick=()=>goScreen(t.dataset.screen));
 function setTheme(t){ S.ui.theme=t; save(); applyTheme(); }
 $('#themeSeg').onclick=e=>{ const b=e.target.closest('button'); if(b) setTheme(b.dataset.th); };
-document.documentElement.setAttribute('data-space',S.ui.space);
-$$('#spaceSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sp===S.ui.space)));
 renderFolderFilter();
-if(!P()||P().space!==S.ui.space||!matchFolder(P())){ const f0=vis()[0]; S.ui.paperId=f0?f0.id:null; }
+if(!P()||!matchFolder(P())){ const f0=vis()[0]; S.ui.paperId=f0?f0.id:null; }
 $('#mapAdd').onclick=()=>{ goScreen('okuma'); openAdd(); };
 renderPens(); applyTheme(); setTone(S.ui.tone||'dark'); updateSw(); $('#mFind').setAttribute('aria-pressed',String(!!S.ui.findOnly));
 let start=(location.hash||'').replace('#','')||S.ui.screen||'okuma'; if(!SCREENS.includes(start)) start='okuma';
