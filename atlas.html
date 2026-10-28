@@ -9,7 +9,7 @@
 /* Konsept: koyu, tek odaklı çalışma alanı. Okuma sakin, Harita sonsuz tuval, Matris tablo. Parlama yalnızca etkin ve ana bulgu öğelerinde. */
 :root{
   --bg:#090b12; --panel:#0f121b; --surface:#141927; --surface-2:#1a2133; --line:#232b3e; --grid:#1a2133;
-  --fg:#e9ecf6; --muted:#8e97b0; --faint:#5f6882; --pagebg:#12151d; --pdfstage:#0b0d14;
+  --fg:#e9ecf6; --muted:#8e97b0; --faint:#7d86a3; --pagebg:#12151d; --pdfstage:#0b0d14;
   --accent:#8fa4ff; --ink:#0a0d1a; --glow:rgba(143,164,255,.3);
   --g1:#6ea8ff; --g2:#a98bff; --g3:#ff8fd0;
   --danger:#ff7a90; --ok:#4ee3a1;
@@ -25,14 +25,14 @@
 @media (prefers-color-scheme:light){
   :root:not([data-theme="dark"]){
     --bg:#f1f3f9; --panel:#ffffff; --surface:#ffffff; --surface-2:#eef1f8; --line:#dbe0ed; --grid:#d9deec;
-    --fg:#141829; --muted:#586179; --faint:#8a93aa; --pagebg:#ffffff; --pdfstage:#e6e9f2;
+    --fg:#141829; --muted:#586179; --faint:#6b7590; --pagebg:#ffffff; --pdfstage:#e6e9f2;
     --accent:#4357e0; --ink:#ffffff; --glow:rgba(67,87,224,.22);
     --pdf-filter:none; --shadow:0 18px 50px rgba(30,40,90,.16); color-scheme:light;
   }
 }
 :root[data-theme="light"]{
   --bg:#f1f3f9; --panel:#ffffff; --surface:#ffffff; --surface-2:#eef1f8; --line:#dbe0ed; --grid:#d9deec;
-  --fg:#141829; --muted:#586179; --faint:#8a93aa; --pagebg:#ffffff; --pdfstage:#e6e9f2;
+  --fg:#141829; --muted:#586179; --faint:#6b7590; --pagebg:#ffffff; --pdfstage:#e6e9f2;
   --accent:#4357e0; --ink:#ffffff; --glow:rgba(67,87,224,.22);
   --pdf-filter:none; --shadow:0 18px 50px rgba(30,40,90,.16); color-scheme:light;
 }
@@ -57,7 +57,7 @@ small{color:var(--faint);font-weight:400}
 .tabs{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
 .tab{padding:6px 14px;border-radius:9px;color:var(--muted);font-weight:500}
 .tab:hover{color:var(--fg)}
-.tab[aria-selected="true"]{color:var(--fg);background:var(--surface-2);box-shadow:0 0 0 1px var(--line),0 0 26px -8px var(--glow)}
+.tab[aria-selected="true"]{color:var(--fg);background:var(--surface-2);box-shadow:0 0 0 1px var(--line)}
 .grow{flex:1}
 .btn{padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:500;white-space:nowrap}
 .btn:hover{background:var(--surface-2)}
@@ -358,6 +358,31 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
   .maphint{max-width:calc(100% - 24px)}
   .row2{grid-template-columns:1fr}
 }
+/* Mobil: üst çubuk iki satır (eylemler + klasör), sekmeler başparmak erişimi için altta sabit */
+#themeCycle{display:none}
+/* Orta genişlikte (laptop) üst çubuk ikinci satıra taşmasın */
+@media (max-width:1340px) and (min-width:821px){ .search{min-width:0} .search .lbl,.search kbd{display:none} }
+.mapempty b{color:var(--fg);font:600 16px var(--font-display);letter-spacing:-.01em}
+.mapempty .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+@media (max-width:820px){
+  .top{gap:8px;padding:6px 8px}
+  #appModeSeg{order:1}
+  .top .grow{order:2}
+  .btnnew{order:3}
+  .search{order:4;min-width:0}
+  #themeSeg{display:none}
+  #appModeSeg .bn{display:none}
+  #btnData{order:5}
+  #folderBar{order:6;flex:1 1 calc(100% - 52px);min-width:0;justify-content:space-between}
+  #themeCycle{display:inline-flex;align-items:center;justify-content:center;order:7}
+  #folderBar .fsel{flex:1;max-width:none;min-width:0}
+  .tabs{position:fixed;order:8;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:20;padding:4px;background:var(--panel);box-shadow:var(--shadow)}
+  .tab{flex:1;min-height:44px;padding:6px 8px;text-align:center}
+  #app{padding-bottom:78px}
+  .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  .top .btn,.top .seg button,.fsel{min-height:36px}
+  .legend{bottom:8px}
+}
 #appModeSeg button{display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s,box-shadow .15s}
 .fbar{display:inline-flex;align-items:center;gap:4px;padding:2px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
 .fsel{border:0;background:var(--surface-2);color:var(--fg);padding:4px 8px;border-radius:8px;font-size:12px;font-weight:500;max-width:170px;outline:none;cursor:pointer}
@@ -403,6 +428,7 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
       <button data-th="dark" aria-pressed="true">Koyu</button>
       <button data-th="light" aria-pressed="false">Açık</button>
     </div>
+    <button class="btn" id="themeCycle" aria-label="Temayı değiştir (Oto / Koyu / Açık)" title="Tema"><svg class="ico" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <button class="btn" id="btnData">Veri</button>
   </header>
 
@@ -449,7 +475,7 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
         </div>
         <div class="legend" id="legend"></div>
         <div class="detail" id="detail" hidden></div>
-        <div class="mapempty" id="mapEmpty" hidden><div><span>Bu alanda henüz makale yok.</span><button class="btn primary" id="mapAdd">Makale ekle</button></div></div>
+        <div class="mapempty" id="mapEmpty" hidden><div><b id="mapEmptyT">Henüz makale yok</b><span id="mapEmptyP"></span><div class="row"><button class="btn primary" id="mapAdd">Makale ekle</button><button class="btn" id="mapGoVibe">Literatür keşfi</button></div></div></div>
       </div>
     </section>
 
@@ -781,7 +807,9 @@ function goScreen(n){
   if(!window.parent||window.parent===window){ try{ history.replaceState(null,'','#'+n); }catch(e){} }
   if(n!=='harita') stopLoop();
   if(n==='okuma'){ renderNote(); ensurePdf(); }
-  if(n==='harita'){ renderMap(); if(!S.view) fitMap(); else applyView(); }
+  if(n==='harita'){ renderMap(); const vw=Math.round(vp.getBoundingClientRect().width); const sv=S.view;
+    /* Kayıtlı görünüm başka bir ekran genişliğinde (ör. masaüstü) kaydedildiyse, telefonda kenara taşmasın diye yeniden sığdır */
+    if(!sv||(sv.vw?Math.abs(sv.vw-vw)>60:vw<700)) fitMap(); else applyView(); }
   if(n==='matris') renderMatrix();
   if(n==='ara') renderSearch();
 }
@@ -1453,12 +1481,19 @@ function fitTarget(){
   const ns=[...SIM.nodes.values()]; if(!ns.length) return {x:r.width/2,y:r.height/2,k:1};
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; const ex=S.ui.findOnly?50:0, ey=S.ui.findOnly?30:0; ns.forEach(n=>{ x0=Math.min(x0,n.x-NW/2-ex); y0=Math.min(y0,n.y-NH/2-ey); x1=Math.max(x1,n.x+NW/2+ex); y1=Math.max(y1,n.y+NH/2+ey); });
   const px=70, pt=70, pb=64, k=clamp(Math.min(r.width/(x1-x0+px*2),(r.height-pt-pb)/(y1-y0)),.2,1.15);
-  return {x:(r.width-(x1-x0)*k)/2-x0*k,y:pt+((r.height-pt-pb)-(y1-y0)*k)/2-y0*k,k};
+  return {x:(r.width-(x1-x0)*k)/2-x0*k,y:pt+((r.height-pt-pb)-(y1-y0)*k)/2-y0*k,k,vw:Math.round(r.width)};
 }
+/* Ekran genişliği belirgin değişirse (döndürme, pencere boyutu) ve kullanıcı haritayı elle kaydırmadıysa yeniden sığdır */
+let _rz=0;
+window.addEventListener('resize',()=>{ clearTimeout(_rz); _rz=setTimeout(()=>{
+  if($('#view-map').hidden||!S.view) return;
+  const vw=Math.round(vp.getBoundingClientRect().width);
+  if(vw&&Math.abs((S.view.vw||vw)-vw)>60) fitMap();
+},180); });
 function fitMap(){ const t=fitTarget(); if(!t) return; S.view=t; M.userView=false; applyView(); }
 function followFit(){
   const t=fitTarget(), v=S.view; if(!t||!v) return;
-  const e=.07; v.x+=(t.x-v.x)*e; v.y+=(t.y-v.y)*e; v.k+=(t.k-v.k)*e; applyView();
+  const e=.07; v.x+=(t.x-v.x)*e; v.y+=(t.y-v.y)*e; v.k+=(t.k-v.k)*e; v.vw=t.vw; applyView();
 }
 function zoomAt(f,cx,cy){ const v=S.view; const nk=clamp(v.k*f,.2,3); v.x=cx-(cx-v.x)*nk/v.k; v.y=cy-(cy-v.y)*nk/v.k; v.k=nk; M.userView=true; applyView(); drawHint(); }
 function zoomMap(f){ const r=vp.getBoundingClientRect(); zoomAt(f,r.width/2,r.height/2); }
@@ -1569,6 +1604,10 @@ vp.addEventListener('pointerleave',()=>setHover(null));
 /* DOM */
 function renderMap(){
   const nodes=$('#nodes'); nodes.innerHTML=''; const list=vis(); $('#mapEmpty').hidden=list.length>0;
+  if(!list.length){ const none=!S.papers.length;
+    $('#mapEmptyT').textContent=none?'Henüz makale yok':'Bu klasörde makale yok';
+    $('#mapEmptyP').textContent=none?'VibePsych\'ta bir makalede “Atlas\'a Al” de ya da makaleyi elle ekle.':'Başka bir klasör seç ya da makaleleri bu klasöre taşı.';
+    $('#mapGoVibe').hidden=!none; }
   list.forEach((p,i)=>{
     const deg=S.links.filter(l=>visLink(l)&&(l.from===p.id||l.to===p.id)).length, s=10+Math.min(16,deg*3+p.hl.length);
     const n=document.createElement('div'); n.className='node'+(p.pinned?' pinned':''); n.dataset.id=p.id;
@@ -1594,7 +1633,8 @@ function drawLegend(){
 $('#legend').onclick=e=>{ const b=e.target.closest('[data-t]'); if(!b) return; const t=b.dataset.t; M.hidden.has(t)?M.hidden.delete(t):M.hidden.add(t); drawLegend(); drawEdges(); };
 function drawHint(){
   const hasEx=vis().some(p=>p.example); const k=S.view?S.view.k:1;
-  $('#mapHint').innerHTML=(k<1.2&&!M.zoomed&&!S.ui.findOnly?'<span class="pill glow">Yakınlaştır: her makalenin ana bulgusu belirir</span>':'')+(hasEx?'<button class="pill" id="exPill">Örnek veri</button>':'')
+  const lst=vis(), noFind=lst.length>0&&!lst.some(p=>(p.finding||'').trim());
+  $('#mapHint').innerHTML=(noFind?'<span class="pill glow">Okuma ekranında ana bulgu yaz; haritada kartta görünür</span>':(k<1.2&&!M.zoomed&&!S.ui.findOnly?'<span class="pill glow">Yakınlaştır: her makalenin ana bulgusu belirir</span>':''))+(hasEx?'<button class="pill" id="exPill">Örnek veri</button>':'')
     +'<span class="pill">Ctrl/⌘ + kaydır: yakınlaş · makaleyi sürükle: sabitlenir · sağ kenar noktası: bağla</span>';
   if(k>=1.2) M.zoomed=true;
   const ex=$('#exPill'); if(ex) ex.onclick=openData;
@@ -1881,6 +1921,8 @@ $('#themeSeg').onclick=e=>{ const b=e.target.closest('button'); if(b) setTheme(b
 renderFolderFilter();
 if(!P()||!matchFolder(P())){ const f0=vis()[0]; S.ui.paperId=f0?f0.id:null; }
 $('#mapAdd').onclick=()=>{ goScreen('okuma'); openAdd(); };
+$('#mapGoVibe').onclick=()=>switchToVibe();
+$('#themeCycle').onclick=()=>{ const o=['auto','dark','light'], n=o[(o.indexOf(S.ui.theme||'dark')+1)%o.length]; setTheme(n); toast('Tema: '+({auto:'Otomatik',dark:'Koyu',light:'Açık'})[n]); };
 renderPens(); applyTheme(); setTone(S.ui.tone||'dark'); updateSw(); $('#mFind').setAttribute('aria-pressed',String(!!S.ui.findOnly));
 let start=(location.hash||'').replace('#','')||S.ui.screen||'okuma'; if(!SCREENS.includes(start)) start='okuma';
 goScreen(start);
