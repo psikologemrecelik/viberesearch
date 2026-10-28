@@ -408,6 +408,17 @@
       outline-offset: 2px;
     }
 
+    /* Yükleme iskeleti */
+    .skel {
+      display: inline-block;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--bg-surface) 0%, var(--bg-surface-2) 50%, var(--bg-surface) 100%);
+      background-size: 200% 100%;
+      animation: skel-shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes skel-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+    @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+
     /* Mobil alt gezinme çubuğu */
     .mob-nav-btn {
       flex: 1 1 0;
@@ -473,6 +484,10 @@
       #disciplineGridContainer {
         max-height: 38vh;
       }
+      /* Dergi menüsü ok düğmelerinin sağından değil, satırın solundan açılır; aksi halde sağdan taşıyordu */
+      #collapsibleJournalRail > div { position: relative; }
+      #journalStrip { position: static; }
+      #journalMenu { left: 0; right: 0; width: auto; }
       .ghost-actions button span.hidden.sm\:inline {
         display: none;
       }
@@ -752,7 +767,7 @@
             </button>
           </div>
 
-          <div id="journalStrip" class="flex items-center gap-1.5 overflow-x-auto touch-scroll flex-1"></div>
+          <div id="journalStrip" class="relative flex items-center gap-1 flex-1 min-w-0"></div>
 
           <a id="activeJournalSiteBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden shrink-0 px-2 py-1 rounded-lg badge-q1-elite text-[10px] font-mono items-center gap-1 transition">
             <span>Resmi Site</span>
@@ -816,9 +831,26 @@
     </div>
 
     <!-- Loading Indicator -->
-    <div id="loadingBox" class="hidden luxury-panel rounded-2xl p-12 text-center space-y-3">
-      <div class="inline-block w-6 h-6 border-2 border-[var(--neon-primary)] border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-xs font-mono text-slate-400">Akademik dizin sorgulanıyor...</p>
+    <div id="loadingBox" class="hidden space-y-3" role="status" aria-live="polite">
+      <span class="sr-only">Akademik dizin sorgulanıyor…</span>
+      <div class="luxury-card rounded-2xl p-4 sm:p-5 space-y-3" aria-hidden="true">
+        <div class="flex items-center gap-2"><span class="skel h-5 w-20"></span><span class="skel h-4 w-48"></span><span class="ml-auto skel h-4 w-20"></span></div>
+        <span class="skel block h-6 w-11/12"></span><span class="skel block h-6 w-2/3"></span>
+        <span class="skel block h-4 w-40"></span>
+        <span class="skel block h-4 w-full"></span><span class="skel block h-4 w-5/6"></span>
+      </div>
+      <div class="luxury-card rounded-2xl p-4 sm:p-5 space-y-3" aria-hidden="true">
+        <div class="flex items-center gap-2"><span class="skel h-5 w-16"></span><span class="skel h-4 w-56"></span><span class="ml-auto skel h-4 w-20"></span></div>
+        <span class="skel block h-6 w-4/5"></span>
+        <span class="skel block h-4 w-52"></span>
+        <span class="skel block h-4 w-full"></span><span class="skel block h-4 w-3/4"></span>
+      </div>
+      <div class="luxury-card rounded-2xl p-4 sm:p-5 space-y-3 hidden sm:block" aria-hidden="true">
+        <div class="flex items-center gap-2"><span class="skel h-5 w-20"></span><span class="skel h-4 w-40"></span><span class="ml-auto skel h-4 w-20"></span></div>
+        <span class="skel block h-6 w-3/4"></span>
+        <span class="skel block h-4 w-36"></span>
+        <span class="skel block h-4 w-full"></span>
+      </div>
     </div>
 
     <!-- Articles Stream Container -->
@@ -1472,6 +1504,7 @@
         if (!e.target.closest('#disciplineDropdownWrapper')) {
           closeDisciplinePopover();
         }
+        if (journalMenuOpen && !e.target.closest('#journalStrip')) setJournalMenu(false);
       });
 
       window.addEventListener('scroll', () => {
@@ -1504,6 +1537,7 @@
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (e.key === 'Escape') {
           closeInspector();
+          setJournalMenu(false);
           closeDirectoryModal();
           closeDisciplinePopover();
           hideAutocomplete();
@@ -1717,6 +1751,22 @@
     }
 
     // 8. JOURNAL STRIP RENDERER
+    // Dergi seçici: kayan çip şeridi yerine seçili havuz/dergi + açılır liste (favori kalpleri listede)
+    let journalMenuOpen = false;
+
+    function setJournalMenu(open) {
+      journalMenuOpen = open;
+      const menu = document.getElementById('journalMenu');
+      const btn = document.getElementById('journalMenuBtn');
+      if (menu) menu.classList.toggle('hidden', !open);
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function toggleJournalMenu(event) {
+      if (event) event.stopPropagation();
+      setJournalMenu(!journalMenuOpen);
+    }
+
     function renderJournalStrip() {
       const strip = document.getElementById('journalStrip');
       const siteBtn = document.getElementById('activeJournalSiteBtn');
@@ -1729,48 +1779,50 @@
         siteBtn.classList.remove('inline-flex');
       }
 
-      const poolActive = activeJournal === null;
       const poolLabel = isFavJournalsStream
         ? `Tüm Favoriler (${favJournals.length})`
         : (activeDomain.isGlobal ? `Küresel Elit Havuz` : `Tüm ${activeDomain.name} Q1 (${list.length})`);
+      const selIdx = activeJournal
+        ? list.findIndex(j => (j.issn && activeJournal.issn === j.issn) || activeJournal.name === j.name)
+        : -1;
+      const sel = selIdx >= 0 ? list[selIdx] : null;
+      const selFav = sel ? isJournalFavorited(sel.issn, sel.name) : false;
+      const activeCls = (!sel && isFavJournalsStream) ? 'neon-crimson-active' : 'neon-primary-active';
 
-      let html = `
-        <button 
-          onclick="selectJournal(null)"
-          class="px-2.5 py-1 rounded-lg text-[11px] font-mono whitespace-nowrap border transition shrink-0 ${
-            poolActive 
-              ? (isFavJournalsStream ? 'neon-crimson-active' : 'neon-primary-active') 
-              : 'glass-pill hover:text-white'
-          }">
-          ${escapeHtml(poolLabel)}
+      const row = (label, idx, isSel, j) => `
+        <div class="flex items-center rounded-lg transition ${isSel ? 'bg-[var(--bg-surface-2)]' : 'hover:bg-[var(--bg-surface-2)]'}">
+          <button role="option" aria-selected="${isSel ? 'true' : 'false'}" onclick="selectJournal(${idx === null ? 'null' : idx})"
+            class="flex-1 min-w-0 flex items-center gap-2 text-left px-2.5 py-2 text-[12.5px] ${isSel ? 'title-ergonomic font-semibold' : 'text-[var(--text-body)] hover:text-[var(--text-title)]'}">
+            ${isSel ? ic('check', 'w-3.5 h-3.5 text-[var(--neon-primary)] shrink-0') : '<span class="w-3.5 shrink-0"></span>'}
+            <span class="truncate">${escapeHtml(label)}</span>
+          </button>
+          ${j ? (() => {
+            const fav = isJournalFavorited(j.issn, j.name);
+            return `<button onclick="toggleFavoriteJournal(${jsArg(j.issn || '')}, ${jsArg(j.name)}, event)"
+              aria-label="${fav ? 'Favorilerden çıkar' : 'Favorilere ekle'}: ${escapeHtml(j.name)}" aria-pressed="${fav ? 'true' : 'false'}" class="btn-icon shrink-0">
+              <i data-lucide="heart" class="w-3.5 h-3.5 ${fav ? 'text-[#D2042D] fill-[#D2042D]' : ''}"></i></button>`;
+          })() : ''}
+        </div>`;
+
+      strip.innerHTML = `
+        <button id="journalMenuBtn" onclick="toggleJournalMenu(event)" aria-haspopup="listbox" aria-expanded="false"
+          class="min-w-0 max-w-full flex items-center gap-2 px-2.5 py-1 rounded-lg border transition ${activeCls}">
+          ${ic(sel ? 'book-open' : 'library', 'w-3.5 h-3.5 text-[var(--neon-primary)] shrink-0')}
+          <span class="truncate text-[12px] font-medium">${escapeHtml(sel ? sel.name : poolLabel)}</span>
+          <span class="num text-[11px] text-[var(--text-muted)] shrink-0">${sel ? `${selIdx + 1}/${list.length}` : `${list.length} dergi`}</span>
+          ${ic('chevron-down', 'w-3.5 h-3.5 shrink-0 opacity-80')}
         </button>
+        ${sel ? `<button onclick="toggleFavoriteJournal(${jsArg(sel.issn || '')}, ${jsArg(sel.name)}, event)"
+          aria-label="${selFav ? 'Favorilerden çıkar' : 'Favorilere ekle'}: ${escapeHtml(sel.name)}" aria-pressed="${selFav ? 'true' : 'false'}" class="btn-icon shrink-0">
+          <i data-lucide="heart" class="w-3.5 h-3.5 ${selFav ? 'text-[#D2042D] fill-[#D2042D]' : ''}"></i></button>` : ''}
+        <div id="journalMenu" role="listbox" aria-label="Dergi seç"
+          class="${journalMenuOpen ? '' : 'hidden '}absolute left-0 top-full mt-1.5 w-[min(440px,calc(100vw-24px))] max-h-[55vh] overflow-y-auto custom-scrollbar luxury-panel rounded-xl p-1.5 z-50 space-y-0.5">
+          ${row(poolLabel, null, !sel, null)}
+          <div class="h-px bg-[var(--line-color)] my-1"></div>
+          ${list.map((j, idx) => row(j.name, idx, selIdx === idx, j)).join('')}
+        </div>
       `;
-
-      list.forEach((j, idx) => {
-        const isSelected = activeJournal && ((j.issn && activeJournal.issn === j.issn) || activeJournal.name === j.name);
-        const isFav = isJournalFavorited(j.issn, j.name);
-
-        html += `
-          <div class="inline-flex items-center rounded-lg border transition shrink-0 overflow-hidden ${
-            isSelected ? 'neon-primary-active' : 'glass-pill hover:border-white/20'
-          }">
-            <button 
-              onclick="selectJournal(${idx})"
-              class="pl-2.5 pr-1.5 py-1 text-[11px] font-mono whitespace-nowrap text-left hover:text-white transition">
-              ${escapeHtml(j.name)}
-            </button>
-            <button 
-              onclick="toggleFavoriteJournal(${jsArg(j.issn || '')}, ${jsArg(j.name)}, event)"
-              aria-label="${isFav ? 'Favorilerden çıkar' : 'Favorilere ekle'}: ${escapeHtml(j.name)}"
-              aria-pressed="${isFav ? 'true' : 'false'}"
-              class="px-1.5 py-1 hover:bg-white/[0.08] transition flex items-center">
-              <i data-lucide="heart" class="w-3 h-3 ${isFav ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
-            </button>
-          </div>
-        `;
-      });
-
-      strip.innerHTML = html;
+      document.getElementById('journalMenuBtn').setAttribute('aria-expanded', journalMenuOpen ? 'true' : 'false');
       refreshIcons();
     }
 
@@ -1780,6 +1832,7 @@
       activeSnowball = null;
       const list = isFavJournalsStream ? favJournals : activeDomain.journals;
       activeJournal = (idx === null || idx < 0) ? null : list[idx];
+      journalMenuOpen = false;
       renderJournalStrip();
       resetAndFetch();
     }
@@ -2487,15 +2540,32 @@
           refreshIcons();
           return;
         }
+        // Hangi süzgeçlerin sonucu daralttığını göster; her biri tek tıkla gevşetilebilir
+        const narrowers = [];
+        if (!isVaultMode) {
+          const yrLbl = { thisyear: String(CURRENT_YEAR), '2024+': '2024 ve sonrası', '5yr': 'Son 5 yıl', custom: `${customYearFrom || '…'}–${customYearTo || '…'}` }[activeYearFilter];
+          if (yrLbl) narrowers.push([`Yıl: ${yrLbl}`, `setYearFilter(${jsArg('all')})`]);
+          if (onlyQ1) narrowers.push(['Sadece Q1', 'toggleQ1Only()']);
+          if (onlyOA) narrowers.push(['Yalnızca açık erişim', 'toggleOAFilter()']);
+          const mSel = document.getElementById('methodSelect');
+          if (mSel && mSel.value !== 'ALL') narrowers.push([`Yöntem: ${mSel.options[mSel.selectedIndex].text}`, "document.getElementById('methodSelect').value='ALL'; resetAndFetch()"]);
+          if (activeJournal) narrowers.push([`Dergi: ${activeJournal.name}`, 'selectJournal(null)']);
+          if (document.getElementById('searchInput').value.trim()) narrowers.push(['Arama terimi', 'clearSearch()']);
+        }
         container.innerHTML = `
-          <div class="luxury-panel rounded-2xl p-12 text-center space-y-3">
-            <p class="font-serif text-lg title-ergonomic">Bu kriterlere uygun yayın bulunamadı.</p>
-            <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
-              ${onlyQ1 && !isVaultMode ? `<button onclick="toggleQ1Only()" class="px-4 py-2 rounded-xl glass-pill hover:text-white text-xs font-mono">Sadece Q1 Filtresini Kapat (Q2/Q3 Göster)</button>` : ''}
-              <button onclick="resetToHome()" class="px-4 py-2 rounded-xl neon-primary-active text-xs font-mono">Tüm Filtreleri Sıfırla</button>
+          <div class="luxury-panel rounded-2xl p-8 sm:p-10 text-center space-y-4">
+            <div class="mx-auto w-10 h-10 rounded-full grid place-items-center bg-[var(--bg-surface-2)] border border-[var(--line-color)]">${ic('search-x', 'w-5 h-5 text-[var(--text-muted)]')}</div>
+            <div class="space-y-1">
+              <p class="font-serif text-lg title-ergonomic">Bu kriterlere uygun yayın bulunamadı</p>
+              ${narrowers.length ? `<p class="text-sm text-[var(--text-body)]">Sonucu daraltan süzgeçler; birini kaldırmayı dene:</p>` : ''}
             </div>
+            ${narrowers.length ? `<div class="flex flex-wrap items-center justify-center gap-1.5">
+              ${narrowers.map(([lbl, act]) => `<button onclick="${act}" class="btn-secondary">${ic('x', 'w-3.5 h-3.5')}<span>${escapeHtml(lbl)}</span></button>`).join('')}
+            </div>` : ''}
+            <div class="pt-1"><button onclick="resetToHome()" class="btn-primary">Tüm filtreleri sıfırla</button></div>
           </div>
         `;
+        refreshIcons();
         return;
       }
 
@@ -2531,41 +2601,28 @@
         return `
           <article class="luxury-card ${isSeen ? 'seen-article' : ''} rounded-2xl p-4 sm:p-5 space-y-3">
             
-            <!-- TOP METRIC BAR -->
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-2.5 text-[11px] font-mono">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-md font-semibold tracking-wide ${art.qClass}">
-                  ${art.quartile}
-                </span>
-                <div class="inline-flex items-center gap-1">
-                  <button 
-                    onclick="filterByCardJournal(${jsArg(art.journalName)}, ${jsArg(art.issn)})"
-                    class="title-ergonomic hover:text-[var(--neon-primary)] font-medium transition text-left">
-                    ${escapeHtml(art.journalName)}
-                  </button>
-                  <button 
-                    onclick="toggleFavoriteJournal(${jsArg(art.issn)}, ${jsArg(art.journalName)}, event)"
-                    aria-label="${isFavVenue ? 'Dergiyi favorilerden çıkar' : 'Dergiyi favorilere ekle'}: ${escapeHtml(art.journalName)}"
-                    aria-pressed="${isFavVenue ? 'true' : 'false'}"
-                    class="p-1 rounded hover:bg-white/[0.06] transition">
-                    <i data-lucide="heart" class="w-3.5 h-3.5 ${isFavVenue ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
-                  </button>
-                </div>
+            <!-- KÜNYE SATIRI: rozet · dergi · favori · h-indeks ............ tarih -->
+            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-[11px]">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                <span class="px-2 py-0.5 rounded-md font-semibold tracking-wide ${art.qClass}">${art.quartile}</span>
+                <button 
+                  onclick="filterByCardJournal(${jsArg(art.journalName)}, ${jsArg(art.issn)})"
+                  title="Bu dergideki makaleleri göster"
+                  class="title-ergonomic hover:text-[var(--neon-primary)] font-medium transition text-left">
+                  ${escapeHtml(art.journalName)}
+                </button>
+                <button 
+                  onclick="toggleFavoriteJournal(${jsArg(art.issn)}, ${jsArg(art.journalName)}, event)"
+                  aria-label="${isFavVenue ? 'Dergiyi favorilerden çıkar' : 'Dergiyi favorilere ekle'}: ${escapeHtml(art.journalName)}"
+                  aria-pressed="${isFavVenue ? 'true' : 'false'}"
+                  class="-ml-1 p-1 rounded hover:bg-white/[0.06] transition">
+                  <i data-lucide="heart" class="w-3.5 h-3.5 ${isFavVenue ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
+                </button>
+                ${art.hIndex ? `<span class="text-[var(--text-muted)]" title="Derginin h-indeksi">h <span class="num">${art.hIndex}</span></span>` : ''}
               </div>
-
-              <div class="flex flex-wrap items-center gap-1.5 tabular-nums">
-                ${isSeen ? `<span class="px-2 py-0.5 rounded-md glass-pill text-[10px] flex items-center gap-1">${ic('check', 'w-3 h-3')}<span>İncelendi</span></span>` : ''}
-                ${art.hIndex ? `
-                  <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-violet)]"></span>
-                    <span>H <strong class="num title-ergonomic">${art.hIndex}</strong></span>
-                  </span>
-                ` : ''}
-                <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-primary)]"></span>
-                  <span>Atıf <strong class="num title-ergonomic">${art.citations}</strong></span>
-                </span>
-                <span class="num px-2.5 py-0.5 rounded-md glass-pill">${escapeHtml(art.pubDate)}</span>
+              <div class="flex items-center gap-2 text-[var(--text-muted)]">
+                ${isSeen ? `<span class="inline-flex items-center gap-1">${ic('check', 'w-3 h-3')}<span>İncelendi</span></span>` : ''}
+                <time class="num" datetime="${escapeHtml(art.pubDate)}">${escapeHtml(art.pubDate)}</time>
               </div>
             </div>
 
@@ -2581,6 +2638,7 @@
                   </button>
                 `).join('<span class="text-slate-600">•</span>')}
                 ${art.totalAuthors > 4 ? `<span class="text-slate-500 font-mono text-[11px]">+${art.totalAuthors - 4}</span>` : ''}
+                ${art.citations > 0 ? `<span class="text-slate-600">·</span><span class="text-[var(--text-muted)]"><span class="num">${art.citations}</span> atıf</span>` : ''}
               </div>
             </div>
 
