@@ -41,7 +41,7 @@
       --bg-card-bottom: #0f121b;
       --text-title: #e9ecf6;
       --text-body: #8e97b0;
-      --text-muted: #5f6882;
+      --text-muted: #7d86a3;      /* ~5:1 kontrast (önceki #5f6882 ~3.4:1 idi) */
       --neon-crimson: #ff7a90;
       --neon-primary: #8fa4ff;
       --neon-violet: #a98bff;
@@ -69,7 +69,7 @@
       --bg-card-bottom: rgba(17, 14, 11, 0.90);
       --text-title: #F2EAE0;      /* Anti-Halation Warm Ivory */
       --text-body: #B8ACA0;       /* Soft Warm Silver */
-      --text-muted: #7C7065;
+      --text-muted: #8c7f72;
       --neon-crimson: #D2042D;    /* Favorite Journals Accent */
       --neon-primary: #E5A93C;    /* Warm Amber Gold */
       --neon-violet: #C87D55;     /* Warm Copper / Terracotta */
@@ -175,16 +175,7 @@
       opacity: 1;
     }
 
-    @media (hover: hover) {
-      .ghost-actions {
-        opacity: 0.55;
-        transition: opacity 0.2s ease;
-      }
-      .luxury-card:hover .ghost-actions,
-      .ghost-actions:focus-within {
-        opacity: 1;
-      }
-    }
+    /* Kart eylemleri artık hayalet (düşük opaklık) değil: hiyerarşi .btn-primary / .btn-secondary / .btn-icon ile kurulur */
 
     .glass-pill {
       background: var(--bg-surface);
@@ -201,13 +192,13 @@
       background: var(--bg-surface-2);
       border: 1px solid color-mix(in srgb, var(--neon-primary) 50%, var(--line-color));
       color: var(--text-title);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--neon-primary) 18%, transparent), 0 0 26px -8px var(--glow);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--neon-primary) 14%, transparent);
     }
     body.warm-mode .neon-primary-active {
       background: color-mix(in srgb, var(--neon-primary) 14%, transparent);
       border: 1px solid color-mix(in srgb, var(--neon-primary) 60%, transparent);
       color: var(--text-title);
-      box-shadow: 0 0 15px -4px color-mix(in srgb, var(--neon-primary) 35%, transparent);
+      box-shadow: none;
     }
 
     .neon-crimson-active {
@@ -224,11 +215,11 @@
       box-shadow: 0 0 22px -6px color-mix(in srgb, var(--neon-violet) 35%, transparent);
     }
 
+    /* Sakin rozet: parıltı yok, düşük doygunluk, metin rengi zemine göre okunur */
     .badge-q1-elite {
-      background: color-mix(in srgb, var(--neon-emerald) 14%, var(--bg-surface));
-      border: 1px solid color-mix(in srgb, var(--neon-emerald) 50%, var(--line-color));
-      color: var(--neon-emerald);
-      box-shadow: 0 0 18px -6px color-mix(in srgb, var(--neon-emerald) 28%, transparent);
+      background: color-mix(in srgb, var(--neon-emerald) 9%, var(--bg-surface));
+      border: 1px solid color-mix(in srgb, var(--neon-emerald) 32%, var(--line-color));
+      color: color-mix(in srgb, var(--neon-emerald) 82%, var(--text-title));
     }
 
     .badge-q1 {
@@ -319,6 +310,174 @@
                   transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
                   visibility 0s linear 0s;
     }
+    /* ===== Tipografi: arayüz Figtree, monospace yalnızca sayısal veride (.num) ===== */
+    body .font-mono {
+      font-family: var(--font-ui);
+    }
+    body .num {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0;
+    }
+    /* Okunabilirlik tabanı: 10px -> 11px, 11px -> 12px */
+    body [class*="text-[10px]"] { font-size: 11px; }
+    body [class*="text-[11px]"] { font-size: 12px; }
+    body .text-slate-500 { color: var(--text-muted); }
+    body input::placeholder { color: var(--text-muted); opacity: 1; }
+
+    /* ===== Segmentli kontrol (yıl seçici) ===== */
+    .seg {
+      display: inline-flex;
+      padding: 2px;
+      border-radius: 10px;
+      background: var(--bg-base);
+      border: 1px solid var(--line-color);
+    }
+    .seg-btn {
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      color: var(--text-body);
+      font-size: 12px;
+      font-weight: 500;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .seg-btn:hover { color: var(--text-title); }
+    .seg-btn.is-on {
+      background: var(--bg-surface-2);
+      color: var(--text-title);
+      border-color: var(--line-color);
+    }
+    body.warm-mode .seg-btn.is-on {
+      background: color-mix(in srgb, var(--neon-primary) 16%, transparent);
+      border-color: color-mix(in srgb, var(--neon-primary) 45%, transparent);
+    }
+
+    /* ===== Kart eylemleri: birincil / ikincil / ikon ===== */
+    .btn-primary,
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--neon-primary);
+      border: 1px solid var(--neon-primary);
+      color: #0b0d14;
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--neon-primary) 40%, var(--line-color));
+      color: var(--text-title);
+      font-weight: 500;
+    }
+    .btn-secondary:hover,
+    .btn-secondary.is-on {
+      background: color-mix(in srgb, var(--neon-primary) 12%, transparent);
+      border-color: var(--neon-primary);
+    }
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 30px;
+      border-radius: 9px;
+      border: 1px solid transparent;
+      color: var(--text-body);
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-icon:hover {
+      background: var(--bg-surface-2);
+      color: var(--text-title);
+      border-color: var(--line-color);
+    }
+    .btn-icon.is-on { color: var(--neon-violet); }
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible,
+    .btn-icon:focus-visible,
+    .seg-btn:focus-visible {
+      outline: 2px solid var(--neon-primary);
+      outline-offset: 2px;
+    }
+
+    /* Mobil alt gezinme çubuğu */
+    .mob-nav-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    .mob-nav-count {
+      position: absolute;
+      top: -6px;
+      right: -12px;
+      min-width: 16px;
+      padding: 0 4px;
+      font-size: 10px;
+      line-height: 16px;
+      text-align: center;
+      border-radius: 999px;
+      background: var(--bg-surface-2);
+      border: 1px solid var(--line-color);
+      color: var(--text-title);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Mobil dokunma hedefleri (>=40px) ve okunabilir yazı boyu */
+    @media (max-width: 639px) {
+      #filterPanel button,
+      #filterPanel select,
+      #filterPanel #customYearBox,
+      .ghost-actions button,
+      .ghost-actions select {
+        min-height: 40px;
+      }
+      #filterPanel .yr-chip {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      #filterPanel [class*="text-[11px]"],
+      #filterPanel button,
+      #filterPanel select {
+        font-size: 12.5px;
+      }
+      #customYearBox input {
+        width: 3rem;
+        font-size: 14px;
+      }
+      /* Alan seçici popover'ı tetikleyiciye değil başlığa hizalanır; aksi halde sağdan taşıyordu */
+      #disciplineDropdownWrapper {
+        position: static;
+      }
+      #disciplinePopover {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        top: 100%;
+        margin-top: 6px;
+      }
+      #disciplineGridContainer {
+        max-height: 38vh;
+      }
+      .ghost-actions button span.hidden.sm\:inline {
+        display: none;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       #atlasStageWrap, body.atlas-stage-open #atlasStageWrap {
         animation: none !important;
@@ -418,6 +577,18 @@
 
       </div>
 
+      <!-- MOBİL: süzgeçleri açıp kapatan tek satır (masaüstünde gizli) -->
+      <button id="mobFilterToggle" type="button" onclick="toggleMobileFilters()" aria-expanded="false" aria-controls="filterPanel"
+        class="sm:hidden w-full flex items-center justify-between gap-2 px-3 min-h-[40px] rounded-[10px] glass-pill text-xs font-medium">
+        <span class="flex items-center gap-2 min-w-0">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4 text-[var(--neon-primary)] shrink-0"></i>
+          <span class="title-ergonomic shrink-0">Filtreler</span>
+          <span id="mobFilterSummary" class="truncate text-[var(--text-body)]"></span>
+        </span>
+        <i data-lucide="chevron-down" id="mobFilterChevron" class="w-4 h-4 shrink-0 transition-transform"></i>
+      </button>
+
+      <div id="filterPanel" class="hidden sm:block space-y-2">
       <!-- ROW 2: WRAPPED ALL-VISIBLE FILTER BAR (NO HORIZONTAL SCROLL NEEDED!) -->
       <div class="relative pt-1.5 border-t border-[var(--line-color)]">
         <div class="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-1.5 text-[11px] font-mono">
@@ -463,10 +634,12 @@
             <span class="text-white/[0.1] hidden md:inline">|</span>
 
             <!-- 3. Compact Year Presets + Custom Year Range (yıllar çalışma anında dinamik hesaplanır) -->
-            <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">Tümü</button>
-            <button onclick="setYearFilter('thisyear')" data-yr="thisyear" id="thisYearChip" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition tabular-nums">2026</button>
-            <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip px-2 py-1 rounded-lg neon-primary-active transition">2024+</button>
-            <button onclick="setYearFilter('5yr')" data-yr="5yr" id="fiveYearChip" class="yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition">5 Yıl</button>
+            <div role="group" aria-label="Yayın yılı" class="seg">
+              <button onclick="setYearFilter('all')" data-yr="all" class="yr-chip seg-btn">Tümü</button>
+              <button onclick="setYearFilter('thisyear')" data-yr="thisyear" id="thisYearChip" class="yr-chip seg-btn num">2026</button>
+              <button onclick="setYearFilter('2024+')" data-yr="2024+" class="yr-chip seg-btn is-on">2024+</button>
+              <button onclick="setYearFilter('5yr')" data-yr="5yr" id="fiveYearChip" class="yr-chip seg-btn">5 Yıl</button>
+            </div>
 
             <!-- Compact Custom Year Range Input -->
             <div id="customYearBox" class="inline-flex items-center rounded-lg glass-pill px-1.5 py-0.5 gap-0.5 focus-within:border-[var(--neon-primary)] transition">
@@ -587,6 +760,7 @@
           </a>
         </div>
       </div>
+      </div><!-- /#filterPanel -->
 
     </div>
   </header>
@@ -720,30 +894,30 @@
   </div>
 
   <!-- MOBILE ERGONOMIC BOTTOM BAR -->
-  <nav class="sm:hidden fixed bottom-0 inset-x-0 z-30 luxury-header border-t border-white/[0.08] px-3 py-2 flex items-center justify-around text-[10px] font-mono">
-    <button onclick="resetToHome()" class="flex flex-col items-center gap-1 text-[var(--neon-primary)]">
-      <i data-lucide="compass" class="w-4 h-4"></i>
+  <nav aria-label="Ana gezinme" class="sm:hidden fixed bottom-0 inset-x-0 z-30 luxury-header border-t border-white/[0.08] px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex items-stretch text-[11px]">
+    <button onclick="resetToHome()" class="mob-nav-btn text-[var(--neon-primary)]">
+      <i data-lucide="compass" class="w-5 h-5"></i>
       <span>Küresel</span>
     </button>
-    <button onclick="toggleDisciplinePopover(event)" class="flex flex-col items-center gap-1 text-slate-200">
-      <i data-lucide="layers" class="w-4 h-4 text-[var(--neon-primary)]"></i>
-      <span>Alan Seç</span>
+    <button onclick="toggleDisciplinePopover(event)" class="mob-nav-btn title-ergonomic">
+      <i data-lucide="layers" class="w-5 h-5 text-[var(--neon-primary)]"></i>
+      <span>Alan</span>
     </button>
-    <button onclick="toggleFavJournalsStream()" class="flex flex-col items-center gap-1 text-[#D2042D]">
-      <i data-lucide="heart" class="w-4 h-4"></i>
-      <span>Favoriler (<span id="mobFavCount">0</span>)</span>
+    <button onclick="toggleFavJournalsStream()" class="mob-nav-btn text-[#D2042D]">
+      <span class="relative"><i data-lucide="heart" class="w-5 h-5"></i><span id="mobFavCount" class="mob-nav-count">0</span></span>
+      <span>Favori</span>
     </button>
-    <button onclick="openDirectoryModal()" class="flex flex-col items-center gap-1 text-slate-300">
-      <i data-lucide="library" class="w-4 h-4"></i>
+    <button onclick="openDirectoryModal()" class="mob-nav-btn title-ergonomic">
+      <i data-lucide="library" class="w-5 h-5"></i>
       <span>Dergiler</span>
     </button>
-    <button onclick="toggleVaultMode()" class="flex flex-col items-center gap-1 text-slate-200">
-      <i data-lucide="folder-heart" class="w-4 h-4"></i>
-      <span>Kasam (<span id="mobVaultCount">0</span>)</span>
+    <button onclick="toggleVaultMode()" class="mob-nav-btn title-ergonomic">
+      <span class="relative"><i data-lucide="folder-heart" class="w-5 h-5"></i><span id="mobVaultCount" class="mob-nav-count">0</span></span>
+      <span>Kasam</span>
     </button>
-    <button onclick="switchToAtlas('atlas.html')" class="flex flex-col items-center gap-1 text-[var(--neon-primary)]">
-      <i data-lucide="book-open-check" class="w-4 h-4"></i>
-      <span>Atlas (<span id="mobAtlasCount">0</span>)</span>
+    <button onclick="switchToAtlas('atlas.html')" class="mob-nav-btn text-[var(--neon-primary)]">
+      <span class="relative"><i data-lucide="book-open-check" class="w-5 h-5"></i><span id="mobAtlasCount" class="mob-nav-count">0</span></span>
+      <span>Atlas</span>
     </button>
   </nav>
 
@@ -1228,8 +1402,16 @@
       });
       document.getElementById('customYearTo').placeholder = CURRENT_YEAR;
 
+      // Dar ekranda arama kutusu sığsın diye kısa placeholder
+      const searchBox = document.getElementById('searchInput');
+      const fullPh = searchBox.placeholder;
+      const syncPh = () => { searchBox.placeholder = isMobileViewport() ? 'Ara…' : fullPh; };
+      syncPh();
+      window.addEventListener('resize', syncPh);
+
       refreshIcons();
       updateCounters();
+      updateFilterSummary();
       renderDisciplinePopoverItems();
       renderJournalStrip();
       resetAndFetch();
@@ -1258,6 +1440,11 @@
 
       window.addEventListener('scroll', () => {
         const y = window.scrollY;
+        // Mobilde açık süzgeç paneli kaydırınca kapanır; sonuçlar ekranı kaplasın
+        if (y > 60 && isMobileViewport() && !document.getElementById('filterPanel').classList.contains('hidden')
+            && document.getElementById('disciplinePopover').classList.contains('hidden')) {
+          setMobileFilters(false);
+        }
         const rail = document.getElementById('collapsibleJournalRail');
         if (y > 190 && y > lastScrollY + 14) {
           rail.classList.add('collapsed-nav');
@@ -1316,8 +1503,44 @@
     }
 
     // 6. COMPACT DISCIPLINE POPOVER ENGINE (Replaces the horizontal row)
+    // Mobil süzgeç paneli: dar ekranda başlık yüksekliğini küçültmek için varsayılan kapalı
+    function isMobileViewport() {
+      return window.matchMedia('(max-width: 639px)').matches;
+    }
+
+    function setMobileFilters(open) {
+      const panel = document.getElementById('filterPanel');
+      const btn = document.getElementById('mobFilterToggle');
+      if (!panel || !btn) return;
+      panel.classList.toggle('hidden', !open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.getElementById('mobFilterChevron').classList.toggle('rotate-180', open);
+    }
+
+    function toggleMobileFilters() {
+      const open = document.getElementById('filterPanel').classList.contains('hidden');
+      setMobileFilters(open);
+    }
+
+    function updateFilterSummary() {
+      const el = document.getElementById('mobFilterSummary');
+      if (!el) return;
+      const yr = activeYearFilter === 'all' ? 'Tüm yıllar'
+        : activeYearFilter === 'thisyear' ? String(CURRENT_YEAR)
+        : activeYearFilter === '5yr' ? '5 yıl'
+        : activeYearFilter === 'custom' ? `${customYearFrom || '…'}–${customYearTo || '…'}`
+        : activeYearFilter;
+      const parts = [yr];
+      if (onlyQ1) parts.push('Q1');
+      if (onlyOA) parts.push('PDF');
+      if (activeDomain && !activeDomain.isGlobal && activeDomain.name) parts.push(activeDomain.name.split('/')[0].trim());
+      el.textContent = parts.join(' · ');
+    }
+
     function toggleDisciplinePopover(event) {
       if (event) event.stopPropagation();
+      // Alt çubuktan "Alan" seçilince, popover kapalı panelin içinde kalmasın
+      if (isMobileViewport() && document.getElementById('filterPanel').classList.contains('hidden')) setMobileFilters(true);
       const pop = document.getElementById('disciplinePopover');
       const chev = document.getElementById('disciplineChevron');
       const isHidden = pop.classList.contains('hidden');
@@ -1577,10 +1800,8 @@
         document.getElementById('customYearBox').className = 'inline-flex items-center rounded-lg glass-pill px-1.5 py-0.5 gap-0.5 focus-within:border-[var(--neon-primary)] transition';
       }
       document.querySelectorAll('.yr-chip').forEach(btn => {
-        const base = btn.dataset.yr === 'thisyear' ? ' tabular-nums' : '';
-        btn.className = (btn.dataset.yr === yr
-          ? 'yr-chip px-2 py-1 rounded-lg neon-primary-active transition'
-          : 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition') + base;
+        const base = btn.dataset.yr === 'thisyear' ? ' num' : '';
+        btn.className = 'yr-chip seg-btn' + base + (btn.dataset.yr === yr ? ' is-on' : '');
       });
       if (!skipFetch) resetAndFetch();
     }
@@ -1612,8 +1833,7 @@
 
       activeYearFilter = 'custom';
       document.querySelectorAll('.yr-chip').forEach(btn => {
-        const base = btn.dataset.yr === 'thisyear' ? ' tabular-nums' : '';
-        btn.className = 'yr-chip px-2 py-1 rounded-lg glass-pill hover:text-white transition' + base;
+        btn.className = 'yr-chip seg-btn' + (btn.dataset.yr === 'thisyear' ? ' num' : '');
       });
       document.getElementById('customYearBox').className = 'inline-flex items-center rounded-lg neon-primary-active px-1.5 py-0.5 gap-0.5 transition';
       resetAndFetch();
@@ -2192,6 +2412,7 @@
     }
 
     function renderFilteredCards() {
+      updateFilterSummary();
       const baseList = isVaultMode ? getActiveVaultSubset() : currentArticles;
       const filtered = baseList.filter(art => {
         if (!isVaultMode && onlyQ1 && !art.isQ1) return false;
@@ -2246,8 +2467,8 @@
                 <h2 class="font-serif text-base font-medium title-ergonomic truncate">${titleHL.html}</h2>
               </div>
               <div class="flex items-center gap-2 font-mono text-[11px] shrink-0 tabular-nums">
-                ${art.hIndex ? `<span class="glass-pill px-2 py-0.5 rounded">H:${art.hIndex}</span>` : ''}
-                <span class="glass-pill px-2 py-0.5 rounded">Atıf:${art.citations}</span>
+                ${art.hIndex ? `<span class="glass-pill px-2 py-0.5 rounded">H <span class="num">${art.hIndex}</span></span>` : ''}
+                <span class="glass-pill px-2 py-0.5 rounded">Atıf <span class="num">${art.citations}</span></span>
               </div>
             </article>
           `;
@@ -2283,20 +2504,20 @@
                 ${art.hIndex ? `
                   <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-violet)]"></span>
-                    <span>H: <strong class="title-ergonomic">${art.hIndex}</strong></span>
+                    <span>H <strong class="num title-ergonomic">${art.hIndex}</strong></span>
                   </span>
                 ` : ''}
                 <span class="px-2.5 py-0.5 rounded-md glass-pill flex items-center gap-1.5">
                   <span class="w-1.5 h-1.5 rounded-full bg-[var(--neon-primary)]"></span>
-                  <span>Atıf: <strong class="title-ergonomic">${art.citations}</strong></span>
+                  <span>Atıf <strong class="num title-ergonomic">${art.citations}</strong></span>
                 </span>
-                <span class="px-2.5 py-0.5 rounded-md glass-pill">${escapeHtml(art.pubDate)}</span>
+                <span class="num px-2.5 py-0.5 rounded-md glass-pill">${escapeHtml(art.pubDate)}</span>
               </div>
             </div>
 
             <!-- EDITORIAL SERIF TITLE & AUTHORS -->
             <div class="space-y-1">
-              <h2 onclick="openInspector(${jsArg(art.id)})" class="font-serif text-lg sm:text-xl font-medium title-ergonomic hover:text-[var(--neon-primary)] transition cursor-pointer leading-snug">
+              <h2 onclick="openInspector(${jsArg(art.id)})" class="font-serif text-lg sm:text-xl font-medium title-ergonomic hover:text-[var(--neon-primary)] transition cursor-pointer leading-[1.32] tracking-[-0.01em]">
                 ${titleHL.html}
               </h2>
               <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
@@ -2310,7 +2531,7 @@
             </div>
 
             <!-- ERGONOMIC ABSTRACT PREVIEW -->
-            <p onclick="openInspector(${jsArg(art.id)})" class="text-xs body-ergonomic ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
+            <p onclick="openInspector(${jsArg(art.id)})" class="text-[13.5px] body-ergonomic ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
               ${absHL.html}
             </p>
 
@@ -2326,39 +2547,37 @@
                 ` : ''}
               </div>
 
-              <div class="flex items-center gap-1.5">
-                <button 
-                  onclick="sendToAtlas(${jsArg(art.id)}, ${inAtlas ? 'true' : 'false'})" 
+              <div class="flex items-center gap-1">
+                <button
+                  onclick="openInObsidianApp(${jsArg(art.id)})"
+                  title="Doğrudan Obsidian Uygulamasında Yeni Not Olarak Aç"
+                  aria-label="Obsidian'da yeni not olarak aç"
+                  class="btn-icon">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </button>
+
+                <button
+                  onclick="toggleVaultArticle(${jsArg(art.id)})"
+                  title="${isSaved ? 'Kasadan çıkar' : 'Kasaya kaydet'}"
+                  aria-label="${isSaved ? 'Kasadan çıkar' : 'Kasaya kaydet'}"
+                  aria-pressed="${isSaved ? 'true' : 'false'}"
+                  class="btn-icon ${isSaved ? 'is-on' : ''}">
+                  <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-current' : ''}"></i>
+                </button>
+
+                <button
+                  onclick="sendToAtlas(${jsArg(art.id)}, ${inAtlas ? 'true' : 'false'})"
                   title="${inAtlas ? 'Bu makaleyi Okuma Atlası içinde aç' : 'Künyeyi Okuma Atlası çalışmana ekle'}"
-                  class="px-2.5 py-1 rounded-lg border transition flex items-center gap-1 ${
-                    inAtlas ? 'neon-primary-active' : 'glass-pill hover:border-[var(--neon-primary)] hover:text-white'
-                  }">
-                  <i data-lucide="book-open-check" class="w-3 h-3 text-[var(--neon-primary)]"></i>
+                  class="btn-secondary ${inAtlas ? 'is-on' : ''}">
+                  <i data-lucide="book-open-check" class="w-3.5 h-3.5"></i>
                   <span>${inAtlas ? "Atlas'ta Aç" : "Atlas'a Al"}</span>
                 </button>
 
-                <button 
-                  onclick="openInObsidianApp(${jsArg(art.id)})" 
-                  title="Doğrudan Obsidian Uygulamasında Yeni Not Olarak Aç"
-                  class="px-2.5 py-1 rounded-lg glass-pill hover:border-[var(--neon-violet)] hover:text-white transition flex items-center gap-1">
-                  <i data-lucide="sparkles" class="w-3 h-3 text-[var(--neon-violet)]"></i>
-                  <span class="hidden sm:inline">Obsidian'da Aç</span>
-                </button>
-
-                <button 
-                  onclick="toggleVaultArticle(${jsArg(art.id)})" 
-                  class="px-2.5 py-1 rounded-lg border transition flex items-center gap-1 ${
-                    isSaved ? 'neon-violet-active' : 'glass-pill hover:text-white'
-                  }">
-                  <i data-lucide="bookmark" class="w-3 h-3 ${isSaved ? 'fill-current' : ''}"></i>
-                  <span>${isSaved ? 'Kasada' : 'Kaydet'}</span>
-                </button>
-
-                <button 
-                  onclick="openInspector(${jsArg(art.id)})" 
-                  class="px-3 py-1 rounded-lg glass-pill hover:border-[var(--neon-primary)] title-ergonomic transition flex items-center gap-1">
+                <button
+                  onclick="openInspector(${jsArg(art.id)})"
+                  class="btn-primary">
                   <span>İncele</span>
-                  <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
             </div>
@@ -3346,7 +3565,7 @@ ${art.abstractText}
       document.getElementById('paginationControls').innerHTML = `
         <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} aria-label="İlk sayfa" class="px-2.5 py-1.5 rounded-lg glass-pill disabled:opacity-30 flex items-center">${ic('chevrons-left', 'w-3.5 h-3.5')}</button>
         <button onclick="goToPage(${firstLoadedPage - 1})" ${firstLoadedPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30 flex items-center gap-1">${ic('chevron-left', 'w-3.5 h-3.5')}<span>Önceki</span></button>
-        <span class="px-3 py-1.5 rounded-lg neon-primary-active tabular-nums">${currentPage} / ${maxP}</span>
+        <span class="px-3 py-1.5 rounded-lg neon-primary-active num">${currentPage} / ${maxP}</span>
         <button onclick="goToPage(${currentPage + 1})" ${currentPage >= maxP ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg glass-pill disabled:opacity-30 flex items-center gap-1"><span>Sonraki</span>${ic('chevron-right', 'w-3.5 h-3.5')}</button>
       `;
       document.getElementById('appendPageBtn').disabled = currentPage >= maxP;
