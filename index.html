@@ -501,7 +501,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=10" />
+  <link rel="prefetch" href="atlas.html?v=11" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -2424,6 +2424,7 @@
         citations: w.cited_by_count || 0,
         isOA: w.open_access?.is_oa || false,
         oaUrl: w.open_access?.oa_url || w.doi || '#',
+        pdfUrl: w.best_oa_location?.pdf_url || w.primary_location?.pdf_url || '',
         doi: w.doi || '',
         authorObjs,
         authors: authorObjs.map(a => a.name),
@@ -2838,6 +2839,19 @@ ${art.abstractText}
       return '';
     }
 
+    // Tarama (sistematik derleme) için özet; OpenAlex'te özet yoksa boş bırakılır
+    function atlasAbstract(art) {
+      const a = String(art.abstractText || '').trim();
+      return a && !a.startsWith(ABSTRACT_PLACEHOLDER) ? a : '';
+    }
+
+    // Açık erişim PDF'inin doğrudan adresi (sayfa değil, .pdf); Atlas bunu indirmeyi dener
+    function atlasPdfUrl(art) {
+      if (art.pdfUrl) return art.pdfUrl;
+      const u = String(art.oaUrl || '');
+      return /\.pdf($|[?#])/i.test(u) ? u : '';
+    }
+
     function upsertAtlasPaper(art, st) {
       st.folders = Array.isArray(st.folders) ? st.folders : ['Genel Okumalar'];
       const targetFolder = art.folder || ((isVaultMode && activeVaultCollection !== 'ALL') ? activeVaultCollection : 'Genel Okumalar');
@@ -2848,6 +2862,9 @@ ${art.abstractText}
       const existing = findInAtlas(art, st);
       if (existing) {
         if (!existing.folder && targetFolder) existing.folder = targetFolder;
+        // Eski kayıtlara sonradan eklenen alanlar (özet, açık erişim PDF bağlantısı) tamamlanır
+        if (!existing.abstract) existing.abstract = atlasAbstract(art);
+        if (!existing.oaPdf) existing.oaPdf = atlasPdfUrl(art);
         return { paper: existing, added: false };
       }
 
@@ -2886,6 +2903,8 @@ ${art.abstractText}
         folder: targetFolder,
         status: 'okunacak',
         summary: '',
+        abstract: atlasAbstract(art),
+        oaPdf: atlasPdfUrl(art),
         surprise: '',
         x: Math.round(cx + (Math.random() - 0.5) * 220),
         y: Math.round(cy + (Math.random() - 0.5) * 170)
@@ -2911,7 +2930,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=10';
+              frame.src = 'atlas.html?v=11';
               showVibeFromAtlas();
               return;
             }
@@ -2922,7 +2941,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=10';
+        frame.src = 'atlas.html?v=11';
       }
     }
 
