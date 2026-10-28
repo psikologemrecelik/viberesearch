@@ -360,6 +360,11 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
 }
 /* Mobil: üst çubuk iki satır (eylemler + klasör), sekmeler başparmak erişimi için altta sabit */
 #themeCycle{display:none}
+.bkbox{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.bkrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#dBackupSt.warn{color:var(--danger)}
+#btnData.due{position:relative}
+#btnData.due::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
 /* Orta genişlikte (laptop) üst çubuk ikinci satıra taşmasın */
 @media (max-width:1340px) and (min-width:821px){ .search{min-width:0} .search .lbl,.search kbd{display:none} }
 @media (max-width:1180px) and (min-width:821px){ #themeSeg{display:none} #themeCycle{display:inline-flex;align-items:center;justify-content:center} .btnnew .lbl{display:none} #appModeSeg .bn{display:none} }
@@ -604,7 +609,16 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
 <dialog id="dlgData">
   <div class="dlg">
     <h2>Veri</h2>
-    <p style="margin:0;color:var(--muted)">Notların ve PDF'lerin bu cihazda durur. Tarayıcı verisini silersen kaybolur, o yüzden arada yedek al. Yedek PDF dosyalarını içermez.</p>
+    <p style="margin:0;color:var(--muted)">Notların ve PDF'lerin yalnızca bu tarayıcıda durur. Tarayıcı verisini silersen ya da başka cihaza geçersen kaybolur; haftada bir tam yedek al.</p>
+    <div class="bkbox">
+      <div class="bkrow"><button class="btn primary" id="dFull">Tam yedek indir (PDF dahil)</button><small id="dBackupSt"></small></div>
+      <small>Tek .json dosyası: notlar, vurgular, bağlantılar, PDF'ler ve alan görüntüleri. Geri yüklemek için aşağıdan dosyayı seç.</small>
+    </div>
+    <div class="field"><label>Kaynakça dışa aktar <small>(görünen klasördeki makaleler)</small></label>
+      <div class="chips"><button class="btn" id="dBib">BibTeX (.bib)</button><button class="btn" id="dRis">RIS (.ris)</button></div>
+      <small>Zotero, Mendeley ve EndNote içe aktarır. Ana bulgu ve klasör/etiketler not ve anahtar kelime olarak eklenir.</small>
+    </div>
+    <label style="font-size:12px;color:var(--muted)">Yalnızca notlar (PDF'siz, hafif)</label>
     <div class="chips">
       <button class="btn" id="dJson">JSON kopyala</button>
       <button class="btn" id="dJsonDl">JSON indir</button>
@@ -612,7 +626,7 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
     </div>
     <div class="field"><label for="dImp">İçe aktar</label>
       <textarea class="in code" id="dImp" placeholder="JSON yedeğini buraya yapıştır"></textarea>
-      <div class="actions"><input type="file" id="dFile" accept="application/json,.json" style="max-width:220px" class="in"><span class="grow"></span><button class="btn primary" id="dImport">Birleştirerek içe aktar</button></div>
+      <div class="actions"><input type="file" id="dFile" accept="application/json,.json" style="max-width:240px" class="in" aria-label="Yedek dosyası seç"><span class="grow"></span><button class="btn primary" id="dImport">Birleştirerek içe aktar</button></div>
     </div>
     <div class="actions" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn danger" id="dClearEx" hidden>Örnek makaleleri kaldır</button><span class="grow"></span><button class="btn" id="dClose">Kapat</button></div>
     <div class="field" id="vaultBox" hidden><label>Markdown klasörü</label>
@@ -1877,14 +1891,14 @@ $('#mxCopy').onclick=()=>{
 };
 
 /* ---------- Veri ---------- */
-function openData(){ $('#dImp').value=''; $('#dlgData').showModal(); }
+function openData(){ $('#dImp').value=''; updBackupSt(); $('#dlgData').showModal(); }
 $('#btnData').onclick=openData; $('#dClose').onclick=()=>$('#dlgData').close();
 const exportJson=()=>JSON.stringify({app:'okuma-atlasi',v:1,papers:S.papers,links:S.links,folders:S.folders,types:S.types,themes:S.themes},null,2);
 $('#dJson').onclick=()=>copy(exportJson(),'JSON kopyalandı');
 if(window.claude){ $('#dJsonDl').hidden=true; $('#dlHint').hidden=true; }
 $('#dJsonDl').onclick=()=>{ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([exportJson()],{type:'application/json'})); a.download='okuma-atlasi-yedek.json'; document.body.append(a); a.click(); a.remove(); toast('İndirme başlatıldı'); }catch(e){ toast('İndirme engellendi, kopyalamayı dene'); } };
 $('#dMd').onclick=()=>{ const names=baseNames(); copy(S.papers.map(p=>paperMd(p,names)).join('\n\n---\n\n')+'\n\n---\n\n'+linksMd(names),'Markdown kopyalandı'); };
-function importData(txt){
+async function importData(txt){
   let d; try{ d=JSON.parse(txt); }catch(e){ return toast('JSON okunamadı'); }
   if(!d||!Array.isArray(d.papers)) return toast('Bu bir Okuma Atlası yedeği değil');
   const have=new Set(S.papers.map(p=>p.id)); let n=0;
@@ -1893,11 +1907,89 @@ function importData(txt){
   (d.types||[]).forEach(t=>{ if(!S.types.find(x=>x.id===t.id)) S.types.push(t); });
   (d.themes||[]).forEach(t=>{ if(!S.themes.find(x=>x.id===t.id)) S.themes.push(t); });
   const lh=new Set(S.links.map(l=>l.id)); (d.links||[]).forEach(l=>{ if(!lh.has(l.id)&&byId(l.from)&&byId(l.to)) S.links.push(l); });
-  if(!S.ui.paperId&&S.papers[0]) S.ui.paperId=S.papers[0].id; save(); renderFolderFilter(); toast(n+' makale eklendi. PDF dosyalarını yeniden eklemen gerekir.'); $('#dlgData').close(); goScreen(S.ui.screen); updateSw();
+  if(!S.ui.paperId&&S.papers[0]) S.ui.paperId=S.papers[0].id; save(); renderFolderFilter();
+  const np=(d.pdfs||d.imgs)?await restoreBinaries(d):0;
+  toast(n+' makale eklendi'+(d.pdfs?', '+np+' PDF geri yüklendi':'. Bu yedek PDF içermiyor; PDF dosyalarını yeniden eklemen gerekir.'));
+  $('#dlgData').close(); goScreen(S.ui.screen); updateSw();
 }
 $('#dImport').onclick=()=>importData($('#dImp').value);
 $('#dFile').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>importData(String(r.result)); r.readAsText(f); };
 $('#dClearEx').onclick=()=>{ const ids=S.papers.filter(p=>p.example).map(p=>p.id); ids.forEach(id=>removePaper(id)); $('#dlgData').close(); toast(ids.length?'Örnek makaleler kaldırıldı':'Örnek makale yok'); updateSw(); goScreen(S.ui.screen); if(S.ui.screen==='okuma'){ renderNote(); openPdf(); } };
+
+/* ---------- Tam yedek (PDF + alan görüntüleri dahil), hatırlatma, BibTeX / RIS ---------- */
+const BACKUP_DAYS=7;
+function abToB64(buf){ const u=new Uint8Array(buf); let s=''; for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
+function b64ToAb(b64){ const s=atob(b64), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u.buffer; }
+const today=()=>new Date().toISOString().slice(0,10);
+function dlFile(name,text,type){ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); return true; }catch(e){ toast('İndirme engellendi'); return false; } }
+function markBackup(){ S.ui.lastBackup=Date.now(); S.ui.backupNag=Date.now(); save(); updBackupSt(); }
+function backupAgeDays(){ return S.ui.lastBackup?Math.floor((Date.now()-S.ui.lastBackup)/864e5):null; }
+function updBackupSt(){
+  const d=backupAgeDays(), el=$('#dBackupSt'); const due=S.papers.length>0&&(d===null||d>=BACKUP_DAYS);
+  if(el) el.textContent=d===null?'Henüz tam yedek alınmadı.':d===0?'Son tam yedek: bugün.':'Son tam yedek: '+d+' gün önce.';
+  if(el) el.classList.toggle('warn',due);
+  $('#btnData').classList.toggle('due',due);
+  $('#btnData').title=due?'Yedek alma zamanı':'Veri, yedek ve dışa aktarma';
+}
+async function fullBackup(){
+  const btn=$('#dFull'); btn.disabled=true; const old=btn.textContent; btn.textContent='Hazırlanıyor…';
+  try{
+    const pdfs={}, imgs={}; let np=0;
+    for(const p of S.papers){
+      if(p.hasPdf){ const b=await pdfGet(p.id); if(b){ pdfs[p.id]=abToB64(b); np++; } }
+      for(const h of (p.hl||[])) if(h.type==='area'){ const u=await imgGet(h.id); if(u) imgs[h.id]=u; }
+    }
+    const data=JSON.stringify({app:'okuma-atlasi',v:2,full:true,created:new Date().toISOString(),papers:S.papers,links:S.links,folders:S.folders,types:S.types,themes:S.themes,pdfs,imgs});
+    if(dlFile('okuma-atlasi-tam-yedek-'+today()+'.json',data,'application/json')){ markBackup(); toast('Tam yedek indirildi: '+S.papers.length+' makale, '+np+' PDF'); }
+  }catch(e){ toast('Yedek hazırlanamadı: '+(e&&e.message||e)); }
+  btn.disabled=false; btn.textContent=old;
+}
+async function restoreBinaries(d){
+  let n=0;
+  for(const [id,b64] of Object.entries(d.pdfs||{})){ const p=byId(id); if(!p) continue; if(p.hasPdf&&await pdfGet(id)) continue; try{ if(await pdfPut(id,b64ToAb(b64))){ p.hasPdf=true; n++; } }catch(e){} }
+  for(const [id,url] of Object.entries(d.imgs||{})){ if(!(await imgGet(id))) await imgPut(id,url); }
+  if(n){ save(); if(S.ui.screen==='okuma'){ renderNote(); openPdf(); } else if(S.ui.screen==='kutuphane') renderLib(); }
+  return n;
+}
+/* BibTeX / RIS: görünen klasördeki makaleler (Zotero, Mendeley, EndNote içe aktarır) */
+const splitAuthors=p=>String(p.authors||'').split(/\s*;\s*/).map(s=>s.trim()).filter(Boolean);
+const bibEsc=s=>String(s||'').replace(/\\/g,'\\textbackslash{}').replace(/([{}&%$#_])/g,'\\$1').replace(/\s+/g,' ').trim();
+const cleanDoi=d=>String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
+function buildBib(list){
+  const used=new Set();
+  return list.map(p=>{
+    const sur=(surname(p)||'anon').normalize('NFKD').replace(/[^A-Za-z]/g,'').toLowerCase()||'anon';
+    const w=(String(p.title||'').normalize('NFKD').match(/[A-Za-z]{4,}/)||['paper'])[0].toLowerCase();
+    let k=sur+(p.year||'nd')+w, key=k, i=0; while(used.has(key)) key=k+String.fromCharCode(97+i++); used.add(key);
+    const f=[['author',splitAuthors(p).map(bibEsc).join(' and ')],['title','{'+bibEsc(p.title)+'}'],['journal',bibEsc(p.journal)],['year',p.year],['doi',cleanDoi(p.doi)],
+      ['keywords',bibEsc([p.folder].concat(p.tags||[]).filter(Boolean).join(', '))],['annote',bibEsc(p.finding)]].filter(([,v])=>v);
+    return '@article{'+key+',\n'+f.map(([a,v])=>'  '+a+' = {'+v+'}').join(',\n')+'\n}';
+  }).join('\n\n')+'\n';
+}
+function buildRis(list){
+  return list.map(p=>{
+    const L=['TY  - JOUR']; splitAuthors(p).forEach(a=>L.push('AU  - '+a));
+    L.push('TI  - '+(p.title||'')); if(p.journal) L.push('T2  - '+p.journal); if(p.year) L.push('PY  - '+p.year);
+    const doi=cleanDoi(p.doi); if(doi){ L.push('DO  - '+doi); L.push('UR  - https://doi.org/'+doi); }
+    [p.folder].concat(p.tags||[]).filter(Boolean).forEach(k=>L.push('KW  - '+k));
+    if(p.finding) L.push('N1  - Ana bulgu: '+p.finding.replace(/\s+/g,' '));
+    L.push('ER  - '); return L.join('\r\n');
+  }).join('\r\n\r\n')+'\r\n';
+}
+function exportCites(fmt){
+  const list=vis(); if(!list.length) return toast('Bu klasörde makale yok');
+  const fn='okuma-atlasi-kaynakca-'+today()+'.'+(fmt==='bib'?'bib':'ris');
+  if(dlFile(fn,fmt==='bib'?buildBib(list):buildRis(list),fmt==='bib'?'application/x-bibtex':'application/x-research-info-systems')) toast(list.length+' kaynak indirildi. Zotero: Dosya > İçe Aktar.');
+}
+$('#dFull').onclick=fullBackup;
+$('#dBib').onclick=()=>exportCites('bib');
+$('#dRis').onclick=()=>exportCites('ris');
+/* Açılışta: yedek gecikmişse günde en fazla bir kez hatırlat */
+setTimeout(()=>{ updBackupSt(); const d=backupAgeDays();
+  if(S.papers.length&&(d===null||d>=BACKUP_DAYS)&&(!S.ui.backupNag||Date.now()-S.ui.backupNag>864e5)){
+    S.ui.backupNag=Date.now(); save();
+    toast(d===null?'Notların yalnızca bu tarayıcıda. Veri > Tam yedek indir ile yedek almanı öneririz.':'Son tam yedeğin '+d+' gün önce. Veri > Tam yedek indir.');
+  } },2500);
 
 /* ---------- Markdown dışa aktarma ve klasör senkronu (masaüstü) ---------- */
 const VAULT={path:null,busy:false,dirty:false,t:0,last:0,err:'',n:0};

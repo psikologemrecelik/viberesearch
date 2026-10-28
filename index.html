@@ -501,7 +501,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=9" />
+  <link rel="prefetch" href="atlas.html?v=10" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -809,6 +809,14 @@
           <button onclick="downloadActiveCollectionMD()" class="px-2.5 py-1 rounded-lg neon-violet-active flex items-center gap-1">
             <i data-lucide="download" class="w-3 h-3"></i>
             <span>Toplu .MD İndir</span>
+          </button>
+          <button onclick="downloadActiveCollectionCitations('bib')" title="Zotero, Mendeley veya EndNote'a aktarmak için BibTeX (.bib) indir" class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1">
+            <i data-lucide="file-down" class="w-3 h-3"></i>
+            <span>BibTeX</span>
+          </button>
+          <button onclick="downloadActiveCollectionCitations('ris')" title="Zotero, Mendeley veya EndNote'a aktarmak için RIS (.ris) indir" class="px-2.5 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1">
+            <i data-lucide="file-down" class="w-3 h-3"></i>
+            <span>RIS</span>
           </button>
           <button onclick="sendCollectionToAtlas()" class="px-2.5 py-1 rounded-lg neon-primary-active flex items-center gap-1" title="Bu klasördeki tüm makaleleri Okuma Atlası'na gönder">
             <i data-lucide="book-open-check" class="w-3 h-3"></i>
@@ -2903,7 +2911,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=9';
+              frame.src = 'atlas.html?v=10';
               showVibeFromAtlas();
               return;
             }
@@ -2914,7 +2922,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=9';
+        frame.src = 'atlas.html?v=10';
       }
     }
 
@@ -3227,6 +3235,89 @@ ${art.abstractText}
       a.download = `VibePsych_${colTitle}.md`;
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    // Kaynakça yöneticileri (Zotero / Mendeley / EndNote) için BibTeX ve RIS dışa aktarımı
+    const ABSTRACT_PLACEHOLDER = 'Tam metin ve özet detayları için';
+
+    function citeAuthors(art) {
+      return (art.apaAuthors?.length ? art.apaAuthors : (art.authors || [])).filter(Boolean);
+    }
+
+    function bibEscape(s) {
+      return String(s || '').replace(/\\/g, '\\textbackslash{}').replace(/([{}&%$#_])/g, '\\$1').replace(/\s+/g, ' ').trim();
+    }
+
+    function bibKey(art, used) {
+      const first = citeAuthors(art)[0] || '';
+      const sur = (apaName(first).split(',')[0] || 'anon').normalize('NFKD').replace(/[^A-Za-z]/g, '') || 'anon';
+      const word = (String(art.title || '').normalize('NFKD').match(/[A-Za-z]{4,}/) || ['paper'])[0];
+      let key = `${sur.toLowerCase()}${art.pubYear || 'nd'}${word.toLowerCase()}`;
+      let k = key, i = 0;
+      while (used.has(k)) k = key + String.fromCharCode(97 + i++);
+      used.add(k);
+      return k;
+    }
+
+    function buildBibtex(list) {
+      const used = new Set();
+      return list.map(art => {
+        const doi = normalizeDoi(art.doi).replace(/^https?:\/\/doi\.org\//i, '');
+        const pages = art.firstPage ? (art.lastPage ? `${art.firstPage}--${art.lastPage}` : art.firstPage) : '';
+        const abs = art.abstractText && !art.abstractText.startsWith(ABSTRACT_PLACEHOLDER) ? art.abstractText : '';
+        const f = [
+          ['author', citeAuthors(art).map(bibEscape).join(' and ')],
+          ['title', `{${bibEscape(art.title)}}`],
+          ['journal', bibEscape(art.journalName)],
+          ['year', art.pubYear],
+          ['volume', art.volume], ['number', art.issue], ['pages', pages],
+          ['doi', doi], ['issn', art.issn],
+          ['abstract', bibEscape(abs)],
+          ['keywords', bibEscape(art.folder || '')]
+        ].filter(([, v]) => v);
+        return `@article{${bibKey(art, used)},\n${f.map(([k, v]) => `  ${k} = {${v}}`).join(',\n')}\n}`;
+      }).join('\n\n') + '\n';
+    }
+
+    function buildRis(list) {
+      return list.map(art => {
+        const doi = normalizeDoi(art.doi).replace(/^https?:\/\/doi\.org\//i, '');
+        const abs = art.abstractText && !art.abstractText.startsWith(ABSTRACT_PLACEHOLDER) ? art.abstractText : '';
+        const L = ['TY  - JOUR'];
+        citeAuthors(art).forEach(a => L.push(`AU  - ${apaName(a) || a}`));
+        L.push(`TI  - ${art.title || ''}`);
+        if (art.journalName) L.push(`T2  - ${art.journalName}`);
+        if (art.pubYear) L.push(`PY  - ${art.pubYear}`);
+        if (art.pubDate && /^\d{4}-\d{2}-\d{2}$/.test(art.pubDate)) L.push(`DA  - ${art.pubDate.replace(/-/g, '/')}`);
+        if (art.volume) L.push(`VL  - ${art.volume}`);
+        if (art.issue) L.push(`IS  - ${art.issue}`);
+        if (art.firstPage) L.push(`SP  - ${art.firstPage}`);
+        if (art.lastPage) L.push(`EP  - ${art.lastPage}`);
+        if (art.issn) L.push(`SN  - ${art.issn}`);
+        if (doi) { L.push(`DO  - ${doi}`); L.push(`UR  - https://doi.org/${doi}`); }
+        if (abs) L.push(`AB  - ${abs.replace(/\s+/g, ' ')}`);
+        if (art.folder) L.push(`KW  - ${art.folder}`);
+        L.push('ER  - ');
+        return L.join('\r\n');
+      }).join('\r\n\r\n') + '\r\n';
+    }
+
+    function downloadActiveCollectionCitations(fmt) {
+      const list = getActiveVaultSubset();
+      if (list.length === 0) {
+        showToast('Bu klasörde dışa aktarılacak makale yok.');
+        return;
+      }
+      const colTitle = activeVaultCollection === 'ALL' ? 'Tum_Kasa' : activeVaultCollection.replace(/\s+/g, '_');
+      const isBib = fmt === 'bib';
+      const blob = new Blob([isBib ? buildBibtex(list) : buildRis(list)], { type: isBib ? 'application/x-bibtex;charset=utf-8' : 'application/x-research-info-systems;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `VibePsych_${colTitle}.${isBib ? 'bib' : 'ris'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`${list.length} kaynak ${isBib ? 'BibTeX' : 'RIS'} olarak indirildi. Zotero: Dosya > İçe Aktar.`);
     }
 
     // 15. DEEP INSPECTOR DRAWER / MOBILE BOTTOM SHEET
