@@ -501,7 +501,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=8" />
+  <link rel="prefetch" href="atlas.html?v=9" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -2903,7 +2903,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=8';
+              frame.src = 'atlas.html?v=9';
               showVibeFromAtlas();
               return;
             }
@@ -2914,7 +2914,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=8';
+        frame.src = 'atlas.html?v=9';
       }
     }
 
