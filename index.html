@@ -958,6 +958,41 @@
       return escapeHtml(JSON.stringify(v ?? ''));
     }
 
+    // OpenAlex API anahtarı: anahtarsız istekler aynı IP'yi paylaşan herkesle ortak, küçük bir günlük bütçe kullanır.
+    // Kullanıcı kendi ücretsiz anahtarını girerse tüm isteklere eklenir (yalnızca bu tarayıcıda saklanır).
+    const OA_KEY_STORE = 'vibepsych_openalex_key';
+    function getOpenAlexKey() {
+      try { return (localStorage.getItem(OA_KEY_STORE) || '').trim(); } catch (e) { return ''; }
+    }
+    function oa(url) {
+      const k = getOpenAlexKey();
+      return k ? `${url}${url.includes('?') ? '&' : '?'}api_key=${encodeURIComponent(k)}` : url;
+    }
+    function saveOpenAlexKey(remove = false) {
+      const v = remove ? '' : (document.getElementById('oaKeyInput')?.value || '').trim();
+      try { v ? localStorage.setItem(OA_KEY_STORE, v) : localStorage.removeItem(OA_KEY_STORE); } catch (e) {}
+      showToast(v ? 'OpenAlex API anahtarı kaydedildi; sorgu yenileniyor.' : 'OpenAlex API anahtarı kaldırıldı.');
+      resetAndFetch();
+    }
+    function renderQuotaPanel() {
+      const hasKey = Boolean(getOpenAlexKey());
+      return `
+        <div class="luxury-panel rounded-2xl p-6 sm:p-8 space-y-4 text-sm">
+          <div class="flex items-center gap-2 title-ergonomic font-semibold">${ic('gauge', 'w-4 h-4 text-[var(--neon-primary)]')}<span>${hasKey ? 'OpenAlex isteği reddedildi' : 'OpenAlex günlük kotası doldu'}</span></div>
+          <p class="body-ergonomic">${hasKey
+            ? 'Kayıtlı API anahtarının günlük bütçesi de dolmuş görünüyor ya da anahtar geçersiz. Anahtarı kontrol edebilir veya kaldırabilirsin.'
+            : 'Anahtarsız istekler, aynı internet bağlantısını (IP) paylaşan herkes için ortak ve küçük bir günlük bütçe kullanır. Bütçe gece yarısı UTC\'de (Türkiye saatiyle 03:00) sıfırlanır. Ücretsiz kişisel bir API anahtarı alıp aşağıya yapıştırırsan kendi bütçenle hemen devam edebilirsin.'}</p>
+          <a href="https://help.openalex.org/api/authentication/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[var(--neon-primary)] hover:underline">${ic('external-link', 'w-3.5 h-3.5')}<span>Ücretsiz API anahtarı nasıl alınır?</span></a>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input id="oaKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="OpenAlex API anahtarı" aria-label="OpenAlex API anahtarı"
+              class="flex-1 min-h-[40px] rounded-[10px] px-3 bg-[var(--bg-surface)] border border-[var(--line-color)] focus:border-[var(--neon-primary)] focus:outline-none title-ergonomic text-sm">
+            <button onclick="saveOpenAlexKey()" class="btn-primary justify-center min-h-[40px]">Kaydet ve yenile</button>
+            ${hasKey ? `<button onclick="saveOpenAlexKey(true)" class="btn-secondary justify-center min-h-[40px]">Anahtarı kaldır</button>` : ''}
+          </div>
+          <p class="text-xs text-[var(--text-muted)]">Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca api.openalex.org isteklerine eklenir.</p>
+        </div>`;
+    }
+
     // Lucide ikon yer tutucusu (emoji yerine)
     function ic(name, cls = 'w-3 h-3') {
       return `<i data-lucide="${name}" class="${cls}"></i>`;
@@ -1364,6 +1399,7 @@
     let fetchSeq = 0;             // Yarış koşulu koruması: yalnızca en son sorgu ekrana basılır
     let fallbackActive = false;   // false | 'psych' | 'all' — aktif Smart Fallback seviyesi
     let autoFillRuns = 0;         // Sadece Q1 modunda seyrek sayfalar için otomatik ek sayfa sayacı
+    let quotaBlocked = false;     // Son ana sorgu OpenAlex 429 (kota) ile döndüyse boş-sonuç yerine kota paneli gösterilir
     const Q1_MIN_VISIBLE = 10;
     const AUTO_FILL_MAX = 3;
     const OPENALEX_MAX_RESULTS = 10000; // OpenAlex page × per-page sınırı
@@ -1771,7 +1807,7 @@
         return;
       }
       try {
-        const res = await fetch(`https://api.openalex.org/sources?filter=issn:${encodeURIComponent(issn)}&per-page=1`);
+        const res = await fetch(oa(`https://api.openalex.org/sources?filter=issn:${encodeURIComponent(issn)}&per-page=1`));
         const data = await res.json();
         const src = data.results?.[0];
         if (src) {
@@ -1928,7 +1964,7 @@
     async function fetchAutocomplete(query) {
       const trans = translateQuery(query);
       try {
-        const res = await fetch(`https://api.openalex.org/autocomplete/works?q=${encodeURIComponent(trans)}`);
+        const res = await fetch(oa(`https://api.openalex.org/autocomplete/works?q=${encodeURIComponent(trans)}`));
         const data = await res.json();
         const list = (data.results || []).slice(0, 5);
         const menu = document.getElementById('autocompleteMenu');
@@ -2063,6 +2099,7 @@
       loader.classList.remove('hidden');
       if (!appendMode) {
         container.innerHTML = '';
+        quotaBlocked = false;
         // Yükleme sırasında önceki sorgunun sayfa sayısı ("1 / 138") gösterilmesin
         document.getElementById('paginationBar').classList.add('hidden');
       }
@@ -2144,12 +2181,14 @@
       }
 
       try {
-        const res = await fetch(apiUrl);
+        const res = await fetch(oa(apiUrl));
         if (seq !== fetchSeq) return;
         if (!res.ok) {
           let msg = '';
           try { msg = (await res.json()).message || ''; } catch (e) {}
-          throw new Error(msg || `HTTP ${res.status}`);
+          const httpErr = new Error(msg || `HTTP ${res.status}`);
+          httpErr.status = res.status;
+          throw httpErr;
         }
         const data = await res.json();
         if (seq !== fetchSeq) return;
@@ -2180,7 +2219,7 @@
 
         if (missingIds.length > 0) {
           try {
-            const sRes = await fetch(`https://api.openalex.org/sources?filter=openalex_id:${missingIds.slice(0, 50).join('|')}&per-page=50`);
+            const sRes = await fetch(oa(`https://api.openalex.org/sources?filter=openalex_id:${missingIds.slice(0, 50).join('|')}&per-page=50`));
             const sData = await sRes.json();
             (sData.results || []).forEach(src => {
               const info = {
@@ -2220,7 +2259,17 @@
         if (seq !== fetchSeq) return;
         loader.classList.add('hidden');
         document.getElementById('paginationBar').classList.remove('hidden');
-        if (appendMode) {
+        if (err.status === 429 || ((err.status === 401 || err.status === 403) && getOpenAlexKey())) {
+          quotaBlocked = true;
+          // Kota dolu: İngilizce ham mesaj yerine açıklama + kişisel API anahtarı alanı
+          if (appendMode) {
+            currentPage = Math.max(firstLoadedPage, currentPage - 1);
+            renderPagination();
+          }
+          container.insertAdjacentHTML(appendMode ? 'beforeend' : 'afterbegin', renderQuotaPanel());
+          if (!appendMode) document.getElementById('paginationBar').classList.add('hidden');
+          refreshIcons();
+        } else if (appendMode) {
           currentPage = Math.max(firstLoadedPage, currentPage - 1);
           showToast(`Sonraki sayfa yüklenemedi: ${err.message}`);
           renderPagination();
@@ -2424,7 +2473,7 @@
         ? `Klasörde ${filtered.length} makale`
         : `Sayfa ${pageLabel} • ${filtered.length} gösterilen / ${currentArticles.length} yüklenen ${onlyQ1 ? '(Sadece Q1)' : '(Tüm İndeks)'} • Toplam: ${totalWorksCount.toLocaleString('tr-TR')}`;
 
-      document.getElementById('paginationBar').classList.toggle('hidden', isVaultMode);
+      document.getElementById('paginationBar').classList.toggle('hidden', isVaultMode || quotaBlocked);
 
       renderCards(filtered);
       refreshIcons();
@@ -2433,6 +2482,11 @@
     function renderCards(articles) {
       const container = document.getElementById('articlesContainer');
       if (articles.length === 0) {
+        if (quotaBlocked && !isVaultMode) {
+          container.innerHTML = renderQuotaPanel();
+          refreshIcons();
+          return;
+        }
         container.innerHTML = `
           <div class="luxury-panel rounded-2xl p-12 text-center space-y-3">
             <p class="font-serif text-lg title-ergonomic">Bu kriterlere uygun yayın bulunamadı.</p>
@@ -3286,7 +3340,7 @@ ${art.abstractText}
       liveBox.innerHTML = `<div class="text-xs font-mono text-slate-400 p-3">OpenAlex 100.000+ dergi dizininde "${escapeHtml(query)}" aranıyor...</div>`;
 
       try {
-        const res = await fetch(`https://api.openalex.org/sources?search=${encodeURIComponent(query)}&filter=type:journal&per-page=8`);
+        const res = await fetch(oa(`https://api.openalex.org/sources?search=${encodeURIComponent(query)}&filter=type:journal&per-page=8`));
         const data = await res.json();
         const venues = (data.results || []).filter(v => v.issn_l);
 
