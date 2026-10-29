@@ -507,6 +507,10 @@ body.splitting #pdfScroll{pointer-events:none}
 .fold:not([open])>summary::after{transform:rotate(-45deg)}
 .fold>summary:hover{color:var(--fg)}
 .fold>summary small{font:400 12px var(--font-ui);letter-spacing:0;text-transform:none;color:var(--faint)}
+.retrbox{margin:0 0 10px;padding:9px 12px;border:1px solid color-mix(in srgb,var(--danger) 55%,transparent);background:color-mix(in srgb,var(--danger) 12%,transparent);border-radius:10px;font-size:13px;line-height:1.45}
+.retrbox b{color:var(--danger)}
+.chip.retr{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 55%,transparent)}
+.toast.warn{border-color:var(--danger);max-width:min(92vw,520px)}
 .fold .kline{font:400 12.5px var(--font-ui);letter-spacing:0;text-transform:none;color:var(--fg);opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .fold[open] .kline{display:none}
 .sumed{min-height:140px;line-height:1.7;font-size:15px;padding:14px 16px;resize:none;overflow:hidden}
@@ -820,6 +824,7 @@ body.splitting #pdfScroll{pointer-events:none}
     <div class="bkbox">
       <div class="bkrow"><button class="btn primary" id="dFull">Tam yedek indir (PDF dahil)</button><small id="dBackupSt"></small></div>
       <small>Tek .json dosyası: notlar, vurgular, bağlantılar, PDF'ler ve alan görüntüleri. Geri yüklemek için aşağıdan dosyayı seç.</small>
+      <small class="warn" id="dStoreSt" hidden>Tarayıcı deposu doldu: veriler yedek veritabanında tutuluyor ve VibePsych'ten yeni makale eklenemiyor. Tam yedek al; PDF'siz kullanılmayan makaleleri silmek yer açar.</small>
     </div>
     <div class="field"><label>Kaynakça dışa aktar <small>(görünen klasördeki makaleler)</small></label>
       <div class="chips"><button class="btn" id="dBib">BibTeX (.bib)</button><button class="btn" id="dRis">RIS (.ris)</button></div>
@@ -910,12 +915,31 @@ function seed(){
 }
 let S=null;
 try{ const raw=localStorage.getItem(LS); if(raw){ S=JSON.parse(raw); } }catch(e){}
+/* Durum deposu: localStorage (VibePsych köprüsü bunu okur) + IndexedDB aynası. localStorage ~5 MB ile sınırlı;
+   dolarsa kayıt aynada sürer, açılışta daha yeni olan kopya yüklenir. Notların Markdown kopyası (p.notes)
+   localStorage'a yazılmaz, açılışta zengin metinden (p.notesHtml) yeniden üretilir. */
+const STORE={full:false,warned:false};
+let _sdb=null;
+const sdb=()=>_sdb||(_sdb=new Promise((res,rej)=>{ try{ const r=indexedDB.open('okuma-atlasi-state',1); r.onupgradeneeded=()=>r.result.createObjectStore('s'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }));
+async function mirrorPut(json){ try{ const d=await sdb(); await new Promise((res,rej)=>{ const t=d.transaction('s','readwrite'); t.objectStore('s').put(json,'state'); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }catch(e){} }
+async function mirrorGet(){ try{ const d=await sdb(); return await new Promise((res,rej)=>{ const q=d.transaction('s').objectStore('s').get('state'); q.onsuccess=()=>res(q.result||null); q.onerror=()=>rej(q.error); }); }catch(e){ return null; } }
+function stateJson(){ return JSON.stringify(S,function(k,v){ return k==='notes'&&this&&this.notesV===3&&typeof this.notesHtml==='string'?undefined:v; }); }
+function hydrateNotes(){ S.papers.forEach(p=>{ if(p.notesV===3&&typeof p.notesHtml==='string'&&typeof p.notes!=='string') p.notes=htmlToMd(p.notesHtml); }); }
+function writeState(){
+  S.savedAt=Date.now(); const j=stateJson(); mirrorPut(j);
+  try{ localStorage.setItem(LS,j); if(STORE.full){ STORE.full=false; try{ updBackupSt(); }catch(e){} } return true; }
+  catch(e){
+    if(!STORE.full){ STORE.full=true; try{ updBackupSt(); }catch(e){} }
+    if(!STORE.warned){ STORE.warned=true; setTimeout(()=>toastLong('Tarayıcı deposu doldu. Notların yedek veritabanında korunuyor, ama Veri > Tam yedek indir ile yedek al.'),300); }
+    return false;
+  }
+}
 if(!S||!Array.isArray(S.papers)) S=seed();
 const exIds=new Set(S.papers.filter(p=>p.example).map(p=>p.id));
 if(exIds.size){
   S.papers=S.papers.filter(p=>!p.example);
   S.links=(S.links||[]).filter(l=>!exIds.has(l.from)&&!exIds.has(l.to));
-  try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){}
+  writeState();
 }
 const ALL_FOLDERS='', NO_FOLDER='__none__';
 S.ui=S.ui||{}; S.types=S.types&&S.types.length?S.types:DEF_TYPES.map(t=>({...t})); S.themes=S.themes||[]; S.links=S.links||[];
@@ -923,6 +947,7 @@ S.folders=Array.isArray(S.folders)?S.folders:[];
 try{ const vc=JSON.parse(localStorage.getItem('vibepsych_collections')||'[]'); if(Array.isArray(vc)) vc.forEach(c=>{ if(c&&typeof c==='string'&&!S.folders.includes(c)) S.folders.push(c); }); }catch(e){}
 if(!S.folders.length) S.folders=['Genel Okumalar'];
 S.papers.forEach(p=>{ if(p.space==='kesif'&&!p.folder) p.folder='Keşif'; p.space='calisma'; p.folder=p.folder||''; if(p.folder&&!S.folders.includes(p.folder)) S.folders.push(p.folder); p.hl=p.hl||[]; p.tags=p.tags||[]; p.themes=p.themes||{}; });
+hydrateNotes();
 S.ui.space='calisma'; S.ui.pen=S.ui.pen||'bulgu'; S.ui.folder=S.ui.folder||ALL_FOLDERS;
 if(S.ui.folder&&S.ui.folder!==NO_FOLDER&&!S.folders.includes(S.ui.folder)) S.ui.folder=ALL_FOLDERS;
 const matchFolder=p=>!S.ui.folder||(S.ui.folder===NO_FOLDER?!p.folder:p.folder===S.ui.folder);
@@ -936,7 +961,7 @@ function syncVibeCols(){
     if(merged.length) localStorage.setItem('vibepsych_collections',JSON.stringify(merged));
   }catch(e){}
 }
-function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ localStorage.setItem(LS,JSON.stringify(S)); syncVibeCols(); if(window.parent&&window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.onAtlasSave) window.parent.__vibeShell.onAtlasSave(); }catch(e){} if(DESK) scheduleVault(); },250); }
+function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ writeState(); syncVibeCols(); if(window.parent&&window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.onAtlasSave) window.parent.__vibeShell.onAtlasSave(); }catch(e){} if(DESK) scheduleVault(); },250); }
 const P=()=>S.papers.find(p=>p.id===S.ui.paperId);
 const byId=id=>S.papers.find(p=>p.id===id);
 const typeOf=id=>S.types.find(t=>t.id===id)||{id,name:id,color:'var(--accent)'};
@@ -945,6 +970,7 @@ function shortLabel(p){ const s=surname(p); return s?(s+(p.year?' '+p.year:'')):
 function toastUndo(m,fn){ const t=document.createElement('div'); t.className='toast undo'; t.setAttribute('role','status'); t.innerHTML='<span></span><button type="button">Geri al</button>'; t.firstChild.textContent=m; document.body.append(t);
   const kill=()=>t.remove(), tm=setTimeout(kill,6000); t.querySelector('button').onclick=()=>{ clearTimeout(tm); kill(); fn(); }; }
 function toast(m){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.body.append(t); setTimeout(()=>t.remove(),2400); }
+function toastLong(m){ const t=document.createElement('div'); t.className='toast warn'; t.setAttribute('role','alert'); t.textContent=m; document.body.append(t); setTimeout(()=>t.remove(),9000); }
 function autosize(el){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
 function copy(text,ok){ const fb=()=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.append(ta); ta.select(); try{document.execCommand('copy');toast(ok||'Kopyalandı');}catch(e){toast('Kopyalanamadı');} ta.remove(); };
   try{ navigator.clipboard.writeText(text).then(()=>toast(ok||'Kopyalandı'),fb); }catch(e){ fb(); } }
@@ -1129,7 +1155,7 @@ function renderScreen(){
     const s=p.scr||{}, v=s[key]||'';
     return '<article class="scrrow'+(v?' dec-'+v:'')+'" tabindex="0" data-scr="'+esc(p.id)+'">'
       +'<div class="scrhead"><div class="libmain"><div class="libttl">'+esc(p.title||'Adsız makale')+'</div>'
-      +'<div class="libsub"><span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(stage==='ft'?'<span class="'+(p.hasPdf?'':'warnt')+'">'+(p.hasPdf?'PDF var':'PDF yok')+'</span>':'')+'</div></div>'
+      +'<div class="libsub">'+(p.retracted?'<span class="chip retr">Geri çekildi</span>':'')+'<span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(stage==='ft'?'<span class="'+(p.hasPdf?'':'warnt')+'">'+(p.hasPdf?'PDF var':'PDF yok')+'</span>':'')+'</div></div>'
       +'<div class="scrbtns" role="group" aria-label="Karar">'+Object.entries(SCR_DEC).map(([k,n])=>'<button class="scrb sb-'+k+'" data-dec="'+k+'" aria-pressed="'+(v===k)+'">'+n+'</button>').join('')+'</div></div>'
       +(stage==='ta'?(p.abstract?'<p class="scrabs">'+esc(p.abstract)+'</p>':'<p class="scrabs none">Özet yok. Başlığa göre karar ver ya da makaleyi açıp oku.</p>'):'')
       +(v==='out'?'<div class="scrwhy"><select class="libsel" data-why="'+esc(p.id)+'" aria-label="Hariç tutma gerekçesi"><option value="">Gerekçe seç</option>'+SCR_REASONS.map(r=>'<option'+(s[why]===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></div>':'')
@@ -1198,7 +1224,7 @@ function renderLib(){
     return '<div class="librow'+(p.id===S.ui.paperId?' cur':'')+'" role="button" tabindex="0" data-lib="'+esc(p.id)+'" aria-label="'+esc((p.title||'Adsız makale')+', Okuma ekranında aç')+'">'
       +'<i class="libdot '+esc(st)+'" title="'+esc(LIB_ST[st]||'Durum yok')+'"></i>'
       +'<div class="libmain"><div class="libttl">'+esc(p.title||'Adsız makale')+'</div>'
-      +'<div class="libsub"><span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(p.folder?'<span class="chip">'+esc(p.folder)+'</span>':'')+(p.method?'<span class="chip">'+esc(p.method)+'</span>':'')+'</div>'
+      +'<div class="libsub">'+(p.retracted?'<span class="chip retr">Geri çekildi</span>':'')+'<span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(p.folder?'<span class="chip">'+esc(p.folder)+'</span>':'')+(p.method?'<span class="chip">'+esc(p.method)+'</span>':'')+'</div>'
       +(fd?'<div class="libfind">'+esc(fd)+'</div>':'')+'</div>'
       +'<div class="libind"><span class="'+(p.hasPdf?'on':'')+'" title="'+(p.hasPdf?'PDF eklendi':'PDF yok')+'">'+icoPdf+'</span>'
       +'<span class="'+(hl?'on':'')+'" title="'+hl+' vurgu kartı">'+icoHl+hl+'</span>'
@@ -1425,6 +1451,9 @@ const selbar=$('#selbar');
 selbar.innerHTML=KINDS.map(k=>'<button class="k-'+k.id+'" data-k="'+k.id+'"><i></i>'+k.name+'</button>').join('')
   +'<button data-cite title="Seçili metni APA metin içi atıfla kopyala"><svg class="ico" style="width:14px;height:14px" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Alıntı kopyala</button>';
 /* APA metin içi atıf: 1 yazar Soyad, 2 yazar Soyad & Soyad, 3+ Soyad vd. */
+/* PDF sayfası -> derginin basılı sayfası (Künye'deki ilk sayfa). İlk sayfa sayı değilse (ör. e0123) null. */
+function printedPage(p,pdfPage){ const f=String(p&&p.fpage||'').trim(); return /^\d+$/.test(f)&&pdfPage?String(+f+pdfPage-1):null; }
+function pageRef(p,pdfPage){ return printedPage(p,pdfPage)||String(pdfPage); }
 function inTextCite(p,page){
   const sur=String(p.authors||'').split(/\s*;\s*/).map(a=>a.split(',')[0].trim()).filter(Boolean);
   const who=sur.length>2?sur[0]+' vd.':sur.length===2?sur[0]+' & '+sur[1]:(sur[0]||(p.title||'Adsız').split(/\s+/).slice(0,3).join(' '));
@@ -1460,7 +1489,7 @@ document.addEventListener('selectionchange',()=>{ clearTimeout(selT); selT=setTi
 selbar.addEventListener('mousedown',e=>e.preventDefault());
 selbar.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b||!pendingSel) return; const p=P(); if(!p) return;
-  if(b.hasAttribute('data-cite')){ copy('“'+pendingSel.text+'” '+inTextCite(p,pendingSel.page),'Alıntı kopyalandı (sayfa: PDF sayfası)'); getSelection().removeAllRanges(); hideSel(); return; }
+  if(b.hasAttribute('data-cite')){ const pp=printedPage(p,pendingSel.page); copy('“'+pendingSel.text+'” '+inTextCite(p,pp||pendingSel.page),pp?'Alıntı kopyalandı (dergi sayfası '+pp+')':'Alıntı kopyalandı. Sayfa PDF sayfası; Künye\'ye ilk sayfayı yazarsan dergi sayfası kullanılır.'); getSelection().removeAllRanges(); hideSel(); return; }
   const h={id:uid(),page:pendingSel.page,kind:b.dataset.k,text:pendingSel.text,rects:pendingSel.rects.map(({x,y,w,h})=>({x,y,w,h})),comment:''};
   p.hl.push(h); save(); getSelection().removeAllRanges(); hideSel(); redrawAllHl(); renderCards();
   toast('Karta eklendi · s.'+h.page+' · '+KINDS.find(k=>k.id===h.kind).name);
@@ -1890,7 +1919,7 @@ function toggleFocus(){ if(S.ui.noteFocus){ S.ui.noteW=S.ui.noteFocusPrev||undef
 /* Vurgu kartını notlara alıntı olarak ekle */
 function addHlToNotes(h){
   const p=P(); if(!p||!h) return; ensureRte(p);
-  const q=h.text?'<blockquote><p>'+esc(h.text.replace(/\s+/g,' '))+' <i>(s. '+h.page+')</i></p></blockquote>':'<p><i>s. '+h.page+'</i></p>';
+  const pg=pageRef(p,h.page), q=h.text?'<blockquote><p>'+esc(h.text.replace(/\s+/g,' '))+' <i>(s. '+pg+')</i></p></blockquote>':'<p><i>s. '+pg+'</i></p>';
   const c=h.comment&&h.comment.trim()?'<p>'+esc(h.comment.trim())+'</p>':'';
   p.notesHtml=(p.notesHtml||'')+q+c+'<p><br></p>'; p.notes=htmlToMd(p.notesHtml); save();
   S.ui.fold=Object.assign({},S.ui.fold,{notes:false}); renderNote();
@@ -1936,7 +1965,7 @@ function renderNote(){
    +'<div class="row3"><input class="in" data-f="authors" placeholder="Yazarlar (Soyad, A.; Soyad, B.)" value="'+esc(p.authors)+'"><input class="in" data-f="year" inputmode="numeric" placeholder="Yıl" value="'+esc(p.year)+'"></div>'
    +'<div class="row2"><input class="in" data-f="journal" placeholder="Dergi" value="'+esc(p.journal)+'"><div class="doi"><input class="in" data-f="doi" placeholder="DOI" value="'+esc(p.doi)+'"><button class="btn" data-act="doi">Çek</button></div></div><div class="row2">'+status+fSel+'</div>'
    +'<div class="row2"><select class="in" data-f="method" aria-label="Yöntem türü"><option value="">Yöntem türü</option>'+METHODS.map(m=>'<option'+(p.method===m?' selected':'')+'>'+m+'</option>').join('')+'</select><input class="in" data-f="sample" placeholder="Örneklem (n, özellik)" value="'+esc(p.sample)+'"></div>'
-   +'<input class="in" data-f="measures" placeholder="Ölçekler / ölçümler" value="'+esc(p.measures)+'"></div>';
+   +'<div class="row2"><input class="in" data-f="measures" placeholder="Ölçekler / ölçümler" value="'+esc(p.measures)+'"><input class="in" data-f="fpage" inputmode="numeric" placeholder="İlk sayfa (dergi)" title="Makalenin dergideki ilk sayfası. Alıntılarda PDF sayfası buna göre dergi sayfasına çevrilir. PDF\'in başında kapak sayfası varsa bir eksiğini yaz." aria-label="Dergideki ilk sayfa" value="'+esc(p.fpage)+'"></div></div>';
   const findSec=foldSec('find','Ana bulgu','<textarea class="find" data-f="finding" data-wc="wcf" rows="2" placeholder="Bu makale … gösteriyor.">'+esc(p.finding)+'</textarea>','',p);
   const notesSec=foldSec('notes','Notlar','<div class="rtewrap">'+rteToolbar()+'<div class="rte" id="rte" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notlar" spellcheck="true">'+(rteClean(p.notesHtml||'')||'<p><br></p>')+'</div></div><div class="sumfoot"><span class="hint" id="wcn">'+words(p.notes)+' kelime</span><span class="cpnote" id="cpHint"></span></div>','',p);
   const f=S.ui.hlFilter||'all', cnt=k=>p.hl.filter(h=>k==='all'||h.kind===k).length;
@@ -1944,7 +1973,8 @@ function renderNote(){
     +[['all','Hepsi']].concat(KINDS.map(k=>[k.id,k.name])).map(([k,n])=>'<button class="chip'+(k!=='all'?' k-'+k:'')+'" data-act="hlf" data-k="'+k+'" aria-pressed="'+(f===k)+'">'+(k!=='all'?'<i class="kd"></i>':'')+esc(n)+' <small>'+cnt(k)+'</small></button>').join('')
     +'</div><div class="cards" data-kind="*"></div>','',p);
   const absSec=p.abstract?foldSec('abs','Makale özeti <small>OpenAlex</small>','<p class="absp">'+esc(p.abstract)+'</p>','',p):'';
-  el.innerHTML=ptabsHtml(p)+'<div class="inner">'+foldSec('kunye','Künye',head,kline,p)+findSec+notesSec+hlSec+absSec
+  const retr=p.retracted?'<div class="retrbox" role="note"><b>Geri çekilmiş makale.</b> Dergi bu çalışmayı geri çekti; bulgularına dayanma. Atıf yapacaksan geri çekildiğini belirt.</div>':'';
+  el.innerHTML=ptabsHtml(p)+'<div class="inner">'+retr+foldSec('kunye','Künye',head,kline,p)+findSec+notesSec+hlSec+absSec
    +foldSec('tags','Etiketler','<div class="chips" id="tagBox"></div>','',p)
    +'<details class="fold sec" data-fold="links"'+(isFolded('links',p)?'':' open')+'><summary>Bağlantılar <small>('+links.length+')</small></summary>'
    +links.map(l=>{ const o=byId(l.from===p.id?l.to:l.from); const t=typeOf(l.type); return '<button class="lkrow" data-act="lk" data-id="'+l.id+'"><b><i class="dot" style="--dc:'+t.color+'"></i>'+esc(t.name)+' <span>'+(l.from===p.id?'→':'←')+' '+esc(o?shortLabel(o):'?')+'</span></b><span>'+esc(l.reason)+'</span></button>'; }).join('')
@@ -2064,7 +2094,7 @@ np.addEventListener('click',async e=>{
   else if(act==='deltag'){ p.tags.splice(+b.dataset.i,1); save(); renderTags(); }
   else if(act==='lk'){ openLink({id:b.dataset.id}); }
   else if(act==='lkadd'){ openLink({from:p.id}); }
-  else if(act==='doi'){ const d=$('[data-f="doi"]',np).value.trim(); if(!d) return toast('Önce DOI yaz'); try{ const m=await fetchDoi(d); Object.assign(p,{title:m.title||p.title,authors:m.authors||p.authors,year:m.year||p.year,journal:m.journal||p.journal,doi:d}); save(); renderNote(); updateSw(); toast('Künye dolduruldu'); }catch(err){ toast('Künye alınamadı. Ağ erişimi kapalı olabilir, elle doldurabilirsin.'); } }
+  else if(act==='doi'){ const d=$('[data-f="doi"]',np).value.trim(); if(!d) return toast('Önce DOI yaz'); try{ const m=await fetchDoi(d); Object.assign(p,{title:m.title||p.title,authors:m.authors||p.authors,year:m.year||p.year,journal:m.journal||p.journal,fpage:m.fpage||p.fpage,doi:d}); save(); renderNote(); updateSw(); toast('Künye dolduruldu'); }catch(err){ toast('Künye alınamadı. Ağ erişimi kapalı olabilir, elle doldurabilirsin.'); } }
   else if(act==='rmpdf'){ if(b.dataset.arm){ await pdfDel(p.id); idxDrop(p.id); p.hasPdf=false; save(); renderNote(); openPdf(); } else { b.dataset.arm='1'; b.textContent='Emin misin? Tekrar tıkla'; setTimeout(()=>{ delete b.dataset.arm; b.textContent='PDF\'i kaldır'; },3000); } }
   else if(act==='delpaper'){ if(b.dataset.arm){ removePaper(p.id); updateSw(); renderNote(); openPdf(); toast('Makale silindi'); } else { b.dataset.arm='1'; b.textContent='Emin misin? Tekrar tıkla'; setTimeout(()=>{ delete b.dataset.arm; b.textContent='Makaleyi sil'; },3000); } }
 });
@@ -2072,7 +2102,7 @@ async function fetchDoi(doi){
   const clean=doi.trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
   const r=await fetch('https://api.crossref.org/works/'+encodeURIComponent(clean)); if(!r.ok) throw new Error('yok');
   const m=(await r.json()).message;
-  return {title:(m.title||[''])[0],authors:(m.author||[]).map(a=>(a.family||a.name||'')+(a.given?', '+a.given.split(/\s+/).filter(Boolean).map(x=>x[0]+'.').join(' '):'')).join('; '),year:String((((m.issued||{})['date-parts']||[[]])[0]||[])[0]||''),journal:(m['container-title']||[''])[0]};
+  return {title:(m.title||[''])[0],authors:(m.author||[]).map(a=>(a.family||a.name||'')+(a.given?', '+a.given.split(/\s+/).filter(Boolean).map(x=>x[0]+'.').join(' '):'')).join('; '),year:String((((m.issued||{})['date-parts']||[[]])[0]||[])[0]||''),journal:(m['container-title']||[''])[0],fpage:(String(m.page||'').match(/^\d+/)||[''])[0]};
 }
 $('#paperSw').onclick=()=>openPalette('papers');
 
@@ -2234,12 +2264,12 @@ $('#srBody').onclick=e=>{
 function renderSearch(){ $('#srQ').value=SR.q; updIdxSt(); runSearch(); indexAll(); setTimeout(()=>$('#srQ').focus(),40); }
 
 /* ---------- Makale ekle ---------- */
-let addBuf=null;
+let addBuf=null, addFpage='';
 function openAdd(){
   ['addDoi','addTitle','addAuth','addYear','addJ'].forEach(i=>$('#'+i).value='');
   const defF=(S.ui.folder&&S.ui.folder!==ALL_FOLDERS&&S.ui.folder!==NO_FOLDER)?S.ui.folder:((P()&&P().folder)||'Genel Okumalar');
   $('#addFolder').innerHTML=folderOpts(defF,true);
-  $('#addFile').value=''; addBuf=null; $('#addErr').hidden=true; $('#dlgAdd').showModal(); $('#addDoi').focus();
+  $('#addFile').value=''; addBuf=null; addFpage=''; $('#addErr').hidden=true; $('#dlgAdd').showModal(); $('#addDoi').focus();
 }
 $('#addFolder').onchange=e=>{
   if(e.target.value==='__new__'){
@@ -2250,11 +2280,11 @@ $('#addFolder').onchange=e=>{
 };
 $('#btnNew').onclick=()=>{ if(S.ui.screen!=='okuma') goScreen('okuma'); openAdd(); }; $('#addCancel').onclick=()=>$('#dlgAdd').close();
 $('#addFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; addBuf=f; if(!$('#addTitle').value) $('#addTitle').value=f.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' '); };
-$('#addFetch').onclick=async()=>{ const d=$('#addDoi').value.trim(); if(!d) return; try{ const m=await fetchDoi(d); $('#addTitle').value=m.title; $('#addAuth').value=m.authors; $('#addYear').value=m.year; $('#addJ').value=m.journal; }catch(e){ const er=$('#addErr'); er.hidden=false; er.textContent='Künye alınamadı. Ağ erişimi kapalı olabilir, bilgileri elle yazabilirsin.'; } };
+$('#addFetch').onclick=async()=>{ const d=$('#addDoi').value.trim(); if(!d) return; try{ const m=await fetchDoi(d); $('#addTitle').value=m.title; $('#addAuth').value=m.authors; $('#addYear').value=m.year; $('#addJ').value=m.journal; addFpage=m.fpage||''; }catch(e){ const er=$('#addErr'); er.hidden=false; er.textContent='Künye alınamadı. Ağ erişimi kapalı olabilir, bilgileri elle yazabilirsin.'; } };
 $('#addOk').onclick=async()=>{
   const title=$('#addTitle').value.trim(); if(!title){ const er=$('#addErr'); er.hidden=false; er.textContent='Başlık gerekli.'; return; }
   const folder=($('#addFolder').value&&$('#addFolder').value!=='__new__')?$('#addFolder').value:'';
-  const p=addPaper({title,authors:$('#addAuth').value.trim(),year:$('#addYear').value.trim(),journal:$('#addJ').value.trim(),doi:$('#addDoi').value.trim(),folder});
+  const p=addPaper({title,authors:$('#addAuth').value.trim(),year:$('#addYear').value.trim(),journal:$('#addJ').value.trim(),doi:$('#addDoi').value.trim(),folder}); if(addFpage) p.fpage=addFpage;
   if(S.ui.folder!==ALL_FOLDERS&&!matchFolder(p)) S.ui.folder=p.folder||NO_FOLDER;
   $('#dlgAdd').close(); S.ui.paperId=p.id; save(); renderFolderFilter();
   if(addBuf){ const buf=await addBuf.arrayBuffer(); await pdfPut(p.id,buf); p.hasPdf=true; idxDrop(p.id); save(); }
@@ -2263,7 +2293,7 @@ $('#addOk').onclick=async()=>{
 
 /* ---------- Komut paleti ---------- */
 function switchToVibe(){
-  try{ localStorage.setItem(LS,JSON.stringify(S)); syncVibeCols(); }catch(e){}
+  try{ writeState(); syncVibeCols(); }catch(e){}
   if(window.parent&&window.parent!==window&&window.parent.__vibeShell){
     stopLoop();
     window.parent.__vibeShell.showVibe();
@@ -2673,7 +2703,7 @@ async function importData(txt){
   (d.types||[]).forEach(t=>{ if(!S.types.find(x=>x.id===t.id)) S.types.push(t); });
   (d.themes||[]).forEach(t=>{ if(!S.themes.find(x=>x.id===t.id)) S.themes.push(t); });
   const lh=new Set(S.links.map(l=>l.id)); (d.links||[]).forEach(l=>{ if(!lh.has(l.id)&&byId(l.from)&&byId(l.to)) S.links.push(l); });
-  if(!S.ui.paperId&&S.papers[0]) S.ui.paperId=S.papers[0].id; save(); renderFolderFilter();
+  hydrateNotes(); if(!S.ui.paperId&&S.papers[0]) S.ui.paperId=S.papers[0].id; save(); renderFolderFilter();
   const np=(d.pdfs||d.imgs)?await restoreBinaries(d):0;
   toast(n+' makale eklendi'+(d.pdfs?', '+np+' PDF geri yüklendi':'. Bu yedek PDF içermiyor; PDF dosyalarını yeniden eklemen gerekir.'));
   $('#dlgData').close(); goScreen(S.ui.screen); updateSw();
@@ -2695,8 +2725,9 @@ function updBackupSt(){
   if(el) el.textContent=d===null?'Henüz tam yedek alınmadı.':d===0?'Son tam yedek: bugün.':'Son tam yedek: '+d+' gün önce.';
   if(el) el.classList.toggle('warn',due);
   const va=typeof vaultAttention==='function'&&vaultAttention();
-  $('#btnData').classList.toggle('due',due||va);
-  $('#btnData').title=va?'Markdown klasörüne yazım durdu':due?'Yedek alma zamanı':'Veri, yedek ve dışa aktarma';
+  const ss=$('#dStoreSt'); if(ss) ss.hidden=!STORE.full;
+  $('#btnData').classList.toggle('due',due||va||STORE.full);
+  $('#btnData').title=STORE.full?'Tarayıcı deposu doldu':va?'Markdown klasörüne yazım durdu':due?'Yedek alma zamanı':'Veri, yedek ve dışa aktarma';
 }
 async function fullBackup(){
   const btn=$('#dFull'); btn.disabled=true; const old=btn.textContent; btn.textContent='Hazırlanıyor…';
@@ -2772,9 +2803,10 @@ function paperMd(p,names){
   const subF=p.folder&&safeName(p.folder);
   const imgRel=subF?'../../Görseller/':'../Görseller/';
   const cards=kind=>p.hl.filter(h=>h.kind===kind).sort((a,b)=>a.page-b.page||a.rects[0].y-b.rects[0].y).map(h=>{
-    if(h.type==='area') return '- ![Alan s.'+h.page+']('+imgRel+h.id+'.jpg) (s.'+h.page+')'+(h.comment?'\n  '+h.comment.replace(/\n/g,'\n  '):'');
-    if(h.type==='pin') return '- Not (s.'+h.page+'): '+(h.comment||'').replace(/\n/g,'\n  ');
-    return '- “'+(h.text||'').replace(/\s+/g,' ')+'” (s.'+h.page+')'+(h.comment?'\n  → '+h.comment.replace(/\n/g,'\n  '):''); }).join('\n');
+    const pg=pageRef(p,h.page);
+    if(h.type==='area') return '- ![Alan s.'+pg+']('+imgRel+h.id+'.jpg) (s.'+pg+')'+(h.comment?'\n  '+h.comment.replace(/\n/g,'\n  '):'');
+    if(h.type==='pin') return '- Not (s.'+pg+'): '+(h.comment||'').replace(/\n/g,'\n  ');
+    return '- “'+(h.text||'').replace(/\s+/g,' ')+'” (s.'+pg+')'+(h.comment?'\n  → '+h.comment.replace(/\n/g,'\n  '):''); }).join('\n');
   const sec=(t,b)=>b&&String(b).trim()?'\n## '+t+'\n\n'+String(b).trim()+'\n':'';
   const out=S.links.filter(l=>l.from===p.id), inn=S.links.filter(l=>l.to===p.id);
   const lk=out.map(l=>'- '+typeOf(l.type).name+' → '+wl(l.to)+': '+l.reason).concat(inn.map(l=>'- ← '+wl(l.from)+' ('+typeOf(l.type).name+'): '+l.reason)).join('\n');
@@ -2817,7 +2849,7 @@ function updVaultUi(){
   $('#vaultPath').value=VAULT.path||VAULT.pending||''; $('#vaultNow').disabled=$('#vaultOpen').disabled=!VAULT.path;
   $('#vaultForget').hidden=!(VAULT.path||VAULT.pending);
   $('#vaultWarn').hidden=!VAULT.pending; if(VAULT.pending) $('#vaultWarnT').textContent='“'+VAULT.pending+'” klasörüne yazım duraklatıldı: tarayıcı yeniden açıldığında izin bir kez yenilenmeli.';
-  if(typeof updBackupSt==='function') updBackupSt();
+  try{ updBackupSt(); }catch(e){}
   $('#vaultSt').textContent=VAULT.err?('Hata: '+VAULT.err):VAULT.busy?'Yazılıyor…':VAULT.last?('Son kayıt '+new Date(VAULT.last).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+' · '+VAULT.n+' dosya'):(VAULT.path?'Hazır':'Klasör seçilmedi');
 }
 function scheduleVault(){ if(!DESK||!VAULT.path) return; clearTimeout(VAULT.t); VAULT.t=setTimeout(syncVault,1800); }
@@ -2849,7 +2881,7 @@ async function offerRestore(){
   const st=d&&d.state; if(!st||!Array.isArray(st.papers)) return false;
   const real=st.papers.filter(p=>!p.example).length; const mine=S.papers.filter(p=>!p.example).length; if(!real||mine) return false;
   if(!confirm('Seçtiğin klasörde '+real+' makalelik bir Okuma Atlası yedeği var. Geri yüklensin mi?\n\nHayır dersen klasördeki yedeğin üzerine yeni (boş) veri yazılır.')) return false;
-  try{ localStorage.setItem(LS,JSON.stringify(st)); }catch(e){} location.reload(); return true;
+  st.savedAt=Date.now(); const j=JSON.stringify(st); await mirrorPut(j); try{ localStorage.setItem(LS,j); }catch(e){} location.reload(); return true;
 }
 if(DESK){
   if(DESK.isWebFs) $('#vaultOpen').hidden=true;
@@ -2924,6 +2956,15 @@ renderPens(); applyTheme(); setTone(S.ui.tone||'dark'); updateSw(); $('#mFind').
 let start=(location.hash||'').replace('#','')||S.ui.screen||'okuma'; if(!SCREENS.includes(start)) start='okuma';
 goScreen(start);
 window.addEventListener('resize',()=>{ if(!$('#view-map').hidden&&S.view) applyView(); });
+mirrorGet().then(j=>{
+  if(!j){ mirrorPut(stateJson()); return; }
+  let D; try{ D=JSON.parse(j); }catch(e){ return; }
+  if(!D||!Array.isArray(D.papers)||!((D.savedAt||0)>(S.savedAt||0))) return;
+  const have=new Set(D.papers.map(p=>p.id)); S.papers.forEach(p=>{ if(!have.has(p.id)) D.papers.push(p); }); /* VibePsych'ten sonradan eklenenler */
+  Object.keys(S).forEach(k=>delete S[k]); Object.assign(S,D); hydrateNotes();
+  STORE.full=true; updBackupSt(); renderFolderFilter(); updateSw(); applyTheme(); goScreen(SCREENS.includes(S.ui.screen)?S.ui.screen:'okuma');
+  toastLong('Son değişikliklerin tarayıcı deposuna yazılamamıştı; notların yedek veritabanından geri yüklendi. Veri > Tam yedek indir ile yedek al.');
+});
 window.__atlas={S,SIM,M,R,SR,IDX,goScreen,fitMap,zoomAt,setSpace,setFolder,openFolders,vis,buildVault,syncVault,VAULT,fold,needleOf,syncFromStorage,activateFromVibe,suspendForVibe};
 })();
 </script>
