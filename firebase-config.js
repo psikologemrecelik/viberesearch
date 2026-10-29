@@ -2,7 +2,14 @@
 // Boş (null) bırakılırsa "Google ile giriş" gizlenir ve uygulama yalnızca tarayıcıda saklar.
 // Firebase konsolu > Proje ayarları > Uygulamalarım > Web uygulaması > "firebaseConfig" nesnesini buraya yapıştır.
 // Bu değerler gizli değildir; erişimi Firestore güvenlik kuralları korur (bkz. FIREBASE-KURULUM.md).
-window.VIBE_FIREBASE_CONFIG = null;
+window.VIBE_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAQZqfevUtBWBP2tDAr1nxSD0dDWhLW4Ik",
+  authDomain: "vibepsych-e6b52.firebaseapp.com",
+  projectId: "vibepsych-e6b52",
+  storageBucket: "vibepsych-e6b52.firebasestorage.app",
+  messagingSenderId: "153944453163",
+  appId: "1:153944453163:web:ec1e6377f6aaecd4fbba6e"
+};
 /* Örnek:
 window.VIBE_FIREBASE_CONFIG = {
   apiKey: "AIza...",
