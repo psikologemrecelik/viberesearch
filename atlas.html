@@ -874,6 +874,9 @@ body.splitting #pdfScroll{pointer-events:none}
     <div class="field"><label>Kaynakça dışa aktar <small>(görünen klasördeki makaleler)</small></label>
       <div class="chips"><button class="btn" id="dBib">BibTeX (.bib)</button><button class="btn" id="dRis">RIS (.ris)</button></div>
     </div>
+    <div class="field"><label for="dCiteLang">Atıf dili <small>(alıntı kopyalarken; VibePsych ile ortak)</small></label>
+      <select class="in" id="dCiteLang"><option value="tr">Türkçe: (Soyad ve Soyad, 2020, s. 12) · vd. · t.y.</option><option value="en">İngilizce: (Surname &amp; Surname, 2020, p. 12) · et al. · n.d.</option></select>
+    </div>
     <div class="field"><label>Sentez tabloları <small>(görünen klasör)</small></label>
       <div class="chips"><button class="btn" id="dEs">Meta-analiz tablosu (CSV)</button><button class="btn" id="dRob">Yanlılık riski (robvis CSV)</button></div>
       <small>Etki büyüklükleri r ve d'ye çevrilir (Fisher z ve varyanslarıyla; d varyansı eşit grup varsayar). RoB 2 dosyası robvis'e doğrudan yüklenir.</small>
@@ -1617,10 +1620,13 @@ selbar.innerHTML=KINDS.map(k=>'<button class="k-'+k.id+'" data-k="'+k.id+'"><i><
 /* PDF sayfası -> derginin basılı sayfası (Künye'deki ilk sayfa). İlk sayfa sayı değilse (ör. e0123) null. */
 function printedPage(p,pdfPage){ const f=String(p&&p.fpage||'').trim(); return /^\d+$/.test(f)&&pdfPage?String(+f+pdfPage-1):null; }
 function pageRef(p,pdfPage){ return printedPage(p,pdfPage)||String(pdfPage); }
+/* Atıf dili VibePsych ile ortak: 'tr' = ve / vd. / t.y. / s., 'en' = & / et al. / n.d. / p. */
+function citeLang(){ try{ return JSON.parse(localStorage.getItem('vibepsych_cite_lang')||'"tr"')==='en'?'en':'tr'; }catch(e){ return 'tr'; } }
 function inTextCite(p,page){
+  const en=citeLang()==='en';
   const sur=String(p.authors||'').split(/\s*;\s*/).map(a=>a.split(',')[0].trim()).filter(Boolean);
-  const who=sur.length>2?sur[0]+' vd.':sur.length===2?sur[0]+' & '+sur[1]:(sur[0]||(p.title||'Adsız').split(/\s+/).slice(0,3).join(' '));
-  return '('+who+', '+(p.year||'t.y.')+(page?', s. '+page:'')+')';
+  const who=sur.length>2?sur[0]+(en?' et al.':' vd.'):sur.length===2?sur[0]+(en?' & ':' ve ')+sur[1]:(sur[0]||(p.title||'Adsız').split(/\s+/).slice(0,3).join(' '));
+  return '('+who+', '+(p.year||(en?'n.d.':'t.y.'))+(page?(en?', p. ':', s. ')+page:'')+')';
 }
 let pendingSel=null;
 function hideSel(){ selbar.hidden=true; pendingSel=null; }
@@ -3192,6 +3198,8 @@ function exportCites(fmt){
 $('#dFull').onclick=fullBackup;
 $('#dBib').onclick=()=>exportCites('bib');
 $('#dEs').onclick=esCsv; $('#dRob').onclick=robCsv;
+$('#dCiteLang').onchange=e=>{ try{ localStorage.setItem('vibepsych_cite_lang',JSON.stringify(e.target.value==='en'?'en':'tr')); }catch(err){} toast('Atıf dili: '+(e.target.value==='en'?'İngilizce':'Türkçe')); };
+$('#btnData').addEventListener('click',()=>{ $('#dCiteLang').value=citeLang(); });
 $('#dRis').onclick=()=>exportCites('ris');
 /* Açılışta: yedek gecikmişse günde en fazla bir kez hatırlat */
 setTimeout(()=>{ updBackupSt(); const d=backupAgeDays();

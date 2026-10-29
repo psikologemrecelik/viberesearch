@@ -506,7 +506,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=20" />
+  <link rel="prefetch" href="atlas.html?v=21" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -3074,7 +3074,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=20';
+              frame.src = 'atlas.html?v=21';
               showVibeFromAtlas();
               return;
             }
@@ -3085,7 +3085,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=20';
+        frame.src = 'atlas.html?v=21';
       }
     }
 
@@ -3576,6 +3576,17 @@ ${art.abstractText}
               <i data-lucide="quote" class="w-3.5 h-3.5"></i>
               <span>APA 7</span>
             </button>
+            <div class="relative flex items-center">
+              <select onchange="setCiteLang(this.value)" aria-label="Atıf dili" title="Kaynakça ve metin içi atıf dili (Okuma Atlası da kullanır)" class="themed-select rounded-xl pl-2.5 pr-6 py-2 text-xs appearance-none cursor-pointer">
+                <option value="tr"${citeLang() === 'tr' ? ' selected' : ''}>Türkçe (ve, vd.)</option>
+                <option value="en"${citeLang() === 'en' ? ' selected' : ''}>İngilizce (&amp;, et al.)</option>
+              </select>
+              <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 absolute right-2 pointer-events-none"></i>
+            </div>
+            <label class="flex items-center gap-1.5 text-xs text-[var(--text-muted)] cursor-pointer" title="APA 7 makale başlıklarını cümle düzeninde ister. Özel adlar (ülke, kişi, kuram adı) korunmaya çalışılır; kopyaladıktan sonra kontrol et.">
+              <input type="checkbox" onchange="setApaSentence(this.checked)" ${apaSentenceOn() ? 'checked' : ''} class="accent-[var(--neon-primary)]">
+              <span>Başlığı cümle düzenine çevir</span>
+            </label>
             ${art.doi ? `
               <a href="${escapeHtml(normalizeDoi(art.doi))}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl neon-primary-active flex items-center gap-1.5 ml-auto">
                 <span>DOI</span>
@@ -4055,6 +4066,42 @@ ${art.abstractText}
       return ini ? `${family}, ${ini}` : family;
     }
 
+    // Atıf dili (VibePsych ve Okuma Atlası ortak): 'tr' = ve / vd. / t.y., 'en' = & / et al. / n.d.
+    function citeLang() { const v = loadJSON('vibepsych_cite_lang', 'tr'); return v === 'en' ? 'en' : 'tr'; }
+    function apaSentenceOn() { return loadJSON('vibepsych_apa_sentence', true) !== false; }
+    function setCiteLang(v) {
+      try { localStorage.setItem('vibepsych_cite_lang', JSON.stringify(v === 'en' ? 'en' : 'tr')); } catch (e) {}
+      showToast(v === 'en' ? 'Atıf dili: İngilizce (&, et al., n.d.)' : 'Atıf dili: Türkçe (ve, vd., t.y.)');
+    }
+    function setApaSentence(on) {
+      try { localStorage.setItem('vibepsych_apa_sentence', JSON.stringify(!!on)); } catch (e) {}
+    }
+
+    // APA 7 makale başlığı cümle düzeninde yazılır. Başlık zaten cümle düzenindeyse dokunulmaz.
+    // Korunanlar: ilk sözcük ve iki nokta/soru işaretinden sonraki sözcük, kısaltmalar (ADHD, fMRI),
+    // rakam içerenler (COVID-19), bilinen özel adlar (uluslar, diller, kişi adlı kuramlar, aylar).
+    const APA_PROPER = new Set(('i american african asian european british english chinese japanese korean german french italian spanish portuguese dutch swedish norwegian danish finnish turkish turkey türkiye kurdish arab arabic iranian persian israeli indian pakistani brazilian mexican canadian australian russian ukrainian polish greek latino latina latinx hispanic christian muslim islamic jewish buddhist hindu catholic protestant covid sars alzheimer alzheimer\'s parkinson parkinson\'s huntington huntington\'s asperger asperger\'s tourette freud freudian jungian piaget piagetian vygotsky bayesian pavlovian skinner rorschach wechsler stroop likert rasch cronbach pearson spearman facebook instagram twitter tiktok youtube whatsapp reddit january february march april may june july august september october november december monday tuesday wednesday thursday friday saturday sunday europe asia africa america americas china japan germany india brazil canada australia istanbul ankara izmir london paris united states kingdom u.s. uk usa eu who').split(' '));
+    function apaSentenceCase(title) {
+      const t = String(title || '');
+      const longW = t.split(/\s+/).filter(w => /^[\p{L}]{4,}/u.test(w));
+      const capped = longW.filter(w => /^\p{Lu}/u.test(w)).length;
+      if (longW.length < 3 || capped / longW.length < 0.6) return t;
+      let capNext = true;
+      return t.split(/(\s+)/).map(w => {
+        if (!w || /^\s+$/.test(w)) return w;
+        const m = /^([^\p{L}\d]*)(.*?)([^\p{L}\d]*)$/u.exec(w);
+        const [, pre, core, post] = m;
+        const parts = core.split('-').map((part, i) => {
+          const key = part.toLocaleLowerCase('en').replace(/’/g, '\'');
+          const keep = (capNext && i === 0) || /\p{Lu}.*\p{Lu}/u.test(part) || /\d/.test(part) || APA_PROPER.has(key);
+          if (capNext && i === 0) return /\p{Lu}/u.test(part.slice(1)) ? part : part.charAt(0).toLocaleUpperCase('en') + part.slice(1); // fMRI, iPhone olduğu gibi
+          return keep ? part : part.replace(/^(\p{Lu})(?=\p{Ll}|$)/u, c => c.toLocaleLowerCase('en'));
+        });
+        capNext = /[:?!.]$/.test(post || core) || /^[—–]$/.test(core);
+        return pre + parts.join('-') + post;
+      }).join('');
+    }
+
     function apaAuthorList(art) {
       const source = (art.apaAuthors && art.apaAuthors.length) ? art.apaAuthors : (art.authors || []);
       const names = source.map(apaName).filter(Boolean);
@@ -4067,9 +4114,12 @@ ${art.abstractText}
       }
       // Eski kasa kayıtları yalnızca ilk 4 yazarı içerir: eksik liste uydurulmaz
       if (names.length < total) {
-        return `${names.join(', ')}, et al.`;
+        return `${names.join(', ')}, ${citeLang() === 'tr' ? 'vd.' : 'et al.'}`;
       }
-      return `${names.slice(0, -1).join(', ')}, & ${names[names.length - 1]}`;
+      // Türkçe kaynakçada "ve" öncesinde virgül kullanılmaz (Türk Psikoloji Dergisi / APA Türkçe uyarlamaları)
+      return citeLang() === 'tr'
+        ? `${names.slice(0, -1).join(', ')} ve ${names[names.length - 1]}`
+        : `${names.slice(0, -1).join(', ')}, & ${names[names.length - 1]}`;
     }
 
     function normalizeDoi(doi) {
@@ -4082,8 +4132,9 @@ ${art.abstractText}
 
     function buildApaReference(art) {
       const authors = apaAuthorList(art);
-      const year = art.pubYear ? String(art.pubYear) : 'n.d.';
-      const title = String(art.title || '').trim();
+      const year = art.pubYear ? String(art.pubYear) : (citeLang() === 'tr' ? 't.y.' : 'n.d.');
+      const rawTitle = String(art.title || '').trim();
+      const title = apaSentenceOn() ? apaSentenceCase(rawTitle) : rawTitle;
       const titlePart = /[.?!]$/.test(title) ? title : `${title}.`;
       const journal = art.journalName || '';
       const vol = art.volume || '';
@@ -4131,7 +4182,9 @@ ${art.abstractText}
       if (!art) return;
       const ref = buildApaReference(art);
       const ok = await copyRich(ref.text, `<p>${ref.html}</p>`);
-      showToast(ok ? 'APA 7 atıf kopyalandı.' : 'Panoya kopyalama başarısız oldu.');
+      const changed = apaSentenceOn() && apaSentenceCase(String(art.title || '').trim()) !== String(art.title || '').trim();
+      showToast(!ok ? 'Panoya kopyalama başarısız oldu.'
+        : changed ? 'APA 7 atıf kopyalandı. Başlık cümle düzenine çevrildi; özel adları kontrol et.' : 'APA 7 atıf kopyalandı.');
     }
 
     async function copyObsidian(id) {
