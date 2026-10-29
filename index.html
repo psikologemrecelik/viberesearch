@@ -506,7 +506,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=21" />
+  <link rel="prefetch" href="atlas.html?v=22" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -2528,6 +2528,19 @@
       const allNames = authorships.map(a => a.author?.display_name).filter(Boolean);
       const apaAuthors = allNames.length <= 20 ? allNames : [...allNames.slice(0, 19), allNames[allNames.length - 1]];
 
+      // Sorumlu yazar (yazardan tam metin isterken hitap için)
+      const corresponding = authorships.find(a => a.is_corresponding)?.author?.display_name || '';
+
+      // Aynı makalenin bütün ücretsiz kopyaları: yayıncı, PubMed Central, kurumsal arşiv, PsyArXiv (yazar sürümü) ...
+      const seenOa = new Set();
+      const oaLocations = (w.locations || []).filter(l => l && l.is_oa).map(l => ({
+        url: l.pdf_url || l.landing_page_url || '',
+        pdf: !!l.pdf_url,
+        source: l.source?.display_name || '',
+        version: l.version || '',
+        license: l.license || ''
+      })).filter(l => l.url && /^https?:\/\//i.test(l.url) && !seenOa.has(l.url) && seenOa.add(l.url));
+
       const biblio = w.biblio || {};
 
       return {
@@ -2546,6 +2559,8 @@
         refCount: w.referenced_works_count || 0,
         isOA: w.open_access?.is_oa || false,
         retracted: !!w.is_retracted,
+        oaLocations,
+        corresponding,
         isPreprint: w.type === 'preprint',
         // Alan-normalize atıf: aynı yıl, alan ve türdeki yayınlara göre (OpenAlex)
         fwci: typeof w.fwci === 'number' ? w.fwci : null,
@@ -3074,7 +3089,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=21';
+              frame.src = 'atlas.html?v=22';
               showVibeFromAtlas();
               return;
             }
@@ -3085,7 +3100,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=21';
+        frame.src = 'atlas.html?v=22';
       }
     }
 
@@ -3540,6 +3555,8 @@ ${art.abstractText}
               </div>
             ` : ''}
           </div>
+
+          ${fullTextAccessHtml(art)}
 
           <div class="pt-3 border-t border-white/[0.07] space-y-2">
             <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Kartopu Keşfi (Snowballing)</span>
@@ -4000,6 +4017,73 @@ ${art.abstractText}
       a.download = 'vibepsych-arama-kaydi.csv';
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+
+    // TAM METNE ULAŞMA: ücretsiz sürümler (OpenAlex), Scholar / ResearchGate araması, yazardan isteme
+    const OA_VERSION = { publishedVersion: 'Yayımlanmış sürüm', acceptedVersion: 'Kabul edilmiş makale (hakemli, dizgisiz)', submittedVersion: 'Ön baskı (hakem öncesi)' };
+
+    function oaHost(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+    }
+
+    function scholarUrl(title) { return 'https://scholar.google.com/scholar?q=' + encodeURIComponent(`"${String(title || '').trim()}"`); }
+    function researchGateUrl(title) { return 'https://www.researchgate.net/search/publication?q=' + encodeURIComponent(String(title || '').trim()); }
+
+    function fullTextAccessHtml(art) {
+      const locs = art.oaLocations || [];
+      const list = locs.length
+        ? `<div class="space-y-1.5">${locs.map(l => `
+            <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] text-xs">
+              <span class="min-w-0">
+                <span class="title-ergonomic block truncate">${escapeHtml(l.source || oaHost(l.url))}</span>
+                <span class="text-[11px] text-[var(--text-muted)]">${escapeHtml(OA_VERSION[l.version] || 'Sürüm belirtilmemiş')}${l.license ? ' · ' + escapeHtml(l.license.toUpperCase()) : ''}</span>
+              </span>
+              <span class="shrink-0 inline-flex items-center gap-1 ${l.pdf ? 'text-[var(--neon-emerald)]' : 'text-[var(--text-muted)]'}">${l.pdf ? 'PDF' : 'Sayfa'} ${ic('arrow-up-right', 'w-3.5 h-3.5')}</span>
+            </a>`).join('')}</div>`
+        : `<p class="text-xs text-[var(--text-muted)]">OpenAlex bu makalenin ücretsiz bir kopyasını bilmiyor. Aşağıdan Scholar ya da ResearchGate'te arayabilir veya yazardan isteyebilirsin.</p>`;
+      return `
+          <div class="pt-3 border-t border-white/[0.07] space-y-2">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Tam Metne Ulaş${locs.length ? ` · ${locs.length} ücretsiz sürüm` : ''}</span>
+            ${list}
+            <div class="flex flex-wrap gap-2 text-xs pt-1">
+              <a href="${escapeHtml(scholarUrl(art.title))}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5" title="Başlığı Google Scholar'da arar; sağdaki [PDF] bağlantıları başka ücretsiz kopyaları gösterir">${ic('graduation-cap', 'w-3.5 h-3.5')}<span>Scholar'da ara</span></a>
+              <a href="${escapeHtml(researchGateUrl(art.title))}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5" title="Başlığı ResearchGate'te arar. Oradaki kopyaların bir kısmı yayıncı izniyle, bir kısmı izinsiz yüklenmiştir.">${ic('search', 'w-3.5 h-3.5')}<span>ResearchGate'te ara</span></a>
+              <button onclick="copyFullTextRequest(${jsArg(art.id)})" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5" title="Yazara gönderebileceğin hazır bir İngilizce e-posta kopyalar">${ic('mail', 'w-3.5 h-3.5')}<span>Yazardan iste</span></button>
+            </div>
+          </div>`;
+    }
+
+    // Yazara tam metin isteği (İngilizce, kibar, kısa). Adres OpenAlex'te yok; genelde yayıncı sayfasında sorumlu yazarın yanında yazar.
+    function fullTextRequestText({ title, journal, year, doi, author }) {
+      const sur = String(author || '').trim().split(/\s+/).pop() || '';
+      const cite = [journal, year].filter(Boolean).join(', ');
+      return [
+        `Subject: Request for a copy of your article "${title}"`,
+        '',
+        `Dear ${sur ? 'Dr. ' + sur : 'Author'},`,
+        '',
+        `I am a psychology researcher and I am very interested in your article "${title}"${cite ? ` (${cite})` : ''}${doi ? `, ${doi}` : ''}.`,
+        'Unfortunately, I do not have access to the full text through my institution. Would you be willing to share a copy (for example, the accepted manuscript) for my personal research use?',
+        '',
+        'Thank you very much for your time.',
+        '',
+        'Kind regards,',
+        '[Your name]',
+        '[Your affiliation]'
+      ].join('\n');
+    }
+
+    async function copyFullTextRequest(id) {
+      const art = articleMap.get(id) || vaultList.find(v => v.id === id);
+      if (!art) return;
+      const author = art.corresponding || (art.apaAuthors && art.apaAuthors[0]) || (art.authors && art.authors[0]) || '';
+      const txt = fullTextRequestText({ title: art.title, journal: art.journalName, year: art.pubYear, doi: normalizeDoi(art.doi), author });
+      try {
+        await navigator.clipboard.writeText(txt);
+        showToast(`E-posta metni kopyalandı${art.corresponding ? ` (sorumlu yazar: ${art.corresponding})` : ''}. Adres genelde yayıncı sayfasında sorumlu yazarın yanında yazar.`);
+      } catch (e) {
+        showToast('Kopyalanamadı.');
+      }
     }
 
     function triggerSnowball(workId, mode, title) {

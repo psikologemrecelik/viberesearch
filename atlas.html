@@ -549,7 +549,8 @@ body.splitting #pdfScroll{pointer-events:none}
 .toast.undo{display:flex;align-items:center;gap:12px}
 .toast.undo button{color:var(--accent);font-weight:600}
 .dropacts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.droplink{font-size:12.5px;color:var(--accent);text-decoration:none}
+.droplink{font-size:12.5px;color:var(--accent);text-decoration:none;background:none;border:0;padding:0;cursor:pointer;font-family:inherit}
+.droplinks{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 .droplink:hover{text-decoration:underline}
 .bkbox{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .bkrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -725,7 +726,7 @@ body.splitting #pdfScroll{pointer-events:none}
               <h2 id="dropT">Bu makalenin PDF'ini bırak</h2>
               <p id="dropP">PDF yalnızca bu tarayıcıda saklanır, hiçbir yere gönderilmez.</p>
               <div class="dropacts"><button class="btn primary" id="btnPick">PDF seç</button><button class="btn" id="btnOaPdf" hidden>Açık erişim PDF'ini getir</button></div>
-              <a class="droplink" id="lnkDoi" href="#" target="_blank" rel="noopener noreferrer" hidden>Yayıncı sayfasını aç</a>
+              <div class="droplinks"><a class="droplink" id="lnkDoi" href="#" target="_blank" rel="noopener noreferrer" hidden>Yayıncı sayfasını aç</a><a class="droplink" id="lnkScholar" href="#" target="_blank" rel="noopener noreferrer" hidden>Scholar'da ara</a><a class="droplink" id="lnkRg" href="#" target="_blank" rel="noopener noreferrer" hidden>ResearchGate'te ara</a><button class="droplink" type="button" id="btnAskAuthor" hidden>Yazardan iste</button></div>
             </div>
           </div>
         </div>
@@ -1477,7 +1478,10 @@ const R={doc:null,pid:null,pages:[],scale:1,obs:null,tok:0,laidOut:false};
 function showDrop(on,title,msg){ $('#drop').hidden=!on; if(on){ $('#dropT').textContent=title||'Bu makalenin PDF\'ini bırak'; $('#dropP').textContent=msg||'PDF yalnızca bu tarayıcıda saklanır, hiçbir yere gönderilmez.'; $('#btnPick').hidden=!!msg;
     const p=P(), doi=p&&String(p.doi||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
     $('#btnOaPdf').hidden=!!msg||!p||!(p.oaPdf||doi);
-    $('#lnkDoi').hidden=!!msg||!doi; if(doi) $('#lnkDoi').href='https://doi.org/'+doi; }
+    $('#lnkDoi').hidden=!!msg||!doi; if(doi) $('#lnkDoi').href='https://doi.org/'+doi;
+    const ttl=p&&String(p.title||'').trim(), showS=!msg&&!!ttl;
+    ['#lnkScholar','#lnkRg','#btnAskAuthor'].forEach(id=>$(id).hidden=!showS);
+    if(showS){ $('#lnkScholar').href='https://scholar.google.com/scholar?q='+encodeURIComponent('"'+ttl+'"'); $('#lnkRg').href='https://www.researchgate.net/search/publication?q='+encodeURIComponent(ttl); } }
   if(on) $('#pages').innerHTML=''; }
 $('#drop').addEventListener('wheel',e=>{ const np=$('#notePane'); if(np) np.scrollTop+=e.deltaY; },{passive:true});
 function teardown(){ R.tok++; if(R.obs) R.obs.disconnect(); R.doc=null; R.pages=[]; $('#pages').innerHTML=''; $('#pgInd').textContent='–'; hideSel(); }
@@ -1576,6 +1580,16 @@ async function attachPdf(file){
 const pick=document.createElement('input'); pick.type='file'; pick.accept='application/pdf'; pick.hidden=true; document.body.append(pick);
 pick.onchange=()=>{ if(pick.files[0]) attachPdf(pick.files[0]); pick.value=''; };
 $('#btnPick').onclick=()=>pick.click();
+/* Yazara tam metin isteği: hazır İngilizce e-posta (ilk yazara hitap; adres yayıncı sayfasında) */
+$('#btnAskAuthor').onclick=()=>{
+  const p=P(); if(!p) return;
+  const sur=String(p.authors||'').split(/\s*;\s*/)[0].split(',')[0].trim(), doi=String(p.doi||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
+  const cite=[p.journal,p.year].filter(Boolean).join(', ');
+  copy(['Subject: Request for a copy of your article "'+p.title+'"','','Dear '+(sur?'Dr. '+sur:'Author')+',','',
+    'I am a psychology researcher and I am very interested in your article "'+p.title+'"'+(cite?' ('+cite+')':'')+(doi?', https://doi.org/'+doi:'')+'.',
+    'Unfortunately, I do not have access to the full text through my institution. Would you be willing to share a copy (for example, the accepted manuscript) for my personal research use?',
+    '','Thank you very much for your time.','','Kind regards,','[Your name]','[Your affiliation]'].join('\n'),'E-posta metni kopyalandı. Yazarın adresi genelde yayıncı sayfasında yazar.');
+};
 /* Açık erişim PDF'i: önce kayıtlı adres, yoksa DOI ile OpenAlex'ten bulunur. Yayıncı tarayıcıdan indirmeye (CORS) izin vermezsa sayfa yeni sekmede açılır. */
 function oaKey(){ try{ return (localStorage.getItem('vibepsych_openalex_key')||'').trim(); }catch(e){ return ''; } }
 async function findOaPdf(p){
