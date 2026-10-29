@@ -3475,7 +3475,7 @@ async function cloudInit(){
 }
 $('#cloudBtn').onclick=async()=>{
   if(!CLOUD.api) return toast('Bulut eşitleme hazırlanıyor, birkaç saniye sonra yeniden dene');
-  if(CLOUD.user){ if(!confirm('Çıkış yapılsın mı? Bu cihazdaki veriler kalır, yalnızca eşitleme durur.')) return; await cloudPush(); await CLOUD.api.signOut(); toast('Çıkış yapıldı'); return; }
+  if(CLOUD.user){ await cloudPush(); await CLOUD.api.signOut(); toast('Çıkış yapıldı. Bu cihazdaki verilerin yerinde duruyor; eşitleme durdu.'); return; }
   try{ await CLOUD.api.signIn(); toast('Giriş yapıldı; veriler eşitleniyor'); }catch(e){ if(e&&e.code!=='auth/popup-closed-by-user') toast('Giriş yapılamadı: '+((e&&e.code)||e)); }
 };
 $('#cloudNow').onclick=()=>{ clearTimeout(CLOUD.pushT); cloudPush(); };

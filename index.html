@@ -507,7 +507,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=23" />
+  <link rel="prefetch" href="atlas.html?v=24" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -1590,6 +1590,7 @@
       });
 
       document.addEventListener('click', (e) => {
+        if (!e.target.closest('#accountMenu') && !e.target.closest('#cloudAuthBtn')) closeAccountMenu();
         if (!e.target.closest('#searchInput') && !e.target.closest('#autocompleteMenu')) {
           hideAutocomplete();
         }
@@ -1628,6 +1629,7 @@
         }
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (e.key === 'Escape') {
+          closeAccountMenu();
           closeSearchLog();
           closeInspector();
           setJournalMenu(false);
@@ -3099,7 +3101,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=23';
+              frame.src = 'atlas.html?v=24';
               showVibeFromAtlas();
               return;
             }
@@ -3110,7 +3112,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=23';
+        frame.src = 'atlas.html?v=24';
       }
     }
 
@@ -3210,24 +3212,22 @@ ${art.abstractText}
       if (fbUser) {
         const name = fbUser.displayName || fbUser.email || 'Hesap';
         b.innerHTML = `${ic('cloud', 'w-4 h-4 text-[var(--neon-emerald)]')}<span class="hidden sm:inline max-w-[9rem] truncate">${escapeHtml(name.split(' ')[0])}</span>`;
-        b.title = `${fbUser.email || name} ile giriş yapıldı; veriler eşitleniyor. Çıkış için tıkla.`;
-        b.setAttribute('aria-label', 'Hesap: ' + (fbUser.email || name) + '. Çıkış yap');
+        b.title = `${fbUser.email || name} · hesap ve eşitleme`;
+        b.setAttribute('aria-label', 'Hesap menüsü: ' + (fbUser.email || name));
+        b.setAttribute('aria-haspopup', 'menu');
       } else {
         b.innerHTML = `${ic('log-in', 'w-4 h-4')}<span class="hidden sm:inline">Giriş</span>`;
         b.title = 'Google ile giriş yap: notların ve listelerin cihazlar arasında eşitlensin';
         b.setAttribute('aria-label', 'Google ile giriş yap');
+        b.removeAttribute('aria-haspopup');
+        closeAccountMenu();
       }
       refreshIcons();
     }
 
     async function cloudSignInOut() {
       if (!fbAuth) { showToast('Bulut girişi hazırlanıyor; birkaç saniye sonra yeniden dene.'); return; }
-      if (fbUser) {
-        if (!confirm(`${fbUser.email || 'Hesap'} ile giriş yapıldı.\\n\\nÇıkış yapılsın mı? Bu cihazdaki veriler kalır, yalnızca eşitleme durur.`)) return;
-        await fbAuth.Au.signOut(fbAuth.auth);
-        showToast('Çıkış yapıldı.');
-        return;
-      }
+      if (fbUser) { toggleAccountMenu(); return; }
       try {
         await fbAuth.Au.signInWithPopup(fbAuth.auth, new fbAuth.Au.GoogleAuthProvider());
         showToast('Giriş yapıldı; veriler eşitleniyor.');
@@ -3235,6 +3235,76 @@ ${art.abstractText}
       } catch (e) {
         if (e?.code !== 'auth/popup-closed-by-user') showToast('Giriş yapılamadı: ' + (e?.code || e?.message || e));
       }
+    }
+
+    // HESAP MENÜSÜ: ad / e-posta, eşitleme durumu (Atlas çerçevesindeki motordan), şimdi eşitle, çıkış
+    function atlasCloud() {
+      try { return document.getElementById('atlasStageFrame')?.contentWindow?.__cloud || null; } catch (e) { return null; }
+    }
+
+    function accountStatusText() {
+      const c = atlasCloud()?.CLOUD;
+      if (!c || !c.user) return 'Eşitleme başlatılıyor…';
+      if (c.status === 'sync') return 'Eşitleniyor…';
+      if (c.status === 'err') return 'Eşitleme hatası: ' + (c.err || 'bilinmiyor');
+      return c.last ? 'Son eşitleme ' + new Date(c.last).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Eşitleniyor…';
+    }
+
+    function closeAccountMenu() {
+      const m = document.getElementById('accountMenu');
+      if (m) m.remove();
+      document.getElementById('cloudAuthBtn')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleAccountMenu() {
+      if (document.getElementById('accountMenu')) { closeAccountMenu(); return; }
+      const btn = document.getElementById('cloudAuthBtn');
+      const r = btn.getBoundingClientRect();
+      const name = fbUser.displayName || fbUser.email || 'Hesap';
+      const initial = (name.trim()[0] || '?').toLocaleUpperCase('tr-TR');
+      const c = atlasCloud()?.CLOUD;
+      const err = c && c.status === 'err';
+      const m = document.createElement('div');
+      m.id = 'accountMenu';
+      m.setAttribute('role', 'menu');
+      m.className = 'fixed z-[60] w-[min(300px,calc(100vw-24px))] luxury-panel rounded-2xl border border-white/[0.1] shadow-2xl p-2 text-[13px]';
+      m.style.top = `${Math.round(r.bottom + 8)}px`;
+      m.style.right = `${Math.max(12, Math.round(window.innerWidth - r.right))}px`;
+      m.innerHTML = `
+        <div class="flex items-center gap-3 px-2.5 py-2.5">
+          <span class="w-9 h-9 shrink-0 rounded-full grid place-items-center font-semibold bg-[var(--neon-primary)] text-[var(--bg-base,#090b12)]">${escapeHtml(initial)}</span>
+          <span class="min-w-0">
+            <span class="block font-medium title-ergonomic truncate">${escapeHtml(name)}</span>
+            ${fbUser.email && fbUser.email !== name ? `<span class="block text-[12px] text-[var(--text-muted)] truncate">${escapeHtml(fbUser.email)}</span>` : ''}
+          </span>
+        </div>
+        <div class="mx-2.5 mb-1.5 px-2.5 py-2 rounded-xl bg-white/[0.03] text-[12px] flex items-start gap-2 ${err ? 'text-[#ff8a8a]' : 'text-[var(--text-muted)]'}">
+          ${ic(err ? 'triangle-alert' : 'cloud', 'w-4 h-4 shrink-0 mt-px ' + (err ? '' : 'text-[var(--neon-emerald)]'))}
+          <span><span id="accountSyncText">${escapeHtml(accountStatusText())}</span><br>Notlar ve listeler eşitleniyor; PDF'ler bu cihazda kalır.</span>
+        </div>
+        <button role="menuitem" onclick="accountSyncNow()" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5">${ic('refresh-cw', 'w-4 h-4 text-[var(--text-muted)]')}<span>Şimdi eşitle</span></button>
+        <div class="my-1 border-t border-white/[0.07]"></div>
+        <button role="menuitem" onclick="accountSignOut()" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5">${ic('log-out', 'w-4 h-4 text-[var(--text-muted)]')}<span>Çıkış yap</span></button>`;
+      document.body.appendChild(m);
+      btn.setAttribute('aria-expanded', 'true');
+      refreshIcons();
+      m.querySelector('[role=menuitem]')?.focus();
+    }
+
+    async function accountSyncNow() {
+      const cl = atlasCloud();
+      if (!cl) { showToast('Okuma Atlası henüz yüklenmedi; birkaç saniye sonra yeniden dene.'); return; }
+      const el = document.getElementById('accountSyncText');
+      if (el) el.textContent = 'Eşitleniyor…';
+      await cl.cloudPush();
+      if (el) el.textContent = accountStatusText();
+    }
+
+    async function accountSignOut() {
+      closeAccountMenu();
+      try { await atlasCloud()?.cloudPush(); } catch (e) {}
+      await fbAuth.Au.signOut(fbAuth.auth);
+      showToast('Çıkış yapıldı. Bu cihazdaki verilerin yerinde duruyor; eşitleme durdu.');
     }
 
     window.__vibeShell = {
@@ -3250,6 +3320,8 @@ ${art.abstractText}
         updateSearchLogCount();
       },
       onAtlasSave: () => {
+        const st = document.getElementById('accountSyncText');
+        if (st) setTimeout(() => { st.textContent = accountStatusText(); }, 3000);
         customCollections = loadJSON('vibepsych_collections', customCollections);
         updateCounters();
         if (isVaultMode) renderVaultCollectionsBar();
