@@ -362,6 +362,7 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
 }
 /* Mobil: üst çubuk iki satır (eylemler + klasör), sekmeler başparmak erişimi için altta sabit */
 #themeCycle{display:none}
+.vaultwarn{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--danger) 45%,var(--line));background:color-mix(in srgb,var(--danger) 8%,transparent);font-size:12.5px}
 .absd summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--fg)}
 .absd p{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
 .toast.undo{display:flex;align-items:center;gap:12px}
@@ -671,7 +672,8 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
     <div class="actions" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn danger" id="dClearEx" hidden>Örnek makaleleri kaldır</button><span class="grow"></span><button class="btn" id="dClose">Kapat</button></div>
     <div class="field" id="vaultBox" hidden><label>Markdown klasörü</label>
       <div class="doi"><input class="in" id="vaultPath" readonly placeholder="Henüz klasör seçilmedi"><button class="btn" id="vaultPick">Klasör seç</button></div>
-      <div class="actions"><button class="btn sm" id="vaultNow">Şimdi yaz</button><button class="btn sm" id="vaultOpen">Klasörü aç</button><span class="grow"></span><small id="vaultSt"></small></div>
+      <div class="vaultwarn" id="vaultWarn" hidden><span id="vaultWarnT"></span><button class="btn primary sm" id="vaultReconnect">İzni yenile ve yaz</button></div>
+      <div class="actions"><button class="btn sm" id="vaultNow">Şimdi yaz</button><button class="btn sm" id="vaultOpen">Klasörü aç</button><button class="btn sm" id="vaultForget" hidden>Bağlantıyı kaldır</button><span class="grow"></span><small id="vaultSt"></small></div>
       <small>Her değişiklikte makale notların, özetlerin ve bağlantıların .md olarak bu klasöre yazılır. PDF'lerin ve tam yedek de burada durur. Notları uygulamadan düzenle, klasörde elle yaptığın değişikliklerin üzerine yazılır.</small></div>
     <small id="dlHint">İndirme bazı önizleme çerçevelerinde engellenir. Kopyalama her yerde çalışır.</small>
   </div>
@@ -703,13 +705,21 @@ const NW=300, NH=176;
 const LS='okuma-atlasi-v1';
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 if(!window.atlasDesktop&&typeof window.showDirectoryPicker==='function'){
-  let _dir=null;
+  let _dir=null, _pending=null;
+  /* Seçilen klasörün tutamacı ayrı bir IndexedDB'de saklanır; tarayıcı açılışta yalnızca bir kez izin ister */
+  const hdb=()=>new Promise((res,rej)=>{ const r=indexedDB.open('okuma-atlasi-fs',1); r.onupgradeneeded=()=>r.result.createObjectStore('h'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });
+  const hPut=async v=>{ try{ const db=await hdb(); await new Promise(res=>{ const tx=db.transaction('h','readwrite'); v?tx.objectStore('h').put(v,'vault'):tx.objectStore('h').delete('vault'); tx.oncomplete=res; tx.onerror=res; }); db.close(); }catch(e){} };
+  const hGet=async()=>{ try{ const db=await hdb(); const v=await new Promise(res=>{ const q=db.transaction('h').objectStore('h').get('vault'); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); db.close(); return v; }catch(e){ return null; } };
+  const ready=(async()=>{ const h=await hGet(); if(!h) return; try{ (await h.queryPermission({mode:'readwrite'}))==='granted'?(_dir=h):(_pending=h); }catch(e){ _pending=h; } })();
   const subDir=async(parts,create)=>{ let d=_dir; for(const p of parts){ d=await d.getDirectoryHandle(p,{create:!!create}); } return d; };
   const writeF=async(rel,data)=>{ const ps=rel.split('/').filter(Boolean), fn=ps.pop(); const d=ps.length?await subDir(ps,true):_dir; const fh=await d.getFileHandle(fn,{create:true}); const w=await fh.createWritable(); await w.write(data); await w.close(); };
   window.atlasDesktop={
     isWebFs:true,
-    getVault:async()=>_dir?_dir.name:null,
-    chooseVault:async()=>{ try{ _dir=await window.showDirectoryPicker({mode:'readwrite'}); return _dir.name; }catch(e){ return null; } },
+    getVault:async()=>{ await ready; return _dir?_dir.name:null; },
+    pendingVault:async()=>{ await ready; return _pending?_pending.name:null; },
+    reconnect:async()=>{ await ready; if(!_pending) return _dir?_dir.name:null; try{ if((await _pending.requestPermission({mode:'readwrite'}))==='granted'){ _dir=_pending; _pending=null; return _dir.name; } }catch(e){} return null; },
+    forgetVault:async()=>{ _dir=null; _pending=null; await hPut(null); },
+    chooseVault:async()=>{ try{ _dir=await window.showDirectoryPicker({mode:'readwrite'}); _pending=null; await hPut(_dir); return _dir.name; }catch(e){ return null; } },
     openVault:async()=>toast('Klasör tarayıcı üzerinden bağlı: '+(_dir?_dir.name:'')),
     readState:async()=>{ if(!_dir) return null; try{ const d=await subDir(['.atlas'],false); const f=await (await d.getFileHandle('state.json')).getFile(); return await f.text(); }catch(e){ return null; } },
     syncVault:async({files,state})=>{ if(!_dir) return; for(const f of (files||[])) await writeF(f.path,f.content); if(state) await writeF('.atlas/state.json',state); },
@@ -2117,8 +2127,9 @@ function updBackupSt(){
   const d=backupAgeDays(), el=$('#dBackupSt'); const due=S.papers.length>0&&(d===null||d>=BACKUP_DAYS);
   if(el) el.textContent=d===null?'Henüz tam yedek alınmadı.':d===0?'Son tam yedek: bugün.':'Son tam yedek: '+d+' gün önce.';
   if(el) el.classList.toggle('warn',due);
-  $('#btnData').classList.toggle('due',due);
-  $('#btnData').title=due?'Yedek alma zamanı':'Veri, yedek ve dışa aktarma';
+  const va=typeof vaultAttention==='function'&&vaultAttention();
+  $('#btnData').classList.toggle('due',due||va);
+  $('#btnData').title=va?'Markdown klasörüne yazım durdu':due?'Yedek alma zamanı':'Veri, yedek ve dışa aktarma';
 }
 async function fullBackup(){
   const btn=$('#dFull'); btn.disabled=true; const old=btn.textContent; btn.textContent='Hazırlanıyor…';
@@ -2233,9 +2244,13 @@ function buildVault(){
   files.push({path:'OKU-BENİ.md',content:'# Okuma Atlası klasörü\n\nBu klasör Okuma Atlası uygulaması tarafından yazılır. Makale notların, özetlerin ve bağlantıların her değişiklikte buraya Markdown olarak kaydedilir.\n\n- `Makaleler/`: her makale için bir not (klasöre atanmışsa alt klasörde)\n- `Bağlantılar.md`: makaleler arası tüm bağlantılar, türüne göre\n- `Özetler.md`: kendi özetlerinin tek dosyada toplamı\n- `Matris.md`: sentez matrisi\n- `Görseller/`: PDF\'ten kestiğin alanlar\n- `.atlas/`: tam yedek (state.json), günlük yedekler ve PDF dosyaları. Silme.\n\nKlasörü Obsidian\'la da açabilirsin, bağlantılar `[[...]]` biçiminde yazılır.\n\n**Önemli:** Notları uygulamadan düzenle. Burada elle yaptığın değişikliklerin üzerine bir sonraki kayıtta yazılır.\n'});
   return {files,pdfIds:S.papers.filter(p=>p.hasPdf).map(p=>p.id),imgIds:S.papers.flatMap(p=>p.hl.filter(h=>h.type==='area').map(h=>h.id))};
 }
+function vaultAttention(){ return !!(DESK&&(VAULT.pending||VAULT.err)); }
 function updVaultUi(){
   if(!DESK) return; const b=$('#vaultBox'); if(!b) return; b.hidden=false;
-  $('#vaultPath').value=VAULT.path||''; $('#vaultNow').disabled=$('#vaultOpen').disabled=!VAULT.path;
+  $('#vaultPath').value=VAULT.path||VAULT.pending||''; $('#vaultNow').disabled=$('#vaultOpen').disabled=!VAULT.path;
+  $('#vaultForget').hidden=!(VAULT.path||VAULT.pending);
+  $('#vaultWarn').hidden=!VAULT.pending; if(VAULT.pending) $('#vaultWarnT').textContent='“'+VAULT.pending+'” klasörüne yazım duraklatıldı: tarayıcı yeniden açıldığında izin bir kez yenilenmeli.';
+  if(typeof updBackupSt==='function') updBackupSt();
   $('#vaultSt').textContent=VAULT.err?('Hata: '+VAULT.err):VAULT.busy?'Yazılıyor…':VAULT.last?('Son kayıt '+new Date(VAULT.last).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+' · '+VAULT.n+' dosya'):(VAULT.path?'Hazır':'Klasör seçilmedi');
 }
 function scheduleVault(){ if(!DESK||!VAULT.path) return; clearTimeout(VAULT.t); VAULT.t=setTimeout(syncVault,1800); }
@@ -2247,7 +2262,7 @@ async function syncVault(){
     const r=await DESK.syncVault({files:b.files,state}); VAULT.n=b.files.length;
     const havePdf=new Set(await DESK.listPdfs()); for(const id of b.pdfIds){ if(!havePdf.has(id)){ const buf=await pdfGet(id); if(buf) await DESK.putPdf(id,buf); } }
     const haveImg=new Set(await DESK.listImgs()); for(const id of b.imgIds){ if(!haveImg.has(id)){ const u=await imgGet(id); if(u) await DESK.putImg(id,u); } }
-    await DESK.prune({pdfIds:b.pdfIds,imgIds:b.imgIds}); VAULT.last=Date.now();
+    await DESK.prune({pdfIds:b.pdfIds,imgIds:b.imgIds}); VAULT.last=Date.now(); S.ui.lastBackup=VAULT.last;
   }catch(e){ VAULT.err=String((e&&e.message)||e); }
   finally{ VAULT.busy=false; updVaultUi(); if(VAULT.dirty){ VAULT.dirty=false; scheduleVault(); } }
 }
@@ -2260,9 +2275,12 @@ async function offerRestore(){
 }
 if(DESK){
   if(DESK.isWebFs) $('#vaultOpen').hidden=true;
-  $('#vaultPick').onclick=async()=>{ const p=await DESK.chooseVault(); if(!p) return; VAULT.path=p; VAULT.err=''; updVaultUi(); if(await offerRestore()) return; syncVault(); toast('Klasör ayarlandı, notların yazılıyor'); };
+  $('#vaultPick').onclick=async()=>{ const p=await DESK.chooseVault(); if(!p) return; VAULT.path=p; VAULT.pending=null; VAULT.err=''; updVaultUi(); if(await offerRestore()) return; syncVault(); toast('Klasör ayarlandı ve hatırlanacak; notların yazılıyor'); };
+  $('#vaultReconnect').onclick=async()=>{ const p=DESK.reconnect?await DESK.reconnect():null; if(!p){ toast('İzin verilmedi; klasöre yazılmıyor'); return; } VAULT.path=p; VAULT.pending=null; VAULT.err=''; updVaultUi(); syncVault(); toast('İzin yenilendi, notların yazılıyor'); };
+  $('#vaultForget').onclick=async()=>{ if(!confirm('Markdown klasörü bağlantısı kaldırılsın mı? Klasördeki dosyalar silinmez.')) return; if(DESK.forgetVault) await DESK.forgetVault(); VAULT.path=null; VAULT.pending=null; VAULT.err=''; VAULT.last=0; VAULT.n=0; updVaultUi(); toast('Klasör bağlantısı kaldırıldı'); };
   $('#vaultNow').onclick=()=>syncVault(); $('#vaultOpen').onclick=()=>DESK.openVault();
-  (async()=>{ try{ VAULT.path=await DESK.getVault(); }catch(e){} updVaultUi();
+  (async()=>{ try{ VAULT.path=await DESK.getVault(); if(!VAULT.path&&DESK.pendingVault) VAULT.pending=await DESK.pendingVault(); }catch(e){} updVaultUi();
+    if(VAULT.pending) setTimeout(()=>toast('Markdown klasörüne yazım duraklatıldı. Veri > İzni yenile ile devam et.'),1200);
     if(VAULT.path){ if(await offerRestore()) return; scheduleVault(); }
     else if(!DESK.isWebFs&&!S.ui.vaultAsked){ S.ui.vaultAsked=true; save(); setTimeout(()=>{ openData(); },700); } })();
 }
