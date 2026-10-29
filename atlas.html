@@ -596,6 +596,15 @@ body.splitting #pdfScroll{pointer-events:none}
 .scrabs.none{color:var(--faint);font-style:italic}
 .scrwhy select{max-width:320px}
 .scrfoot{display:flex;justify-content:flex-end}
+.scrrow.conf{box-shadow:inset 0 0 0 1px #ffb454}
+.rvbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:12px;font-size:12.5px;color:var(--muted)}
+.rvbar b{color:var(--fg)}
+.rvk.muted{color:var(--faint)}
+.lnk{background:none;border:0;padding:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.rvline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding:6px 10px;border-radius:8px;background:var(--surface)}
+.rvline b{color:var(--fg)}
+.rvline.c{background:rgba(255,180,84,.12)}
+.rvind{color:var(--faint)}
 .warnt{color:var(--danger)}
 @media (max-width:820px){ .scrhead{flex-direction:column} .scrbtns{width:100%} .scrb{flex:1;min-height:40px} #libMode{flex:1 1 100%} #libMode button{flex:1} .prisma .pr-arr{display:none} }
 .libwrap{flex:1;display:flex;flex-direction:column}
@@ -737,7 +746,8 @@ body.splitting #pdfScroll{pointer-events:none}
           <div class="seg" id="libMode" role="group" aria-label="Görünüm"><button data-mode="list" aria-pressed="true">Liste</button><button data-mode="scr" aria-pressed="false" title="Sistematik derleme: başlık/özet ve tam metin taraması">Tarama</button></div>
           <input class="in libq" id="libQ" placeholder="Başlık, yazar, dergi veya etiket ara" autocomplete="off" aria-label="Kütüphanede ara">
           <div class="seg scronly" id="libStage" role="group" aria-label="Tarama aşaması"><button data-stage="ta" aria-pressed="true">Başlık / özet</button><button data-stage="ft" aria-pressed="false">Tam metin</button></div>
-          <div class="seg scronly" id="libDec" role="group" aria-label="Karar süzgeci"><button data-dec="todo" aria-pressed="true">Bekleyen</button><button data-dec="in" aria-pressed="false">Dahil</button><button data-dec="maybe" aria-pressed="false">Belirsiz</button><button data-dec="out" aria-pressed="false">Hariç</button><button data-dec="all" aria-pressed="false">Hepsi</button></div>
+          <div class="seg scronly" id="libDec" role="group" aria-label="Karar süzgeci"><button data-dec="todo" aria-pressed="true">Bekleyen</button><button data-dec="in" aria-pressed="false">Dahil</button><button data-dec="maybe" aria-pressed="false">Belirsiz</button><button data-dec="out" aria-pressed="false">Hariç</button><button data-dec="all" aria-pressed="false">Hepsi</button><button data-dec="conf" aria-pressed="false" title="İki hakemin bağımsız kararlarının farklı olduğu, henüz uzlaşılmamış kayıtlar">Uyuşmazlık</button></div>
+          <input type="file" id="rvFile" accept=".json,application/json" hidden>
           <div class="seg listonly" id="libSt" role="group" aria-label="Okuma durumu">
             <button data-st="all" aria-pressed="true">Hepsi</button><button data-st="okunacak" aria-pressed="false">Okunacak</button><button data-st="okunuyor" aria-pressed="false">Okunuyor</button><button data-st="bitti" aria-pressed="false">Bitti</button>
           </div>
@@ -1157,7 +1167,7 @@ function prismaText(x){
     'Diğer yollarla eklenen (VibePsych, elle, atıf taraması): '+I.other]:[]).concat([
     'Taranan kayıt: '+x.n,'Başlık/özet aşamasında hariç: '+x.taOut+(x.taMaybe?' (belirsiz: '+x.taMaybe+')':''),
     'Tam metni değerlendirilen: '+x.taIn,'Tam metin aşamasında hariç: '+x.ftOut+(x.ftWhy.length?'\n'+x.ftWhy.map(([k,v])=>'  - '+k+': '+v).join('\n'):''),
-    'Derlemeye dahil edilen: '+x.ftIn]).join('\n');
+    'Derlemeye dahil edilen: '+x.ftIn]).concat(['ta','ft'].map(k=>{ const r=rvStats(k); return r.n?'Hakemler arası uyum ('+(k==='ta'?'başlık/özet':'tam metin')+', n='+r.n+'): Cohen κ = '+fmtK(r.k)+' ('+kLabel(r.k)+'), gözlenen uyum %'+Math.round(r.po*100)+(r.conf?', uzlaşılmamış '+r.conf:''):''; }).filter(Boolean)).join('\n');
 }
 function renderScreen(){
   const L=libState(), stage=L.stage==='ft'?'ft':'ta', key=stage, why=stage+'Why';
@@ -1166,7 +1176,8 @@ function renderScreen(){
   const q=L.q.trim().toLocaleLowerCase('tr-TR'), pool=scrPool(stage);
   const list=pool.filter(p=>{
     const v=(p.scr||{})[key]||'';
-    if(L.dec==='todo'&&v&&!scrKeep.has(p.id)) return false; if(L.dec!=='todo'&&L.dec!=='all'&&v!==L.dec) return false;
+    if(L.dec==='conf'){ if(!rvConflict(p,key)&&!scrKeep.has(p.id)) return false; }
+    else if(L.dec==='todo'&&v&&!scrKeep.has(p.id)) return false; else if(L.dec!=='todo'&&L.dec!=='all'&&v!==L.dec) return false;
     if(q){ const hay=[p.title,p.authors,p.journal,p.abstract].join(' ').toLocaleLowerCase('tr-TR'); if(!hay.includes(q)) return false; }
     return true;
   });
@@ -1179,16 +1190,18 @@ function renderScreen(){
     +'<div class="pr-step"><b>'+x.n+'</b><span>taranan kayıt</span></div><i class="pr-arr"></i>'
     +'<div class="pr-step"><b>'+x.taIn+'</b><span>tam metne geçti</span><small>'+x.taOut+' hariç'+(x.taMaybe?' · '+x.taMaybe+' belirsiz':'')+'</small></div><i class="pr-arr"></i>'
     +'<div class="pr-step"><b>'+x.ftIn+'</b><span>dahil edildi</span><small>'+x.ftOut+' tam metinde hariç</small></div>'
-    +'<span class="grow"></span><div class="pr-acts"><button class="btn sm" data-scr-copy>PRISMA sayılarını kopyala</button><button class="btn sm" data-scr-csv>Kararları CSV indir</button></div></div>';
+    +'<span class="grow"></span><div class="pr-acts"><button class="btn sm" data-scr-copy>PRISMA sayılarını kopyala</button><button class="btn sm" data-scr-csv>Kararları CSV indir</button></div></div>'
+    +rvBar(stage);
   if(!pool.length){ $('#libBody').innerHTML=box+'<div class="libempty"><b>'+(stage==='ft'?'Tam metne geçen kayıt yok':'Bu klasörde kayıt yok')+'</b><span>'+(stage==='ft'?'Önce başlık/özet aşamasında “Dahil” kararı ver.':'Derleme kayıtlarını bir klasörde topla; tarama görünen klasörde yapılır.')+'</span></div>'; return; }
-  if(!list.length){ $('#libBody').innerHTML=box+'<div class="libempty"><b>'+(L.dec==='todo'?'Bu aşamada bekleyen kayıt kalmadı':'Eşleşen kayıt yok')+'</b><span>Üstten başka bir karar süzgeci seç.</span></div>'; return; }
+  if(!list.length){ $('#libBody').innerHTML=box+'<div class="libempty"><b>'+(L.dec==='todo'?'Bu aşamada bekleyen kayıt kalmadı':L.dec==='conf'?'Uzlaşılmamış uyuşmazlık yok':'Eşleşen kayıt yok')+'</b><span>'+(L.dec==='conf'?'İkinci hakemin karar dosyasını içe aktardığında iki kararın farklı olduğu kayıtlar burada listelenir.':'Üstten başka bir karar süzgeci seç.')+'</span></div>'; return; }
   $('#libBody').innerHTML=box+list.map(p=>{
     const s=p.scr||{}, v=s[key]||'';
-    return '<article class="scrrow'+(v?' dec-'+v:'')+'" tabindex="0" data-scr="'+esc(p.id)+'">'
+    return '<article class="scrrow'+(v?' dec-'+v:'')+(rvConflict(p,key)?' conf':'')+'" tabindex="0" data-scr="'+esc(p.id)+'">'
       +'<div class="scrhead"><div class="libmain"><div class="libttl">'+esc(p.title||'Adsız makale')+'</div>'
       +'<div class="libsub">'+(p.retracted?'<span class="chip retr">Geri çekildi</span>':'')+'<span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(stage==='ft'?'<span class="'+(p.hasPdf?'':'warnt')+'">'+(p.hasPdf?'PDF var':'PDF yok')+'</span>':'')+'</div></div>'
       +'<div class="scrbtns" role="group" aria-label="Karar">'+Object.entries(SCR_DEC).map(([k,n])=>'<button class="scrb sb-'+k+'" data-dec="'+k+'" aria-pressed="'+(v===k)+'">'+n+'</button>').join('')+'</div></div>'
       +(stage==='ta'?(p.abstract?'<p class="scrabs">'+esc(p.abstract)+'</p>':'<p class="scrabs none">Özet yok. Başlığa göre karar ver ya da makaleyi açıp oku.</p>'):'')
+      +rvLine(p,key)
       +(v==='out'?'<div class="scrwhy"><select class="libsel" data-why="'+esc(p.id)+'" aria-label="Hariç tutma gerekçesi"><option value="">Gerekçe seç</option>'+SCR_REASONS.map(r=>'<option'+(s[why]===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></div>':'')
       +'<div class="scrfoot"><button class="btn sm" data-scr-open="'+esc(p.id)+'">Okuma\'da aç</button></div>'
       +'</article>';
@@ -1197,19 +1210,114 @@ function renderScreen(){
 function scrDecide(id,dec,advance){
   const p=byId(id); if(!p) return; const L=libState(), key=L.stage==='ft'?'ft':'ta', s=scrOf(p);
   s[key]=s[key]===dec?'':dec; if(s[key]!=='out') delete s[key+'Why'];
+  const ind=p.scrInd=p.scrInd||{}, r2=p.scr2&&p.scr2[key];
+  if(!r2||!ind[key]) ind[key]=s[key]||''; /* ikinci hakemin kararı gelene (ve ilk kararı verene) kadar bağımsız karar güncel kalır */
+  else if(L.dec==='conf'){ (p.scrRes=p.scrRes||{})[key]=true; scrKeep.add(id); } /* uyuşmazlık görünümünde verilen karar = uzlaşı */
   if(s[key]==='out') scrKeep.add(id); else scrKeep.delete(id);
   if(key==='ta'&&s.ta!=='in'){ delete s.ft; delete s.ftWhy; }
   save();
   const rows=$$('#libBody [data-scr]'), i=rows.findIndex(r=>r.dataset.scr===id), next=rows[i+1]&&rows[i+1].dataset.scr;
   renderScreen();
-  const tgt=(advance&&s[key]&&s[key]!=='out'&&next)?next:id; const el=$('#libBody [data-scr="'+tgt+'"]'); if(el) el.focus({preventScroll:false});
+  const tgt=(advance&&s[key]&&s[key]!=='out'&&L.dec!=='conf'&&next)?next:id; const el=$('#libBody [data-scr="'+tgt+'"]'); if(el) el.focus({preventScroll:false});
 }
 function scrCsv(){
-  const rows=[['Başlık','Yazarlar','Yıl','Dergi','DOI','Klasör','Başlık/özet kararı','Başlık/özet gerekçesi','Tam metin kararı','Tam metin gerekçesi']];
-  vis().forEach(p=>{ const s=p.scr||{}; rows.push([p.title,p.authors,p.year,p.journal,p.doi,p.folder,SCR_DEC[s.ta]||'',s.taWhy||'',SCR_DEC[s.ft]||'',s.ftWhy||'']); });
+  const r2by=rvName2()||'2. hakem', me=S.ui.reviewer||'1. hakem';
+  const rows=[['Başlık','Yazarlar','Yıl','Dergi','DOI','Klasör','Başlık/özet kararı (uzlaşı)','Başlık/özet gerekçesi','Tam metin kararı (uzlaşı)','Tam metin gerekçesi','B/Ö bağımsız: '+me,'B/Ö bağımsız: '+r2by,'TM bağımsız: '+me,'TM bağımsız: '+r2by]];
+  vis().forEach(p=>{ const s=p.scr||{}, i=p.scrInd||{}, r=p.scr2||{}; rows.push([p.title,p.authors,p.year,p.journal,p.doi,p.folder,SCR_DEC[s.ta]||'',s.taWhy||'',SCR_DEC[s.ft]||'',s.ftWhy||'',SCR_DEC[i.ta]||'',SCR_DEC[r.ta]||'',SCR_DEC[i.ft]||'',SCR_DEC[r.ft]||'']); });
   const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(';')).join('\r\n');
   if(dlFile('tarama-kararlari-'+today()+'.csv',csv,'text/csv;charset=utf-8')) toast('Tarama kararları indirildi');
 }
+
+/* ---------- İki hakemli tarama: paket / karar dosyası alışverişi, Cohen kappa ---------- */
+const rvInd=(p,k)=>((p.scrInd||{})[k])||((!p.scr2||!p.scr2[k])?((p.scr||{})[k]||''):'');
+const rvName2=()=>{ const p=vis().find(x=>x.scr2&&x.scr2.by); return p?p.scr2.by:''; };
+function rvConflict(p,k){ const a=rvInd(p,k), b=p.scr2&&p.scr2[k]; return !!(a&&b&&a!==b&&!((p.scrRes||{})[k])); }
+/* Kappa ikili hesaplanır: Dahil ve Belirsiz = "dahil", Hariç = "hariç" (başlık/özet taramasında yaygın, temkinli yaklaşım). */
+function rvStats(k){
+  const pairs=scrPool(k).filter(p=>p.scr2&&p.scr2[k]&&rvInd(p,k));
+  const n=pairs.length; if(!n) return {n:0};
+  const inc=v=>v!=='out'; let ag=0, ex=0, a1=0, b1=0;
+  pairs.forEach(p=>{ const a=rvInd(p,k), b=p.scr2[k]; if(inc(a)===inc(b)) ag++; if(a===b) ex++; if(inc(a)) a1++; if(inc(b)) b1++; });
+  const po=ag/n, pa=a1/n, pb=b1/n, pe=pa*pb+(1-pa)*(1-pb);
+  return {n,po,exact:ex/n,k:pe>=1?(po>=1?1:0):(po-pe)/(1-pe),conf:pairs.filter(p=>rvConflict(p,k)).length};
+}
+const fmtK=k=>(Math.round(k*100)/100).toFixed(2).replace('.',',');
+const kLabel=k=>k<0?'uyumsuz':k<=.2?'hafif':k<=.4?'makul':k<=.6?'orta':k<=.8?'önemli':'neredeyse mükemmel'; /* Landis ve Koch (1977) */
+function rvLine(p,k){
+  const s=p.scr||{}, r=p.scr2;
+  if(!r||!r[k]||!s[k]) return ''; /* kör tarama: kendi kararını vermeden ikinci hakemin kararı gösterilmez */
+  const a=rvInd(p,k), why=r[k+'Why'], c=rvConflict(p,k);
+  return '<div class="rvline'+(c?' c':'')+'"><span>'+esc(r.by||'2. hakem')+': <b>'+esc(SCR_DEC[r[k]]||r[k])+'</b>'+(why?' · '+esc(why):'')+'</span>'
+    +(a&&a!==s[k]?'<span class="rvind">senin ilk kararın: '+esc(SCR_DEC[a]||a)+'</span>':'')
+    +(c?'<span class="grow"></span><button class="btn sm" data-rv-keep="'+esc(p.id)+'">Benim kararım kalsın</button><button class="btn sm" data-rv-take="'+esc(p.id)+'">2. hakemin kararını al</button>':'')+'</div>';
+}
+function rvBar(stage){
+  const r=rvStats(stage), me=S.ui.reviewer;
+  return '<div class="rvbar"><span class="rvme">Hakem: <b>'+esc(me||'adsız')+'</b> <button class="lnk" data-rv-name>değiştir</button></span>'
+    +(r.n?'<span class="rvk" title="Cohen kappa, ikili: Dahil ve Belirsiz bir arada, Hariç ayrı. Bağımsız (ilk) kararlarla hesaplanır.">'+esc(rvName2()||'2. hakem')+' ile κ = <b>'+fmtK(r.k)+'</b> ('+kLabel(r.k)+') · uyum %'+Math.round(r.po*100)+' · n='+r.n+(r.conf?' · <button class="lnk" data-rv-conf>'+r.conf+' uyuşmazlık</button>':' · uyuşmazlık yok')+'</span>':'<span class="rvk muted">İkinci hakem için: paketi gönder, onun karar dosyasını içe aktar.</span>')
+    +'<span class="grow"></span><button class="btn sm" data-rv-pack title="Kayıtları kararsız olarak paylaş (kör tarama)">Hakem paketi indir</button><button class="btn sm" data-rv-dec title="Bağımsız kararlarını ikinci hakeme gönder">Kararlarımı indir</button><button class="btn sm" data-rv-imp title="Hakem paketi ya da ikinci hakemin karar dosyası">Hakem dosyası içe aktar</button></div>';
+}
+function rvEnsureName(){
+  if(S.ui.reviewer) return S.ui.reviewer;
+  const n=(prompt('Hakem adın ya da baş harflerin (dosyalarda ve kappa raporunda görünür):','')||'').trim();
+  if(n){ S.ui.reviewer=n.slice(0,40); save(); } return S.ui.reviewer||'';
+}
+const rvRec=p=>({title:p.title,authors:p.authors,year:p.year,journal:p.journal,doi:p.doi});
+const rvFolderName=()=>S.ui.folder&&S.ui.folder!==NO_FOLDER?S.ui.folder:'Derleme';
+function rvPack(){
+  const me=rvEnsureName(); if(!me) return;
+  const stage=libState().stage==='ft'?'ft':'ta', pool=scrPool(stage), f=S.ui.folder;
+  const pk={app:'okuma-atlasi',kind:'scr-package',v:1,at:new Date().toISOString(),from:me,folder:rvFolderName(),stage,
+    imports:(S.imports||[]).filter(i=>!f||i.folder===f),
+    records:pool.map(p=>Object.assign(rvRec(p),{abstract:p.abstract||'',fpage:p.fpage||'',src:p.src||[]},stage==='ft'?{ta:'in'}:{}))};
+  if(dlFile('hakem-paketi-'+safeName(pk.folder)+'-'+(stage==='ft'?'tam-metin':'baslik-ozet')+'.json',JSON.stringify(pk),'application/json')) toast(pool.length+' kayıt pakete yazıldı; kararların pakette yok');
+}
+function rvExportDecisions(){
+  const me=rvEnsureName(); if(!me) return;
+  const recs=vis().filter(p=>p.scr&&(p.scr.ta||p.scr.ft)).map(p=>{ const s=p.scr; return Object.assign(rvRec(p),{ta:rvInd(p,'ta'),taWhy:s.taWhy||'',ft:rvInd(p,'ft'),ftWhy:s.ftWhy||''}); });
+  if(!recs.length) return toast('Bu klasörde henüz karar yok');
+  const d={app:'okuma-atlasi',kind:'scr-decisions',v:1,at:new Date().toISOString(),reviewer:me,folder:rvFolderName(),records:recs};
+  if(dlFile('tarama-kararlari-'+safeName(me)+'-'+today()+'.json',JSON.stringify(d),'application/json')) toast(recs.length+' kaydın bağımsız kararları indirildi');
+}
+function rvFind(r,list){
+  const d=impDoiKey(r.doi), t=impTitleKey(r.title);
+  return list.find(p=>d&&impDoiKey(p.doi)===d)||(t.length>=12?list.find(p=>impTitleKey(p.title)===t&&(!p.year||!r.year||String(p.year)===String(r.year))):null)||null;
+}
+async function rvImport(file){
+  let d; try{ d=JSON.parse(await file.text()); }catch(e){ return toast('Dosya okunamadı'); }
+  if(!d||d.app!=='okuma-atlasi'||!Array.isArray(d.records)) return toast('Bu bir hakem paketi ya da karar dosyası değil');
+  if(d.kind==='scr-package'){
+    const folder=d.folder||'Derleme';
+    importRecords(d.records,{source:'',folder,move:true,file:file.name,nolog:true});
+    S.imports=Array.isArray(S.imports)?S.imports:[]; const have=new Set(S.imports.map(i=>i.id));
+    (d.imports||[]).forEach(i=>{ if(!have.has(i.id)) S.imports.push(Object.assign({},i,{folder})); });
+    const list=S.papers.filter(p=>p.folder===folder); let n=0;
+    if(d.stage==='ft') d.records.forEach(r=>{ const p=rvFind(r,list); if(p){ const s=scrOf(p); if(s.ta!=='in'){ s.ta='in'; n++; } } });
+    S.ui.folder=folder; const L=libState(); L.mode='scr'; L.stage=d.stage==='ft'?'ft':'ta'; L.dec='todo'; save(); renderFolderFilter(); goScreen('kutuphane'); updateSw();
+    toastLong((d.from?d.from+' tarafından gönderilen ':'')+'paket: '+d.records.length+' kayıt "'+folder+'" klasöründe. '+(d.stage==='ft'?'Tam metin aşaması; ':'')+'Kararlarını ver, sonra "Kararlarımı indir" ile geri gönder.',false);
+    return;
+  }
+  if(d.kind!=='scr-decisions') return toast('Tanınmayan dosya türü');
+  const me=S.ui.reviewer||'';
+  if(me&&d.reviewer&&d.reviewer===me&&!confirm('Bu dosya senin adınla ("'+me+'") kaydedilmiş. Yine de ikinci hakem kararı olarak içe aktarılsın mı?')) return;
+  const list=vis(); let hit=0, miss=0;
+  d.records.forEach(r=>{
+    const p=rvFind(r,list); if(!p){ miss++; return; } hit++;
+    const s=p.scr||{}, ind=p.scrInd=p.scrInd||{};
+    ['ta','ft'].forEach(k=>{ if(!ind[k]&&s[k]) ind[k]=s[k]; }); /* ikinci hakemin kararı gelmeden önceki kararın bağımsız karar olarak dondurulur */
+    const r2=p.scr2=Object.assign(p.scr2||{},{by:d.reviewer||'2. hakem'});
+    ['ta','ft'].forEach(k=>{ if(r[k]){ r2[k]=r[k]; r2[k+'Why']=r[k+'Why']||''; } });
+  });
+  save(); renderLib();
+  const st=rvStats(libState().stage==='ft'?'ft':'ta');
+  toastLong((d.reviewer||'2. hakem')+': '+hit+' kayıt eşleşti'+(miss?', '+miss+' kayıt bu klasörde bulunamadı':'')+(st.n?'. κ = '+fmtK(st.k)+' ('+kLabel(st.k)+'), '+st.conf+' uyuşmazlık.':'.'),false);
+}
+function rvResolve(id,take){
+  const p=byId(id); if(!p||!p.scr2) return; const key=libState().stage==='ft'?'ft':'ta', s=scrOf(p);
+  if(take){ s[key]=p.scr2[key]; if(s[key]==='out') s[key+'Why']=p.scr2[key+'Why']||s[key+'Why']||''; else delete s[key+'Why']; if(key==='ta'&&s.ta!=='in'){ delete s.ft; delete s.ftWhy; } }
+  (p.scrRes=p.scrRes||{})[key]=true; save(); renderScreen();
+}
+$('#rvFile').onchange=()=>{ const f=$('#rvFile').files[0]; $('#rvFile').value=''; if(f) rvImport(f); };
 
 /* ---------- Kütüphane ---------- */
 const LIB_ST={okunacak:'Okunacak',okunuyor:'Okunuyor',bitti:'Bitti'};
@@ -1281,6 +1389,13 @@ $('#libBody').addEventListener('click',e=>{
     const o=e.target.closest('[data-scr-open]'); if(o){ libOpen(o.dataset.scrOpen); return; }
     if(e.target.closest('[data-scr-copy]')){ copy(prismaText(prisma()),'PRISMA sayıları kopyalandı'); return; }
     if(e.target.closest('[data-scr-csv]')){ scrCsv(); return; }
+    const kp=e.target.closest('[data-rv-keep]'), tk=e.target.closest('[data-rv-take]');
+    if(kp){ rvResolve(kp.dataset.rvKeep,false); return; } if(tk){ rvResolve(tk.dataset.rvTake,true); return; }
+    if(e.target.closest('[data-rv-pack]')){ rvPack(); return; }
+    if(e.target.closest('[data-rv-dec]')){ rvExportDecisions(); return; }
+    if(e.target.closest('[data-rv-imp]')){ $('#rvFile').click(); return; }
+    if(e.target.closest('[data-rv-name]')){ const n=(prompt('Hakem adın ya da baş harflerin:',S.ui.reviewer||'')||'').trim(); if(n){ S.ui.reviewer=n.slice(0,40); save(); renderScreen(); } return; }
+    if(e.target.closest('[data-rv-conf]')){ scrKeep.clear(); libState().dec='conf'; save(); renderLib(); return; }
     return;
   }
   if(e.target.closest('[data-libst]')) return;
@@ -2812,7 +2927,7 @@ function parseRecords(txt){
 const impTitleKey=t=>String(t||'').toLocaleLowerCase('tr-TR').normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,160);
 const impDoiKey=d=>String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').toLowerCase();
 /* recs -> derleme klasörü. Eşleşme: DOI, yoksa başlık (+ yıllar çelişmiyorsa). */
-function importRecords(recs,{source,folder,move,file}){
+function importRecords(recs,{source,folder,move,file,nolog}){
   const byDoi=new Map(), byTitle=new Map();
   const index=p=>{ const d=impDoiKey(p.doi); if(d&&!byDoi.has(d)) byDoi.set(d,p); const k=impTitleKey(p.title); if(k.length>=12){ if(!byTitle.has(k)) byTitle.set(k,[]); byTitle.get(k).push(p); } };
   S.papers.forEach(index);
@@ -2828,11 +2943,11 @@ function importRecords(recs,{source,folder,move,file}){
       if(move){ ex.folder=folder; res.moved++; fill(ex,r); return; }
       res.other++; return;
     }
-    const p=addPaper({title:r.title||'(başlıksız kayıt)',authors:r.authors,year:r.year,journal:r.journal,doi:r.doi,abstract:r.abstract,fpage:r.fpage,folder,src:source?[source]:[]},true);
+    const p=addPaper({title:r.title||'(başlıksız kayıt)',authors:r.authors,year:r.year,journal:r.journal,doi:r.doi,abstract:r.abstract,fpage:r.fpage,folder,src:Array.isArray(r.src)&&r.src.length?r.src.slice():(source?[source]:[])},true);
     index(p); res.added++;
   });
   S.imports=Array.isArray(S.imports)?S.imports:[];
-  S.imports.push(Object.assign({id:uid(),at:Date.now(),source:source||'Belirtilmedi',file:file||'',folder,n:recs.length},res));
+  if(!nolog) S.imports.push(Object.assign({id:uid(),at:Date.now(),source:source||'Belirtilmedi',file:file||'',folder,n:recs.length},res));
   save(); renderFolderFilter();
   return res;
 }
