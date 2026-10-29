@@ -276,6 +276,13 @@
       overflow: hidden;
       pointer-events: none;
     }
+    /* Telefonda Filtreler panelinin içindeyken kaydırma gizlemesi uygulanmaz */
+    #mobSheetBody #collapsibleJournalRail.collapsed-nav {
+      max-height: 80px;
+      opacity: 1;
+      overflow: visible;
+      pointer-events: auto;
+    }
 
     /* Cross-Interface Smooth Transition & Persistent Single-Page Atlas Stage */
     html { background-color: #080706; }
@@ -425,33 +432,128 @@
     @keyframes skel-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
     @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
 
-    /* Mobil alt gezinme çubuğu */
+    /* Mobil alt gezinme: yarı saydam, bulanık zemin; etkin sekmede ikonun arkasında hap vurgusu */
+    .mob-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      display: flex;
+      align-items: stretch;
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+      background: color-mix(in srgb, var(--bg-base) 80%, transparent);
+      backdrop-filter: blur(18px) saturate(1.4);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      border-top: 1px solid color-mix(in srgb, var(--line-color) 80%, transparent);
+    }
     .mob-nav-btn {
       flex: 1 1 0;
       min-width: 0;
-      min-height: 48px;
+      min-height: 54px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2px;
-      border-radius: 10px;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 11.5px;
       font-weight: 500;
+      letter-spacing: 0.01em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mob-nav-ico {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 30px;
+      border-radius: 999px;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.12s ease;
+    }
+    .mob-nav-btn:active .mob-nav-ico { transform: scale(0.92); }
+    .mob-nav-btn[aria-current="page"] { color: var(--text-title); }
+    .mob-nav-btn[aria-current="page"] .mob-nav-ico {
+      background: color-mix(in srgb, var(--neon-primary) 20%, transparent);
+      color: var(--neon-primary);
     }
     .mob-nav-count {
       position: absolute;
-      top: -6px;
-      right: -12px;
-      min-width: 16px;
+      top: -3px;
+      right: 8px;
+      min-width: 17px;
       padding: 0 4px;
       font-size: 10px;
-      line-height: 16px;
+      font-weight: 700;
+      line-height: 17px;
       text-align: center;
       border-radius: 999px;
-      background: var(--bg-surface-2);
-      border: 1px solid var(--line-color);
-      color: var(--text-title);
+      background: var(--neon-primary);
+      color: var(--bg-base);
       font-variant-numeric: tabular-nums;
+      box-shadow: 0 0 0 2px var(--bg-base);
+    }
+    .mob-nav-count[hidden] { display: none; }
+
+    /* Alttan açılan panel (telefon): Alanlar, Filtreler, Hesap */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      background: rgba(4, 6, 11, 0.58);
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+    .sheet-backdrop.on { opacity: 1; }
+    .mob-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 71;
+      max-height: 88dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid var(--line-color);
+      border-bottom: 0;
+      border-radius: 22px 22px 0 0;
+      box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.45);
+      transform: translateY(105%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mob-sheet.on { transform: none; }
+    .mob-sheet.dragging { transition: none; }
+    .sheet-grab { display: flex; justify-content: center; padding: 9px 0 3px; touch-action: none; }
+    .sheet-grab span { width: 40px; height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+    .sheet-head { display: flex; align-items: center; gap: 10px; padding: 4px 12px 10px 18px; touch-action: none; }
+    .sheet-head h2 { flex: 1; min-width: 0; font: 600 17px var(--font-title); color: var(--text-title); }
+    .sheet-head small { display: block; font: 400 12px var(--font-ui); color: var(--text-muted); margin-top: 1px; }
+    .sheet-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 2px 16px 14px; }
+    .sheet-foot { padding: 10px 16px 12px; border-top: 1px solid var(--line-color); }
+    .sheet-foot:empty { display: none; }
+    .sheet-sec { font: 600 11px var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 14px 2px 6px; }
+    .sheet-row {
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      text-align: left;
+      color: var(--text-title);
+      font-size: 14.5px;
+    }
+    .sheet-row:active { background: var(--bg-surface-2); }
+    .sheet-row .sub { margin-left: auto; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sheet-row.is-on { background: color-mix(in srgb, var(--neon-primary) 14%, transparent); color: var(--neon-primary); }
+    .sheet-row.is-on .sub { color: var(--neon-primary); }
+    #mobSheetBody #filterPanel { display: block; }
+    #mobSheetBody #filterPanel > div:first-child { border-top: 0; padding-top: 0; }
+    @media (prefers-reduced-motion: reduce) {
+      .mob-sheet, .sheet-backdrop, .mob-nav-ico { transition: none; }
     }
 
     /* Mobil dokunma hedefleri (>=40px) ve okunabilir yazı boyu */
@@ -476,6 +578,13 @@
         width: 3rem;
         font-size: 14px;
       }
+      /* Dokunma hedefleri >= 40 px (başlık, kart künyesi, sonuç satırı) */
+      #appModeSeg button { min-height: 38px; }
+      #themeToggleBtn { min-width: 40px; min-height: 40px; display: grid; place-items: center; }
+      #saveSearchBtn, #statusToolbar button { min-height: 38px; min-width: 40px; justify-content: center; }
+      #articlesContainer button[aria-label^="Dergiyi"] { min-width: 38px; min-height: 38px; display: inline-grid; place-items: center; }
+      #articlesContainer .btn-icon { min-width: 44px; min-height: 44px; }
+      #toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
       /* Alan seçici popover'ı tetikleyiciye değil başlığa hizalanır; aksi halde sağdan taşıyordu */
       #disciplineDropdownWrapper {
         position: static;
@@ -507,7 +616,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=24" />
+  <link rel="prefetch" href="atlas.html?v=25" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -516,7 +625,7 @@
     <div class="max-w-5xl mx-auto space-y-2">
       
       <!-- ROW 1: Shared Top-Left Mode Switcher, Unified Search Bar & Utility Controls -->
-      <div class="flex items-center justify-between gap-2.5 sm:gap-3">
+      <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-2.5 gap-y-2 sm:gap-3">
         
         <!-- Shared Mode Switcher: [ VibePsych | Okuma Atlası ] -->
         <div id="appModeSeg" role="group" aria-label="Uygulama Modu" class="inline-flex items-center p-[2px] rounded-[10px] bg-[var(--bg-base)] border border-[var(--line-color)] shrink-0">
@@ -535,8 +644,8 @@
         </div>
 
         <!-- Center: Clean Search Bar -->
-        <div class="relative flex-1 max-w-2xl">
-          <div class="flex items-center bg-[var(--bg-surface)] border border-[var(--line-color)] focus-within:border-[var(--neon-primary)] focus-within:shadow-[0_0_0_3px_var(--glow)] rounded-[10px] transition overflow-hidden">
+        <div class="relative flex-1 max-w-2xl order-last sm:order-none basis-full sm:basis-auto flex items-center gap-2">
+          <div class="flex-1 min-w-0 flex items-center bg-[var(--bg-surface)] border border-[var(--line-color)] focus-within:border-[var(--neon-primary)] focus-within:shadow-[0_0_0_3px_var(--glow)] rounded-[10px] transition overflow-hidden">
             
             <div class="relative flex-1 flex items-center">
               <i data-lucide="search" class="w-3.5 h-3.5 text-[var(--text-muted)] ml-3 shrink-0"></i>
@@ -564,6 +673,13 @@
           </div>
 
           <!-- Live Autocomplete Dropdown -->
+          <!-- Telefonda filtreler alttan açılan panelde -->
+          <button id="mobFilterBtn" type="button" onclick="toggleMobileFilters()" aria-haspopup="dialog" aria-label="Filtreler"
+            class="sm:hidden relative shrink-0 w-11 h-11 grid place-items-center rounded-[10px] glass-pill text-[var(--text-title)]">
+            <i data-lucide="sliders-horizontal" class="w-[18px] h-[18px]"></i>
+            <span id="mobFilterCount" class="mob-nav-count" style="top:-5px;right:-5px" hidden></span>
+          </button>
+
           <div id="autocompleteMenu" class="hidden absolute left-0 right-0 top-full mt-1.5 luxury-panel rounded-xl z-50 overflow-hidden divide-y divide-[var(--line-color)]"></div>
         </div>
 
@@ -605,18 +721,8 @@
 
       </div>
 
-      <!-- MOBİL: süzgeçleri açıp kapatan tek satır (masaüstünde gizli) -->
-      <button id="mobFilterToggle" type="button" onclick="toggleMobileFilters()" aria-expanded="false" aria-controls="filterPanel"
-        class="sm:hidden w-full flex items-center justify-between gap-2 px-3 min-h-[40px] rounded-[10px] glass-pill text-xs font-medium">
-        <span class="flex items-center gap-2 min-w-0">
-          <i data-lucide="sliders-horizontal" class="w-4 h-4 text-[var(--neon-primary)] shrink-0"></i>
-          <span class="title-ergonomic shrink-0">Filtreler</span>
-          <span id="mobFilterSummary" class="truncate text-[var(--text-body)]"></span>
-        </span>
-        <i data-lucide="chevron-down" id="mobFilterChevron" class="w-4 h-4 shrink-0 transition-transform"></i>
-      </button>
 
-      <div id="filterPanel" class="hidden sm:block space-y-2">
+      <div id="filterPanel" class="hidden sm:block space-y-2" data-home="1">
       <!-- ROW 2: WRAPPED ALL-VISIBLE FILTER BAR (NO HORIZONTAL SCROLL NEEDED!) -->
       <div class="relative pt-1.5 border-t border-[var(--line-color)]">
         <div class="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-1.5 text-[11px] font-mono">
@@ -1004,33 +1110,41 @@
     </div>
   </div>
 
-  <!-- MOBILE ERGONOMIC BOTTOM BAR -->
-  <nav aria-label="Ana gezinme" class="sm:hidden fixed bottom-0 inset-x-0 z-30 luxury-header border-t border-white/[0.08] px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex items-stretch text-[11px]">
-    <button onclick="resetToHome()" class="mob-nav-btn text-[var(--neon-primary)]">
-      <i data-lucide="compass" class="w-5 h-5"></i>
-      <span>Küresel</span>
+  <!-- MOBİL ALT GEZİNME: Keşfet · Alanlar · Kasam · Atlas · Hesap -->
+  <nav id="mobNav" aria-label="Ana gezinme" class="sm:hidden mob-nav">
+    <button id="navFeedBtn" onclick="navFeed()" class="mob-nav-btn" aria-current="page">
+      <span class="mob-nav-ico"><i data-lucide="compass" class="w-[22px] h-[22px]"></i></span>
+      <span>Keşfet</span>
     </button>
-    <button onclick="toggleDisciplinePopover(event)" class="mob-nav-btn title-ergonomic">
-      <i data-lucide="layers" class="w-5 h-5 text-[var(--neon-primary)]"></i>
-      <span>Alan</span>
+    <button id="navAreasBtn" onclick="openSheet('areas')" class="mob-nav-btn" aria-haspopup="dialog">
+      <span class="mob-nav-ico"><i data-lucide="layers" class="w-[22px] h-[22px]"></i><span id="mobFavCount" class="mob-nav-count" hidden></span></span>
+      <span>Alanlar</span>
     </button>
-    <button onclick="toggleFavJournalsStream()" class="mob-nav-btn text-[#D2042D]">
-      <span class="relative"><i data-lucide="heart" class="w-5 h-5"></i><span id="mobFavCount" class="mob-nav-count">0</span></span>
-      <span>Favori</span>
-    </button>
-    <button onclick="openDirectoryModal()" class="mob-nav-btn title-ergonomic">
-      <i data-lucide="library" class="w-5 h-5"></i>
-      <span>Dergiler</span>
-    </button>
-    <button onclick="toggleVaultMode()" class="mob-nav-btn title-ergonomic">
-      <span class="relative"><i data-lucide="folder-heart" class="w-5 h-5"></i><span id="mobVaultCount" class="mob-nav-count">0</span></span>
+    <button id="navVaultBtn" onclick="navVault()" class="mob-nav-btn">
+      <span class="mob-nav-ico"><i data-lucide="folder-heart" class="w-[22px] h-[22px]"></i><span id="mobVaultCount" class="mob-nav-count" hidden></span></span>
       <span>Kasam</span>
     </button>
-    <button onclick="switchToAtlas('atlas.html')" class="mob-nav-btn text-[var(--neon-primary)]">
-      <span class="relative"><i data-lucide="book-open-check" class="w-5 h-5"></i><span id="mobAtlasCount" class="mob-nav-count">0</span></span>
+    <button onclick="switchToAtlas('atlas.html')" class="mob-nav-btn">
+      <span class="mob-nav-ico"><i data-lucide="book-open-check" class="w-[22px] h-[22px]"></i><span id="mobAtlasCount" class="mob-nav-count" hidden></span></span>
       <span>Atlas</span>
     </button>
+    <button id="navAccountBtn" onclick="openSheet('account')" class="mob-nav-btn" aria-haspopup="dialog" hidden>
+      <span class="mob-nav-ico"><i data-lucide="circle-user-round" class="w-[22px] h-[22px]"></i></span>
+      <span id="navAccountLabel">Giriş</span>
+    </button>
   </nav>
+
+  <!-- ALTTAN AÇILAN PANEL (telefon) -->
+  <div id="sheetBackdrop" class="sheet-backdrop" hidden onclick="closeSheet()"></div>
+  <section id="mobSheet" class="mob-sheet" role="dialog" aria-modal="true" aria-labelledby="mobSheetTitle" hidden>
+    <div class="sheet-grab" aria-hidden="true"><span></span></div>
+    <div class="sheet-head">
+      <h2 id="mobSheetTitle"></h2>
+      <button onclick="closeSheet()" class="w-10 h-10 grid place-items-center rounded-full glass-pill text-[var(--text-body)]" aria-label="Kapat"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div id="mobSheetBody" class="sheet-body"></div>
+    <div id="mobSheetFoot" class="sheet-foot"></div>
+  </section>
 
   <!-- TOAST -->
   <div id="toast" class="fixed bottom-16 sm:bottom-6 right-4 left-4 sm:left-auto z-50 hidden luxury-panel border-[var(--neon-primary)] title-ergonomic px-4 py-2.5 rounded-xl text-xs font-mono shadow-2xl flex items-center gap-2">
@@ -1542,6 +1656,7 @@
     function initVibePsych() {
       paintTAOnly();
       updateSearchLogCount();
+      initSheetDrag();
       paintCloudBtn();
       initCloudAuth();
       setTimeout(() => checkFollowedSearches(), 4000);
@@ -1602,15 +1717,12 @@
 
       window.addEventListener('scroll', () => {
         const y = window.scrollY;
-        // Mobilde açık süzgeç paneli kaydırınca kapanır; sonuçlar ekranı kaplasın
-        if (y > 60 && isMobileViewport() && !document.getElementById('filterPanel').classList.contains('hidden')
-            && document.getElementById('disciplinePopover').classList.contains('hidden')) {
-          setMobileFilters(false);
-        }
+        // Telefonda Alanlar ve Filtreler alttan açılan panelde; kaydırma onları kapatmaz.
+        // (Eskiden filtre paneli açılınca sayfa uzuyor, tarayıcının kaydırma düzeltmesi Alan menüsünü hemen kapatıyordu.)
         const rail = document.getElementById('collapsibleJournalRail');
         if (y > 190 && y > lastScrollY + 14) {
           rail.classList.add('collapsed-nav');
-          closeDisciplinePopover();
+          if (!isMobileViewport()) closeDisciplinePopover();
         } else if (y < lastScrollY - 14 || y < 100) {
           rail.classList.remove('collapsed-nav');
         }
@@ -1629,6 +1741,7 @@
         }
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (e.key === 'Escape') {
+          closeSheet();
           closeAccountMenu();
           closeSearchLog();
           closeInspector();
@@ -1674,20 +1787,181 @@
     }
 
     function setMobileFilters(open) {
-      const panel = document.getElementById('filterPanel');
-      const btn = document.getElementById('mobFilterToggle');
-      if (!panel || !btn) return;
-      panel.classList.toggle('hidden', !open);
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      document.getElementById('mobFilterChevron').classList.toggle('rotate-180', open);
+      if (!isMobileViewport()) return;
+      if (open && sheetKind !== 'filters') openSheet('filters');
+      else if (!open && sheetKind === 'filters') closeSheet();
     }
 
     function toggleMobileFilters() {
-      const open = document.getElementById('filterPanel').classList.contains('hidden');
-      setMobileFilters(open);
+      if (sheetKind === 'filters') closeSheet(); else openSheet('filters');
+    }
+
+    // ALTTAN AÇILAN PANEL (telefon). Filtreler paneli DOM'da taşınır (olay bağları ve kimlikler korunur), kapanınca yerine döner.
+    let sheetKind = null;
+    let filterPanelHome = null;
+    let sheetBackPending = false;
+
+    function navFeed() {
+      if (sheetKind) closeSheet();
+      if (isVaultMode) { toggleVaultMode(); return; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navVault() {
+      if (sheetKind) closeSheet();
+      if (!isVaultMode) { toggleVaultMode(); window.scrollTo({ top: 0 }); return; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateNavActive() {
+      const set = (id, on) => { const b = document.getElementById(id); if (b) { if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); } };
+      set('navFeedBtn', !sheetKind && !isVaultMode);
+      set('navVaultBtn', !sheetKind && isVaultMode);
+      set('navAreasBtn', sheetKind === 'areas');
+      set('navAccountBtn', sheetKind === 'account');
+    }
+
+    function activeFilterCount() {
+      let n = 0;
+      if (activeYearFilter !== 'all') n++;
+      if (onlyQ1) n++;
+      if (onlyOA) n++;
+      if (searchTAOnly) n++;
+      if (langFilter) n++;
+      if (includePreprints) n++;
+      if (document.getElementById('methodSelect').value !== 'ALL') n++;
+      if (activeJournal) n++;
+      return n;
+    }
+
+    function renderAreasSheet() {
+      const row = (on, icon, label, sub, onclick) => `
+        <button class="sheet-row${on ? ' is-on' : ''}" onclick="${onclick}" ${on ? 'aria-current="true"' : ''}>
+          ${ic(icon, 'w-[18px] h-[18px] shrink-0')}<span class="min-w-0 truncate">${escapeHtml(label)}</span>${sub ? `<span class="sub">${escapeHtml(sub)}</span>` : ''}
+        </button>`;
+      const g = PSYCH_DOMAINS.find(d => d.isGlobal) || PSYCH_DOMAINS[0];
+      const onDomain = d => !isVaultMode && !isFavJournalsStream && activeDomain.id === d.id;
+      return `
+        <div class="sheet-sec">Akış</div>
+        ${row(onDomain(g), 'globe', 'Tüm alanlar (küresel)', `${g.journals.length} dergi`, `sheetPickDomain(${jsArg(g.id)})`)}
+        ${row(!isVaultMode && isFavJournalsStream, 'heart', 'Favori dergilerim', `${favJournals.length} dergi`, 'sheetPickFavorites()')}
+        <div class="sheet-sec">Alanlar</div>
+        ${PSYCH_DOMAINS.filter(d => !d.isGlobal).map(d => row(onDomain(d), onDomain(d) ? 'check' : 'layers', d.name, `${d.journals.length} dergi`, `sheetPickDomain(${jsArg(d.id)})`)).join('')}
+        <div class="sheet-sec">Dergiler</div>
+        ${row(false, 'library', 'Dergi dizini', '100.000+ dergi', 'closeSheet(); openDirectoryModal()')}`;
+    }
+
+    function renderAccountSheet() {
+      if (!FB_CFG) return '<p class="text-sm text-[var(--text-muted)]">Bulut eşitleme bu sitede kurulmamış.</p>';
+      if (!fbUser) {
+        return `
+          <p class="text-[14px] text-[var(--text-body)] leading-relaxed">Google hesabınla giriş yapınca notların, Kasam'ın, favori dergilerin ve arama kaydın cihazlar arasında eşitlenir. PDF'ler her cihazda yerel kalır.</p>
+          <button onclick="closeSheet(); cloudSignInOut()" class="btn-primary w-full mt-4 min-h-[48px] rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2">${ic('log-in', 'w-[18px] h-[18px]')}<span>Google ile giriş yap</span></button>`;
+      }
+      const name = fbUser.displayName || fbUser.email || 'Hesap';
+      const c = atlasCloud()?.CLOUD;
+      const err = c && c.status === 'err';
+      return `
+        <div class="flex items-center gap-3 py-2">
+          <span class="w-11 h-11 shrink-0 rounded-full grid place-items-center text-[17px] font-semibold bg-[var(--neon-primary)] text-[var(--bg-base)]">${escapeHtml((name.trim()[0] || '?').toLocaleUpperCase('tr-TR'))}</span>
+          <span class="min-w-0"><span class="block text-[15px] font-medium title-ergonomic truncate">${escapeHtml(name)}</span>${fbUser.email && fbUser.email !== name ? `<span class="block text-[13px] text-[var(--text-muted)] truncate">${escapeHtml(fbUser.email)}</span>` : ''}</span>
+        </div>
+        <div class="mt-2 px-3 py-2.5 rounded-xl bg-white/[0.03] text-[13px] flex items-start gap-2 ${err ? 'text-[#ff8a8a]' : 'text-[var(--text-body)]'}">
+          ${ic(err ? 'triangle-alert' : 'cloud', 'w-4 h-4 shrink-0 mt-0.5 ' + (err ? '' : 'text-[var(--neon-emerald)]'))}
+          <span><span id="accountSyncText">${escapeHtml(accountStatusText())}</span><br>Notlar ve listeler eşitleniyor; PDF'ler bu cihazda kalır.</span>
+        </div>
+        <button class="sheet-row mt-2" onclick="accountSyncNow()">${ic('refresh-cw', 'w-[18px] h-[18px]')}<span>Şimdi eşitle</span></button>
+        <button class="sheet-row" onclick="closeSheet(); accountSignOut()">${ic('log-out', 'w-[18px] h-[18px]')}<span>Çıkış yap</span></button>`;
+    }
+
+    function sheetPickDomain(id) { closeSheet(); selectDiscipline(id); window.scrollTo({ top: 0 }); }
+    function sheetPickFavorites() { closeSheet(); if (!isFavJournalsStream || isVaultMode) toggleFavJournalsStream(); window.scrollTo({ top: 0 }); }
+
+    function updateSheetCount() {
+      const el = document.getElementById('sheetResultCount');
+      if (el) el.textContent = quotaBlocked ? '' : `(${totalWorksCount.toLocaleString('tr-TR')})`;
+    }
+
+    function openSheet(kind) {
+      if (!isMobileViewport()) { if (kind === 'areas') toggleDisciplinePopover(); else if (kind === 'account') cloudSignInOut(); return; }
+      const switching = !!sheetKind;
+      if (sheetKind) closeSheet(true);
+      sheetKind = kind;
+      const sheet = document.getElementById('mobSheet');
+      const body = document.getElementById('mobSheetBody');
+      const foot = document.getElementById('mobSheetFoot');
+      const title = document.getElementById('mobSheetTitle');
+      foot.innerHTML = '';
+      if (kind === 'filters') {
+        const panel = document.getElementById('filterPanel');
+        filterPanelHome = { parent: panel.parentNode, next: panel.nextSibling };
+        body.innerHTML = '';
+        body.appendChild(panel);
+        panel.classList.remove('hidden');
+        title.innerHTML = `Filtreler<small id="mobFilterSummary"></small>`;
+        foot.innerHTML = `<button onclick="closeSheet()" class="btn-primary w-full min-h-[48px] rounded-xl text-[15px] font-semibold">Sonuçları göster <span id="sheetResultCount" class="num font-normal opacity-80"></span></button>`;
+        updateFilterSummary();
+        updateSheetCount();
+      } else if (kind === 'areas') {
+        title.textContent = 'Alanlar ve dergiler';
+        body.innerHTML = renderAreasSheet();
+      } else if (kind === 'account') {
+        title.textContent = fbUser ? 'Hesap' : 'Giriş yap';
+        body.innerHTML = renderAccountSheet();
+      }
+      const bd = document.getElementById('sheetBackdrop');
+      bd.hidden = false; sheet.hidden = false;
+      document.documentElement.style.overflow = 'hidden';
+      requestAnimationFrame(() => { bd.classList.add('on'); sheet.classList.add('on'); });
+      // Panelden panele geçişte geçmişe yeni kayıt eklenmez (geri tuşu bir kez basınca kapatsın)
+      try { if (switching) history.replaceState({ vpSheet: true }, ''); else history.pushState({ vpSheet: true }, ''); } catch (e) {}
+      updateNavActive();
+      refreshIcons();
+      setTimeout(() => sheet.querySelector('.sheet-head button')?.focus({ preventScroll: true }), 50);
+    }
+
+    function closeSheet(silent) {
+      if (!sheetKind) return;
+      const kind = sheetKind;
+      sheetKind = null;
+      const sheet = document.getElementById('mobSheet');
+      const bd = document.getElementById('sheetBackdrop');
+      if (kind === 'filters' && filterPanelHome) {
+        const panel = document.getElementById('filterPanel');
+        panel.classList.add('hidden');
+        filterPanelHome.parent.insertBefore(panel, filterPanelHome.next);
+        filterPanelHome = null;
+      }
+      sheet.classList.remove('on', 'dragging');
+      sheet.style.transform = '';
+      bd.classList.remove('on');
+      document.documentElement.style.overflow = '';
+      setTimeout(() => { if (!sheetKind) { sheet.hidden = true; bd.hidden = true; document.getElementById('mobSheetBody').innerHTML = ''; } }, silent ? 0 : 280);
+      if (!silent && history.state && history.state.vpSheet) { sheetBackPending = true; try { history.back(); } catch (e) { sheetBackPending = false; } }
+      updateNavActive();
+    }
+
+    // Aşağı sürükleyerek kapatma (tutamak ve başlık)
+    function initSheetDrag() {
+      const sheet = document.getElementById('mobSheet');
+      let y0 = null, dy = 0;
+      const start = e => { y0 = e.clientY; dy = 0; sheet.classList.add('dragging'); };
+      const move = e => { if (y0 == null) return; dy = Math.max(0, e.clientY - y0); sheet.style.transform = `translateY(${dy}px)`; };
+      const end = () => { if (y0 == null) return; y0 = null; sheet.classList.remove('dragging'); if (dy > 90) closeSheet(); else sheet.style.transform = ''; };
+      sheet.querySelectorAll('.sheet-grab, .sheet-head').forEach(h => {
+        h.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; h.setPointerCapture(e.pointerId); start(e); });
+        h.addEventListener('pointermove', move);
+        h.addEventListener('pointerup', end);
+        h.addEventListener('pointercancel', end);
+      });
+      // Kendi history.back() çağrımızın gecikmeli popstate'i, arada açılmış yeni paneli kapatmasın
+      window.addEventListener('popstate', () => { if (sheetBackPending) { sheetBackPending = false; return; } if (sheetKind) closeSheet(true); });
+      window.matchMedia('(max-width: 639px)').addEventListener('change', e => { if (!e.matches && sheetKind) closeSheet(true); });
     }
 
     function updateFilterSummary() {
+      const fc = document.getElementById('mobFilterCount');
+      if (fc) { const n = activeFilterCount(); fc.textContent = n; fc.hidden = n === 0; }
       const el = document.getElementById('mobFilterSummary');
       if (!el) return;
       const yr = activeYearFilter === 'all' ? 'Tüm yıllar'
@@ -1707,8 +1981,8 @@
 
     function toggleDisciplinePopover(event) {
       if (event) event.stopPropagation();
-      // Alt çubuktan "Alan" seçilince, popover kapalı panelin içinde kalmasın
-      if (isMobileViewport() && document.getElementById('filterPanel').classList.contains('hidden')) setMobileFilters(true);
+      // Telefonda alan seçici alttan açılan panel (kaydırma ve filtre paneliyle ilgisi yok)
+      if (isMobileViewport()) { openSheet('areas'); return; }
       const pop = document.getElementById('disciplinePopover');
       const chev = document.getElementById('disciplineChevron');
       const isHidden = pop.classList.contains('hidden');
@@ -1830,12 +2104,14 @@
       const atlasCnt = getAtlasPaperCount();
       document.getElementById('vaultCountBadge').textContent = vaultList.length;
       document.getElementById('favCountInline').textContent = favJournals.length;
-      document.getElementById('mobFavCount').textContent = favJournals.length;
-      document.getElementById('mobVaultCount').textContent = vaultList.length;
+      const setCount = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n > 99 ? '99+' : n; el.hidden = !n; } };
+      setCount('mobFavCount', isFavJournalsStream ? favJournals.length : 0);
+      setCount('mobVaultCount', vaultList.length);
       const ab = document.getElementById('atlasCountBadge');
       if (ab) ab.textContent = atlasCnt;
-      const mab = document.getElementById('mobAtlasCount');
-      if (mab) mab.textContent = atlasCnt;
+      setCount('mobAtlasCount', atlasCnt);
+      updateNavActive();
+      updateFilterSummary();
 
       const favBtn = document.getElementById('favStreamBtn');
       if (isFavJournalsStream) {
@@ -2689,7 +2965,10 @@
       });
 
       const pageLabel = currentPage > firstLoadedPage ? `${firstLoadedPage}–${currentPage}` : `${currentPage}`;
-      document.getElementById('resultsTelemetryText').textContent = isVaultMode
+      updateSheetCount();
+      document.getElementById('resultsTelemetryText').textContent = isVaultMode ? `Klasörde ${filtered.length} makale`
+        : isMobileViewport() ? `${totalWorksCount.toLocaleString('tr-TR')} sonuç${pageLabel !== '1' ? ` · sayfa ${pageLabel}` : ''}${onlyQ1 ? ' · Q1' : ''}`
+        : isVaultMode
         ? `Klasörde ${filtered.length} makale`
         : `Sayfa ${pageLabel} • ${filtered.length} gösterilen / ${currentArticles.length} yüklenen ${onlyQ1 ? '(Sadece Q1)' : '(Tüm İndeks)'} • Toplam: ${totalWorksCount.toLocaleString('tr-TR')}`;
 
@@ -3101,7 +3380,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=24';
+              frame.src = 'atlas.html?v=25';
               showVibeFromAtlas();
               return;
             }
@@ -3112,7 +3391,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=24';
+        frame.src = 'atlas.html?v=25';
       }
     }
 
@@ -3197,7 +3476,7 @@ ${art.abstractText}
         const [A, Au] = await Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-auth.js')]);
         const app = A.getApps().length ? A.getApp() : A.initializeApp(FB_CFG);
         fbAuth = { auth: Au.getAuth(app), Au };
-        Au.onAuthStateChanged(fbAuth.auth, u => { fbUser = u || null; paintCloudBtn(); });
+        Au.onAuthStateChanged(fbAuth.auth, u => { fbUser = u || null; paintCloudBtn(); if (sheetKind === 'account') { document.getElementById('mobSheetTitle').textContent = fbUser ? 'Hesap' : 'Giriş yap'; document.getElementById('mobSheetBody').innerHTML = renderAccountSheet(); refreshIcons(); } });
         paintCloudBtn();
       } catch (e) {
         console.warn('Firebase yüklenemedi', e);
@@ -3207,8 +3486,12 @@ ${art.abstractText}
     function paintCloudBtn() {
       const b = document.getElementById('cloudAuthBtn');
       if (!b) return;
-      b.classList.toggle('hidden', !FB_CFG);
-      b.classList.toggle('inline-flex', !!FB_CFG);
+      b.classList.add('hidden');
+      b.classList.toggle('sm:inline-flex', !!FB_CFG);
+      const nb = document.getElementById('navAccountBtn');
+      if (nb) nb.hidden = !FB_CFG;
+      const nl = document.getElementById('navAccountLabel');
+      if (nl) nl.textContent = fbUser ? ((fbUser.displayName || fbUser.email || 'Hesap').split(' ')[0]) : 'Giriş';
       if (fbUser) {
         const name = fbUser.displayName || fbUser.email || 'Hesap';
         b.innerHTML = `${ic('cloud', 'w-4 h-4 text-[var(--neon-emerald)]')}<span class="hidden sm:inline max-w-[9rem] truncate">${escapeHtml(name.split(' ')[0])}</span>`;

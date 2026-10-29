@@ -58,6 +58,7 @@ small{color:var(--faint);font-weight:400}
 .tab{padding:6px 14px;border-radius:9px;color:var(--muted);font-weight:500}
 .tab:hover{color:var(--fg)}
 .tab[aria-selected="true"]{color:var(--fg);background:var(--surface-2);box-shadow:0 0 0 1px var(--line)}
+.tab .tico{display:none}
 .grow{flex:1}
 .btn{padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:500;white-space:nowrap}
 .btn:hover{background:var(--surface-2)}
@@ -575,9 +576,14 @@ body.splitting #pdfScroll{pointer-events:none}
   #folderBar{order:6;flex:1 1 calc(100% - 52px);min-width:0;justify-content:space-between}
   #themeCycle{display:inline-flex;align-items:center;justify-content:center;order:7}
   #folderBar .fsel{flex:1;max-width:none;min-width:0}
-  .tabs{position:fixed;order:8;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:20;padding:4px;background:var(--panel);box-shadow:var(--shadow)}
-  .tab{flex:1;min-height:44px;padding:6px 8px;text-align:center}
-  #app{padding-bottom:78px}
+  .tabs{position:fixed;order:8;left:0;right:0;bottom:0;z-index:20;gap:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));border:0;border-top:1px solid color-mix(in srgb,var(--line) 80%,transparent);border-radius:0;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);box-shadow:none}
+  .tab{flex:1;min-width:0;min-height:54px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;color:var(--muted);-webkit-tap-highlight-color:transparent}
+  .tab[aria-selected="true"]{background:none;box-shadow:none;color:var(--fg)}
+  .tab .tico{display:grid;place-items:center;width:58px;height:30px;border-radius:999px;transition:background-color .2s,color .2s,transform .12s}
+  .tab .tico .ico{width:22px;height:22px;stroke-width:1.5}
+  .tab:active .tico{transform:scale(.92)}
+  .tab[aria-selected="true"] .tico{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+  #app{padding-bottom:84px}
   .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
   .top .btn,.top .seg button,.fsel{min-height:36px}
   .legend{bottom:8px}
@@ -684,11 +690,11 @@ body.splitting #pdfScroll{pointer-events:none}
       <button class="btn sm" id="btnFolders" type="button" title="Klasörleri yönet / Yeni klasör">Klasörler</button>
     </div>
     <nav class="tabs" role="tablist" aria-label="Ekranlar">
-      <button class="tab" role="tab" data-screen="kutuphane">Kütüphane</button>
-      <button class="tab" role="tab" data-screen="okuma">Okuma</button>
-      <button class="tab" role="tab" data-screen="harita">Harita</button>
-      <button class="tab" role="tab" data-screen="matris">Matris</button>
-      <button class="tab" role="tab" data-screen="ara">Ara</button>
+      <button class="tab" role="tab" data-screen="kutuphane"><span class="tico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg></span><span class="tlbl">Kütüphane</span></button>
+      <button class="tab" role="tab" data-screen="okuma"><span class="tico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></span><span class="tlbl">Okuma</span></button>
+      <button class="tab" role="tab" data-screen="harita"><span class="tico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/></svg></span><span class="tlbl">Harita</span></button>
+      <button class="tab" role="tab" data-screen="matris"><span class="tico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg></span><span class="tlbl">Matris</span></button>
+      <button class="tab" role="tab" data-screen="ara"><span class="tico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><span class="tlbl">Ara</span></button>
     </nav>
     <span class="grow"></span>
     <button class="btn primary btnnew" id="btnNew" title="Yeni makale ekle"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Yeni makale</span></button>
