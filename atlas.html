@@ -119,6 +119,19 @@ main{flex:1;min-height:0;position:relative}
 .in:focus,.find:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
 select.in{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
 .sec{display:flex;flex-direction:column;gap:8px}
+.extgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.esrow{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px}
+.esline{display:flex;gap:6px;min-width:0}
+.esline .in{min-width:0}
+.esline select.in{flex:1 1 60%}
+.esconv{font-size:12px;color:var(--muted)}
+.extfoot{display:flex;align-items:center;gap:8px}
+.muted{color:var(--faint)}
+.robrow{display:grid;grid-template-columns:1fr 170px;gap:8px;align-items:center;font-size:13px}
+.chip.rob-low{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent)}
+.chip.rob-some{color:#ffb454;border-color:rgba(255,180,84,.5)}
+.chip.rob-high{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 55%,transparent)}
+@media (max-width:820px){ .extgrid{grid-template-columns:1fr 1fr} .esline{flex-wrap:wrap} .esline .in{flex:1 1 30%} .robrow{grid-template-columns:1fr} }
 .sec>h3{margin:0;display:flex;align-items:center;gap:8px;font:600 11px var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .sec>h3 small{font:400 12px var(--font-ui);letter-spacing:0;text-transform:none}
 .find{width:100%;resize:none;overflow:hidden;padding:12px 14px;font:500 15px/1.5 var(--font-display);border-radius:14px;border:1.5px solid transparent;
@@ -860,6 +873,10 @@ body.splitting #pdfScroll{pointer-events:none}
     </div>
     <div class="field"><label>Kaynakça dışa aktar <small>(görünen klasördeki makaleler)</small></label>
       <div class="chips"><button class="btn" id="dBib">BibTeX (.bib)</button><button class="btn" id="dRis">RIS (.ris)</button></div>
+    </div>
+    <div class="field"><label>Sentez tabloları <small>(görünen klasör)</small></label>
+      <div class="chips"><button class="btn" id="dEs">Meta-analiz tablosu (CSV)</button><button class="btn" id="dRob">Yanlılık riski (robvis CSV)</button></div>
+      <small>Etki büyüklükleri r ve d'ye çevrilir (Fisher z ve varyanslarıyla; d varyansı eşit grup varsayar). RoB 2 dosyası robvis'e doğrudan yüklenir.</small>
       <small>Zotero, Mendeley ve EndNote içe aktarır. Ana bulgu ve klasör/etiketler not ve anahtar kelime olarak eklenir.</small>
     </div>
     <label style="font-size:12px;color:var(--muted)">Yalnızca notlar (PDF'siz, hafif)</label>
@@ -1363,7 +1380,7 @@ function renderLib(){
     return '<div class="librow'+(p.id===S.ui.paperId?' cur':'')+'" role="button" tabindex="0" data-lib="'+esc(p.id)+'" aria-label="'+esc((p.title||'Adsız makale')+', Okuma ekranında aç')+'">'
       +'<i class="libdot '+esc(st)+'" title="'+esc(LIB_ST[st]||'Durum yok')+'"></i>'
       +'<div class="libmain"><div class="libttl">'+esc(p.title||'Adsız makale')+'</div>'
-      +'<div class="libsub">'+(p.retracted?'<span class="chip retr">Geri çekildi</span>':'')+'<span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(p.folder?'<span class="chip">'+esc(p.folder)+'</span>':'')+(p.method?'<span class="chip">'+esc(p.method)+'</span>':'')+'</div>'
+      +'<div class="libsub">'+(p.retracted?'<span class="chip retr">Geri çekildi</span>':'')+'<span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+robChip(p)+(p.folder?'<span class="chip">'+esc(p.folder)+'</span>':'')+(p.method?'<span class="chip">'+esc(p.method)+'</span>':'')+'</div>'
       +(fd?'<div class="libfind">'+esc(fd)+'</div>':'')+'</div>'
       +'<div class="libind"><span class="'+(p.hasPdf?'on':'')+'" title="'+(p.hasPdf?'PDF eklendi':'PDF yok')+'">'+icoPdf+'</span>'
       +'<span class="'+(hl?'on':'')+'" title="'+hl+' vurgu kartı">'+icoHl+hl+'</span>'
@@ -1728,10 +1745,97 @@ function ptabsHtml(p){
     +'<button class="btn sm" data-act="nfocus" aria-pressed="'+!!S.ui.noteFocus+'" title="Not panelini genişlet / geri al">'+(S.ui.noteFocus?'Daralt':'Odak')+'</button>'
     +'<button class="btn sm" data-act="foldall" title="Tüm bölümleri daralt ya da aç">'+(allFolded()?'Tümünü aç':'Tümünü daralt')+'</button></div>'; }
 /* Katlanabilir bölümler: durum S.ui.fold içinde (true = kapalı) */
-const FOLD_DEF={kunye:'auto',abs:true};
+const FOLD_DEF={kunye:'auto',abs:true,ext:true,rob:true};
 function isFolded(k,p){ const f=(S.ui.fold||{}); if(k in f) return f[k]; const d=FOLD_DEF[k]; return d==='auto'?!!(p&&p.title):!!d; }
-const FOLD_KEYS=['kunye','find','notes','hl','abs','tags','links'];
+const FOLD_KEYS=['kunye','find','notes','ext','rob','hl','abs','tags','links'];
 function allFolded(){ const p=P(); return FOLD_KEYS.every(k=>isFolded(k,p)); }
+/* ---------- Veri çıkarımı (meta-analiz) ---------- */
+const ES_TYPES=[['r','r (korelasyon)'],['d','Cohen d'],['g','Hedges g'],['OR','Odds oranı'],['beta','β (standart)'],['other','Diğer']];
+const num=v=>{ const x=parseFloat(String(v==null?'':v).replace(',','.')); return isFinite(x)?x:null; };
+/* r ve d'ye çevirme (eşit grup büyüklüğü varsayımı; β ≈ r yaklaşımı). Diğer türler çevrilmez. */
+function esConv(e){
+  const v=num(e.value); if(v==null) return {r:null,d:null};
+  let r=null, d=null;
+  if(e.type==='r'||e.type==='beta'){ if(Math.abs(v)<1){ r=v; d=2*v/Math.sqrt(1-v*v); } }
+  else if(e.type==='d'||e.type==='g'){ d=v; r=v/Math.sqrt(v*v+4); }
+  else if(e.type==='OR'){ if(v>0){ d=Math.log(v)*Math.sqrt(3)/Math.PI; r=d/Math.sqrt(d*d+4); } }
+  return {r,d};
+}
+const f2=x=>x==null?'–':(Math.round(x*1000)/1000).toFixed(3).replace('.',',');
+function esConvHtml(e){ const c=esConv(e); return c.r==null?'<span class="muted">çevrilmedi</span>':'r = '+f2(c.r)+' · d = '+f2(c.d)+(e.type==='beta'?' <span class="muted">(β ≈ r)</span>':''); }
+function extHtml(p){
+  const es=p.es||[];
+  return '<div class="extgrid"><input class="in" data-f="n" inputmode="numeric" placeholder="Toplam N" aria-label="Toplam örneklem büyüklüğü" value="'+esc(p.n)+'">'
+    +'<input class="in" data-f="ageM" inputmode="decimal" placeholder="Yaş ort." aria-label="Yaş ortalaması" value="'+esc(p.ageM)+'">'
+    +'<input class="in" data-f="female" inputmode="decimal" placeholder="Kadın %" aria-label="Kadın yüzdesi" value="'+esc(p.female)+'">'
+    +'<input class="in" data-f="country" placeholder="Ülke" aria-label="Ülke" value="'+esc(p.country)+'"></div>'
+    +es.map(e=>'<div class="esrow" data-es="'+esc(e.id)+'">'
+      +'<div class="esline"><input class="in" data-k="outcome" placeholder="Sonuç / ilişki (ör. kaygı ile işleyen bellek)" value="'+esc(e.outcome)+'"><button class="btn sm" data-act="esdel" data-id="'+esc(e.id)+'" aria-label="Etki büyüklüğünü sil" title="Sil"><svg class="ico" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div>'
+      +'<div class="esline"><select class="in" data-k="type" aria-label="Etki büyüklüğü türü">'+ES_TYPES.map(([v,n])=>'<option value="'+v+'"'+(e.type===v?' selected':'')+'>'+n+'</option>').join('')+'</select>'
+      +'<input class="in" data-k="value" inputmode="decimal" placeholder="Değer" aria-label="Değer" value="'+esc(e.value)+'"></div>'
+      +'<div class="esline"><input class="in" data-k="lo" inputmode="decimal" placeholder="GA alt" aria-label="Güven aralığı alt sınır" value="'+esc(e.lo)+'">'
+      +'<input class="in" data-k="hi" inputmode="decimal" placeholder="GA üst" aria-label="Güven aralığı üst sınır" value="'+esc(e.hi)+'">'
+      +'<input class="in" data-k="n" inputmode="numeric" placeholder="n" aria-label="Bu analizdeki n" value="'+esc(e.n)+'"></div>'
+      +'<div class="esconv" data-esconv="'+esc(e.id)+'">'+esConvHtml(e)+'</div></div>').join('')
+    +'<div class="extfoot"><button class="btn sm" data-act="esadd">+ Etki büyüklüğü</button><span class="grow"></span><small class="muted">Klasörün tablosu: Veri &gt; Meta-analiz tablosu</small></div>';
+}
+function esCsv(){
+  const rows=[['Çalışma','Yıl','DOI','Sonuç','Tür','Değer','GA alt','GA üst','n','r','Fisher z','var(z)','d','var(d)','Toplam N','Yaş ort.','Kadın %','Ülke']];
+  vis().forEach(p=>(p.es||[]).forEach(e=>{
+    const c=esConv(e), n=num(e.n)||num(p.n), z=c.r!=null&&Math.abs(c.r)<1?Math.atanh(c.r):null;
+    const fx=(x,k)=>x==null?'':x.toFixed(k).replace('.',','), dc=v=>String(v==null?'':v).replace('.',','); /* ; ayraçlı dosya: ondalık virgül (Excel TR, R read.csv2) */
+    rows.push([shortLabel(p),p.year,p.doi,e.outcome,e.type,dc(e.value),dc(e.lo),dc(e.hi),e.n||p.n||'',
+      fx(c.r,4),fx(z,4),z!=null&&n>3?fx(1/(n-3),5):'',
+      fx(c.d,4),c.d!=null&&n>0?fx(4/n+c.d*c.d/(2*n),5):'',p.n||'',dc(p.ageM||''),dc(p.female||''),p.country||'']);
+  }));
+  if(rows.length<2) return toast('Görünen klasörde etki büyüklüğü yok');
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  if(dlFile('meta-analiz-tablosu-'+today()+'.csv',csv,'text/csv;charset=utf-8')) toast((rows.length-1)+' etki büyüklüğü indirildi');
+}
+/* ---------- Yanlılık riski / kalite değerlendirmesi ---------- */
+const ROB2_D=[['D1','Randomizasyon süreci'],['D2','Amaçlanan müdahaleden sapmalar'],['D3','Eksik sonuç verisi'],['D4','Sonucun ölçümü'],['D5','Raporlanan sonucun seçimi']];
+const ROB2_J={low:'Düşük',some:'Bazı endişeler',high:'Yüksek'}, ROB2_EN={low:'Low',some:'Some concerns',high:'High'};
+const JBI_CS=['Örnekleme dahil etme ölçütleri açıkça tanımlanmış mı?','Katılımcılar ve ortam ayrıntılı tanımlanmış mı?','Maruziyet / yordayıcı geçerli ve güvenilir biçimde ölçülmüş mü?','Durumu ölçmek için nesnel, standart ölçütler kullanılmış mı?','Karıştırıcı değişkenler belirlenmiş mi?','Karıştırıcı değişkenlerle baş etme stratejileri belirtilmiş mi?','Sonuçlar geçerli ve güvenilir biçimde ölçülmüş mü?','Uygun istatistiksel analiz kullanılmış mı?'];
+const JBI_A={y:'Evet',n:'Hayır',u:'Belirsiz',na:'Uygulanamaz'};
+function robOverallAuto(r){ const v=ROB2_D.map(([k])=>r[k]); if(v.includes('high')) return 'high'; if(v.includes('some')) return 'some'; if(v.every(x=>x==='low')) return 'low'; return ''; }
+function jbiScore(r){ const a=JBI_CS.map((_,i)=>r['q'+(i+1)]).filter(Boolean), app=a.filter(x=>x!=='na'); return app.length?{yes:app.filter(x=>x==='y').length,of:app.length}:null; }
+function robChip(p){
+  const r=p.rob||{};
+  if(r.tool==='rob2'){ const o=r.overall||robOverallAuto(r); return o?'<span class="chip rob-'+o+'" title="RoB 2 genel yanlılık riski">RoB: '+ROB2_J[o]+'</span>':''; }
+  if(r.tool==='jbi'){ const sc=jbiScore(r); return sc?'<span class="chip" title="JBI analitik kesitsel kontrol listesi: evet / uygulanabilir madde">JBI '+sc.yes+'/'+sc.of+'</span>':''; }
+  return '';
+}
+function robHtml(p){
+  const r=p.rob||{};
+  const sel=(k,opts,v,lbl)=>'<select class="in" data-rob="'+k+'" aria-label="'+esc(lbl)+'"><option value="">–</option>'+Object.entries(opts).map(([x,n])=>'<option value="'+x+'"'+(v===x?' selected':'')+'>'+n+'</option>').join('')+'</select>';
+  let body='<select class="in" data-rob="tool" aria-label="Değerlendirme aracı"><option value="">Araç seç</option><option value="rob2"'+(r.tool==='rob2'?' selected':'')+'>RoB 2 (randomize deneyler)</option><option value="jbi"'+(r.tool==='jbi'?' selected':'')+'>JBI analitik kesitsel (korelasyonel çalışmalar)</option></select>';
+  if(r.tool==='rob2'){
+    const auto=robOverallAuto(r);
+    body+=ROB2_D.map(([k,n])=>'<div class="robrow"><span>'+k+' · '+esc(n)+'</span>'+sel(k,ROB2_J,r[k],n)+'</div>').join('')
+      +'<div class="robrow"><b>Genel</b>'+sel('overall',ROB2_J,r.overall,'Genel yanlılık riski')+'</div>'
+      +(auto?'<small class="muted">Alan kararlarına göre öneri: '+ROB2_J[auto]+(auto==='some'?' (birden çok alanda endişe varsa “Yüksek” düşünülebilir)':'')+'</small>':'');
+  }else if(r.tool==='jbi'){
+    const sc=jbiScore(r);
+    body+=JBI_CS.map((q,i)=>'<div class="robrow"><span>'+(i+1)+'. '+esc(q)+'</span>'+sel('q'+(i+1),JBI_A,r['q'+(i+1)],q)+'</div>').join('')
+      +(sc?'<small class="muted">Evet: '+sc.yes+' / '+sc.of+' uygulanabilir madde</small>':'');
+  }
+  if(r.tool) body+='<textarea class="in" data-rob="note" rows="2" placeholder="Gerekçe ve destekleyici alıntılar">'+esc(r.note||'')+'</textarea>';
+  return body+'<div class="extfoot"><span class="grow"></span><small class="muted">Klasörün tablosu: Veri &gt; Yanlılık riski (robvis)</small></div>';
+}
+function robCsv(){
+  const L=vis().filter(p=>p.rob&&p.rob.tool);
+  if(!L.length) return toast('Görünen klasörde yanlılık değerlendirmesi yok');
+  const r2=L.filter(p=>p.rob.tool==='rob2'), jb=L.filter(p=>p.rob.tool==='jbi'); const q=c=>'"'+String(c==null?'':c).replace(/"/g,'""')+'"';
+  if(r2.length){ /* robvis (McGuinness ve Higgins) RoB 2 şablonu: Study, D1-D5, Overall, Weight */
+    const rows=[['Study','D1','D2','D3','D4','D5','Overall','Weight']].concat(r2.map(p=>{ const r=p.rob; return [shortLabel(p)].concat(ROB2_D.map(([k])=>ROB2_EN[r[k]]||'No information'),[ROB2_EN[r.overall||robOverallAuto(r)]||'No information',1]); }));
+    dlFile('robvis-rob2-'+today()+'.csv',rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv;charset=utf-8');
+  }
+  if(jb.length){
+    const rows=[['Çalışma'].concat(JBI_CS.map((_,i)=>'S'+(i+1)),['Evet','Uygulanabilir','Gerekçe'])].concat(jb.map(p=>{ const r=p.rob, sc=jbiScore(r)||{yes:0,of:0}; return [shortLabel(p)].concat(JBI_CS.map((_,i)=>JBI_A[r['q'+(i+1)]]||''),[sc.yes,sc.of,r.note||'']); }));
+    dlFile('jbi-kesitsel-'+today()+'.csv','﻿'+rows.map(r=>r.map(q).join(';')).join('\r\n'),'text/csv;charset=utf-8');
+  }
+  toast((r2.length?r2.length+' RoB 2 (robvis)':'')+(r2.length&&jb.length?' ve ':'')+(jb.length?jb.length+' JBI':'')+' değerlendirmesi indirildi');
+}
 function foldSec(k,title,body,extra,p){ return '<details class="fold sec" data-fold="'+k+'"'+(isFolded(k,p)?'':' open')+'><summary>'+title+(extra||'')+'</summary>'+body+'</details>'; }
 /* ---------- Notlar: tek Markdown belgesi (Obsidian benzeri) ---------- */
 /* Belge kaynaktır. Bu başlıkların altındaki metin eski alanlara eşitlenir; Matris, arama ve dışa aktarım çalışmaya devam eder */
@@ -2120,7 +2224,10 @@ function renderNote(){
     +'</div><div class="cards" data-kind="*"></div>','',p);
   const absSec=p.abstract?foldSec('abs','Makale özeti <small>OpenAlex</small>','<p class="absp">'+esc(p.abstract)+'</p>','',p):'';
   const retr=p.retracted?'<div class="retrbox" role="note"><b>Geri çekilmiş makale.</b> Dergi bu çalışmayı geri çekti; bulgularına dayanma. Atıf yapacaksan geri çekildiğini belirt.</div>':'';
-  el.innerHTML=ptabsHtml(p)+'<div class="inner">'+retr+foldSec('kunye','Künye',head,kline,p)+findSec+notesSec+hlSec+absSec
+  const esN=(p.es||[]).length, rc=robChip(p);
+  const extSec=foldSec('ext','Veri çıkarımı','<div id="extBox">'+extHtml(p)+'</div>','<span class="kline">'+(esN?esN+' etki büyüklüğü':'')+(p.n?(esN?' · ':'')+'N = '+esc(p.n):'')+'</span>',p);
+  const robSec=foldSec('rob','Yanlılık riski','<div id="robBox">'+robHtml(p)+'</div>','<span class="kline">'+rc.replace(/<[^>]+>/g,'')+'</span>',p);
+  el.innerHTML=ptabsHtml(p)+'<div class="inner">'+retr+foldSec('kunye','Künye',head,kline,p)+findSec+notesSec+extSec+robSec+hlSec+absSec
    +foldSec('tags','Etiketler','<div class="chips" id="tagBox"></div>','',p)
    +'<details class="fold sec" data-fold="links"'+(isFolded('links',p)?'':' open')+'><summary>Bağlantılar <small>('+links.length+')</small></summary>'
    +links.map(l=>{ const o=byId(l.from===p.id?l.to:l.from); const t=typeOf(l.type); return '<button class="lkrow" data-act="lk" data-id="'+l.id+'"><b><i class="dot" style="--dc:'+t.color+'"></i>'+esc(t.name)+' <span>'+(l.from===p.id?'→':'←')+' '+esc(o?shortLabel(o):'?')+'</span></b><span>'+esc(l.reason)+'</span></button>'; }).join('')
@@ -2154,6 +2261,8 @@ np.addEventListener('input',e=>{
   if(t.dataset.f){ p[t.dataset.f]=t.value; if(t.tagName==='TEXTAREA') autosize(t); if(t.dataset.f==='title'||t.dataset.f==='authors'||t.dataset.f==='year') updateSw(); if(t.dataset.wc){ const w=$('#'+t.dataset.wc); if(w) w.textContent=words(t.value)+' kelime'; } if(t.dataset.f==='notes'){ syncFromNotes(p); if(WK.open) wikiUpdate(); const rd=$('#mdRead',np); if(rd){ clearTimeout(t._rt); t._rt=setTimeout(()=>{ rd.innerHTML=String(p.notes||'').trim()?mdRender(p.notes):'<p class="empty">Henüz not yok.</p>'; },150); } }
     if(t.dataset.f==='notes'||t.dataset.f==='finding'){ clearTimeout(cpT); cpT=setTimeout(copyHint,500); } save(); }
   else if(t.hasAttribute('data-cn')){ const h=p.hl.find(x=>x.id===t.closest('.hcard').dataset.id); if(h){ h.comment=t.value; save(); } autosize(t); }
+  else if(t.dataset.k&&t.closest('[data-es]')){ const id=t.closest('[data-es]').dataset.es, e=(p.es||[]).find(x=>x.id===id); if(e){ e[t.dataset.k]=t.value; save(); const c=$('[data-esconv="'+id+'"]',np); if(c) c.innerHTML=esConvHtml(e); } }
+  else if(t.dataset.rob){ p.rob=p.rob||{}; p.rob[t.dataset.rob]=t.value; save(); if(t.tagName==='SELECT'){ $('#robBox',np).innerHTML=robHtml(p); const fs=$('[data-fold="rob"] .kline',np); if(fs) fs.textContent=robChip(p).replace(/<[^>]+>/g,''); } }
 });
 np.addEventListener('change',e=>{
   const p=P(); if(!p||e.target.tagName!=='SELECT'||!e.target.dataset.f) return;
@@ -2228,6 +2337,8 @@ np.addEventListener('click',async e=>{
   const card=b.closest('.hcard'); const h=card&&p&&p.hl.find(x=>x.id===card.dataset.id);
   if(act==='add') return openAdd();
   if(!p) return;
+  if(act==='esadd'){ p.es=p.es||[]; p.es.push({id:uid(),outcome:'',type:'r',value:'',lo:'',hi:'',n:''}); save(); $('#extBox',np).innerHTML=extHtml(p); const r=$$('#extBox [data-k="outcome"]',np).pop(); if(r) r.focus(); return; }
+  if(act==='esdel'){ p.es=(p.es||[]).filter(x=>x.id!==b.dataset.id); save(); $('#extBox',np).innerHTML=extHtml(p); return; }
   if(extraAct(act,b,p)) return;
   if(act==='go'&&h) goToHl(h.id);
   else if(act==='open') b.classList.toggle('open');
@@ -3080,6 +3191,7 @@ function exportCites(fmt){
 }
 $('#dFull').onclick=fullBackup;
 $('#dBib').onclick=()=>exportCites('bib');
+$('#dEs').onclick=esCsv; $('#dRob').onclick=robCsv;
 $('#dRis').onclick=()=>exportCites('ris');
 /* Açılışta: yedek gecikmişse günde en fazla bir kez hatırlat */
 setTimeout(()=>{ updBackupSt(); const d=backupAgeDays();
