@@ -554,7 +554,7 @@ body.splitting #pdfScroll{pointer-events:none}
 .droplink:hover{text-decoration:underline}
 .bkbox{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .bkrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#dBackupSt.warn{color:var(--danger)}
+#dBackupSt.warn,#cloudSt.warn{color:var(--danger)}
 #btnData.due{position:relative}
 #btnData.due::after{content:'';position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
 /* Orta genişlikte (laptop) üst çubuk ikinci satıra taşmasın */
@@ -863,6 +863,10 @@ body.splitting #pdfScroll{pointer-events:none}
 <dialog id="dlgData">
   <div class="dlg">
     <h2>Veri</h2>
+    <div class="bkbox" id="cloudBox" hidden>
+      <div class="bkrow"><b style="font-size:14px">Bulut eşitleme</b><span class="grow"></span><button class="btn" id="cloudNow" hidden>Şimdi eşitle</button><button class="btn primary" id="cloudBtn">Google ile giriş yap</button></div>
+      <small id="cloudSt">Giriş yapınca notların, vurguların, klasörlerin ve VibePsych verilerin Google hesabına eşitlenir; telefonda ve başka bilgisayarda aynı veriler açılır. PDF'ler her cihazda yerel kalır.</small>
+    </div>
     <p style="margin:0;color:var(--muted)">Notların ve PDF'lerin yalnızca bu tarayıcıda durur. Tarayıcı verisini silersen ya da başka cihaza geçersen kaybolur; haftada bir tam yedek al.</p>
     <div class="bkbox">
       <div class="bkrow"><button class="btn primary" id="dFull">Tam yedek indir (PDF dahil)</button><small id="dBackupSt"></small></div>
@@ -904,6 +908,7 @@ body.splitting #pdfScroll{pointer-events:none}
 </dialog>
 
 <script src="vendor/pdf.min.js"></script>
+<script src="firebase-config.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1014,7 +1019,7 @@ function syncVibeCols(){
     if(merged.length) localStorage.setItem('vibepsych_collections',JSON.stringify(merged));
   }catch(e){}
 }
-function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ writeState(); syncVibeCols(); if(window.parent&&window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.onAtlasSave) window.parent.__vibeShell.onAtlasSave(); }catch(e){} if(DESK) scheduleVault(); },250); }
+function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ writeState(); syncVibeCols(); if(typeof cloudSchedule==='function') cloudSchedule(); if(window.parent&&window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.onAtlasSave) window.parent.__vibeShell.onAtlasSave(); }catch(e){} if(DESK) scheduleVault(); },250); }
 const P=()=>S.papers.find(p=>p.id===S.ui.paperId);
 const byId=id=>S.papers.find(p=>p.id===id);
 const typeOf=id=>S.types.find(t=>t.id===id)||{id,name:id,color:'var(--accent)'};
@@ -3328,6 +3333,157 @@ if(DESK){
     else if(!DESK.isWebFs&&!S.ui.vaultAsked){ S.ui.vaultAsked=true; save(); setTimeout(()=>{ openData(); },700); } })();
 }
 
+/* ---------- Bulut eşitleme (Firebase: Google girişi + Firestore) ----------
+   users/{uid}/papers/{id}, users/{uid}/vault/{id}, users/{uid}/meta/{atlas|vibe}; her belge {id, u, d (JSON metni) | del:true}.
+   Belge başına "son yazan kazanır" (u = zaman damgası). CLOUD.known[anahtar] = en son eşitlenen içeriğin özeti ve u'su;
+   yerel özet farklıysa gönderilir, uzaktaki u daha yeniyse uygulanır. PDF, vurgu görüntüleri ve not Markdown kopyası yerel kalır. */
+const CLOUD_CFG=window.VIBE_FIREBASE_CONFIG||(window.parent!==window&&window.parent.VIBE_FIREBASE_CONFIG)||null;
+const CLOUD_LS='okuma-atlasi-cloud', FB_V='10.12.2';
+const CLOUD={api:null,user:null,on:false,known:{},pushT:null,applying:false,status:'',err:'',last:0,choice:null,unsub:null,vibeH:''};
+const CLOUD_LOCAL=new Set(['hasPdf','notes']);
+const VIBE_SYNC={fav:'vibepsych_fav_journals',collections:'vibepsych_collections',searchLog:'vibepsych_search_log',citeLang:'vibepsych_cite_lang',apaSentence:'vibepsych_apa_sentence',taOnly:'vibepsych_ta_only',lang:'vibepsych_lang',preprint:'vibepsych_preprint'};
+const cloudHash=str=>{ let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))|0; return (h>>>0).toString(36)+'.'+str.length; };
+const cloudDocId=id=>String(id).replace(/^https?:\/\/openalex\.org\//,'').replace(/[\/.#$\[\]]/g,'_').slice(0,400)||'x';
+const pCloudJson=p=>JSON.stringify(p,(k,v)=>CLOUD_LOCAL.has(k)?undefined:v);
+const lsJSON=(k,f)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?f:v; }catch(e){ return f; } };
+function cloudLoadKnown(uid){ const d=lsJSON(CLOUD_LS,{}); return d&&d.uid===uid&&d.k?d.k:{}; }
+function cloudSaveKnown(){ if(!CLOUD.user) return; try{ localStorage.setItem(CLOUD_LS,JSON.stringify({uid:CLOUD.user.uid,k:CLOUD.known})); }catch(e){} }
+function atlasMeta(){ return {links:S.links,folders:S.folders,types:S.types,themes:S.themes,imports:S.imports||[],view:S.view||null,reviewer:S.ui.reviewer||''}; }
+function vibeMeta(){ const o={}; Object.entries(VIBE_SYNC).forEach(([k,key])=>{ const v=localStorage.getItem(key); if(v!=null) o[k]=v; }); return o; }
+/* anahtar -> {id, json} (yerel güncel durum) */
+function cloudLocal(){
+  const m=new Map();
+  S.papers.forEach(p=>m.set('p/'+cloudDocId(p.id),{id:p.id,json:pCloudJson(p)}));
+  m.set('m/atlas',{id:'atlas',json:JSON.stringify(atlasMeta())});
+  m.set('m/vibe',{id:'vibe',json:JSON.stringify(vibeMeta())});
+  const vault=lsJSON('vibepsych_vault',[]); (Array.isArray(vault)?vault:[]).forEach(a=>{ if(a&&a.id) m.set('v/'+cloudDocId(a.id),{id:a.id,json:JSON.stringify(a)}); });
+  return m;
+}
+function cloudStatus(st,err){
+  CLOUD.status=st; if(err) CLOUD.err=String((err&&(err.code||err.message))||err);
+  if(st==='ok') CLOUD.last=Date.now();
+  const el=$('#cloudSt'); if(!el) return;
+  if(!CLOUD.user){ el.textContent='Giriş yapınca notların, vurguların, klasörlerin ve VibePsych verilerin Google hesabına eşitlenir; telefonda ve başka bilgisayarda aynı veriler açılır. PDF\'ler her cihazda yerel kalır.'; el.classList.remove('warn'); return; }
+  const who=CLOUD.user.email||CLOUD.user.displayName||'Google hesabı';
+  el.textContent=who+' · '+(st==='sync'?'eşitleniyor…':st==='err'?'eşitleme hatası: '+CLOUD.err:CLOUD.last?'son eşitleme '+new Date(CLOUD.last).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'bağlanıyor…')+'. PDF\'ler bu cihazda kalır.';
+  el.classList.toggle('warn',st==='err');
+}
+function cloudPaintBtn(){ const b=$('#cloudBtn'); if(!b) return; b.textContent=CLOUD.user?'Çıkış yap':'Google ile giriş yap'; b.classList.toggle('primary',!CLOUD.user); $('#cloudNow').hidden=!CLOUD.user; cloudStatus(CLOUD.status); }
+function cloudSchedule(){ if(!CLOUD.on||CLOUD.applying) return; clearTimeout(CLOUD.pushT); CLOUD.pushT=setTimeout(cloudPush,2500); }
+async function cloudPush(){
+  if(!CLOUD.on) return;
+  const loc=cloudLocal(), now=Date.now(), writes=[], prev={};
+  loc.forEach((v,key)=>{ const h=cloudHash(v.json), k=CLOUD.known[key]; if(!k||k.h!==h){ prev[key]=k; writes.push([key,{id:v.id,u:now,d:v.json}]); CLOUD.known[key]={h,u:now}; } });
+  Object.keys(CLOUD.known).forEach(key=>{ if(key[0]!=='m'&&!loc.has(key)&&CLOUD.known[key].h!=='DEL'){ prev[key]=CLOUD.known[key]; writes.push([key,{id:key.slice(2),u:now,del:true}]); CLOUD.known[key]={h:'DEL',u:now}; } });
+  CLOUD.vibeH=cloudHash(JSON.stringify(vibeMeta())+localStorage.getItem('vibepsych_vault'));
+  if(!writes.length){ if(CLOUD.status!=='err') cloudStatus('ok'); return; }
+  cloudStatus('sync');
+  try{ await CLOUD.api.write(CLOUD.user.uid,writes); cloudSaveKnown(); cloudStatus('ok'); }
+  catch(e){ writes.forEach(([key])=>{ if(prev[key]) CLOUD.known[key]=prev[key]; else delete CLOUD.known[key]; }); cloudStatus('err',e); }
+}
+function cloudRerender(){
+  renderFolderFilter(); updateSw();
+  const typing=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#notePane');
+  if(S.ui.screen==='okuma'){ if(!typing){ renderNote(); openPdf(); } }
+  else if(S.ui.screen==='harita') renderMap(); else if(S.ui.screen==='kutuphane') renderLib(); else if(S.ui.screen==='matris') renderMatrix(); else if(S.ui.screen==='ara') runSearch();
+}
+const unionBy=(a,b,k)=>{ const m=new Map(); (a||[]).forEach(x=>m.set(k(x),x)); (b||[]).forEach(x=>{ if(!m.has(k(x))) m.set(k(x),x); }); return [...m.values()]; };
+/* Uzaktan gelen belgeleri uygula. first = bu dinleyicinin ilk teslimi (ilk eşitlemede birleştirme). */
+function cloudApply(changes,first){
+  const firstSync=first&&!Object.keys(CLOUD.known).some(k=>k[0]==='p'||k[0]==='v');
+  if(firstSync&&CLOUD.choice==null){
+    const loc=cloudLocal();
+    const diff=changes.filter(c=>!c.del&&c.d&&(c.key[0]==='p'||c.key[0]==='v')&&loc.has(c.key)&&cloudHash(loc.get(c.key).json)!==cloudHash(c.d)).length;
+    CLOUD.choice=diff?(confirm('Bu cihazda ve bulutta aynı '+diff+' kaydın farklı sürümleri var.\n\nTamam: buluttaki sürümler kullanılsın.\nİptal: bu cihazdaki sürümler kalsın ve buluta yazılsın.\n\nYalnızca bir tarafta olan kayıtlar her durumda birleştirilir.')?'remote':'local'):'remote';
+  }
+  let vibe=false, any=false; CLOUD.applying=true;
+  try{
+    for(const c of changes){
+      const k=CLOUD.known[c.key];
+      if(k&&(c.u||0)<=k.u) continue; /* kendi yazdığımız ya da eski */
+      const h=c.del?'DEL':cloudHash(c.d||'');
+      if(firstSync&&CLOUD.choice==='local'&&c.key[0]!=='m'&&cloudLocal().has(c.key)){ CLOUD.known[c.key]={h:'?',u:c.u}; continue; } /* yerel kalsın: bir sonraki gönderimde üzerine yazılır */
+      if(c.key[0]==='p'){
+        const cur=byId(c.id);
+        if(c.del){ if(cur) removePaper(c.id); }
+        else{ let np; try{ np=JSON.parse(c.d); }catch(e){ continue; }
+          np.hl=np.hl||[]; np.tags=np.tags||[]; np.themes=np.themes||{}; np.hasPdf=cur?!!cur.hasPdf:false;
+          if(np.notesV===3&&typeof np.notesHtml==='string') np.notes=htmlToMd(np.notesHtml);
+          if(cur) S.papers[S.papers.indexOf(cur)]=np; else S.papers.push(np);
+          if(np.folder) ensureFolder(np.folder); }
+        any=true;
+      }else if(c.key==='m/atlas'&&!c.del){ let d; try{ d=JSON.parse(c.d); }catch(e){ continue; }
+        if(first){ S.links=unionBy(S.links,d.links,l=>l.id); S.folders=[...new Set([...(S.folders||[]),...(d.folders||[])])]; S.types=unionBy(S.types,d.types,t=>t.id); S.themes=unionBy(S.themes,d.themes,t=>t.id); S.imports=unionBy(S.imports,d.imports,i=>i.id); }
+        else{ S.links=(d.links||[]).filter(l=>byId(l.from)&&byId(l.to)); S.folders=d.folders||S.folders; S.types=d.types&&d.types.length?d.types:S.types; S.themes=d.themes||S.themes; S.imports=d.imports||[]; if(d.view) S.view=d.view; }
+        if(d.reviewer&&!S.ui.reviewer) S.ui.reviewer=d.reviewer;
+        any=true;
+      }else if(c.key==='m/vibe'&&!c.del){ let d; try{ d=JSON.parse(c.d); }catch(e){ continue; }
+        Object.entries(VIBE_SYNC).forEach(([k,key])=>{ if(d[k]==null) return;
+          if(first&&(k==='fav'||k==='collections'||k==='searchLog')){ const a=lsJSON(key,[]), b=(()=>{ try{ return JSON.parse(d[k]); }catch(e){ return []; } })();
+            const keyOf=k==='fav'?(x=>x&&(x.issn||x.name)):k==='searchLog'?(x=>x&&x.id):(x=>x);
+            try{ localStorage.setItem(key,JSON.stringify(k==='collections'?[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])]:unionBy(Array.isArray(a)?a:[],Array.isArray(b)?b:[],keyOf))); }catch(e){} }
+          else{ try{ localStorage.setItem(key,d[k]); }catch(e){} } });
+        vibe=true;
+      }else if(c.key[0]==='v'){
+        const list=lsJSON('vibepsych_vault',[]), arr=Array.isArray(list)?list:[], i=arr.findIndex(a=>a&&a.id===c.id);
+        if(c.del){ if(i>=0) arr.splice(i,1); } else{ try{ const a=JSON.parse(c.d); if(i>=0) arr[i]=a; else arr.push(a); }catch(e){ continue; } }
+        try{ localStorage.setItem('vibepsych_vault',JSON.stringify(arr)); }catch(e){}
+        vibe=true;
+      }
+      CLOUD.known[c.key]={h,u:c.u||0};
+    }
+  }finally{ CLOUD.applying=false; }
+  cloudSaveKnown();
+  if(any){ writeState(); syncVibeCols(); cloudRerender(); }
+  if(vibe){ CLOUD.vibeH=cloudHash(JSON.stringify(vibeMeta())+localStorage.getItem('vibepsych_vault')); try{ if(window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.reloadFromStorage) window.parent.__vibeShell.reloadFromStorage(); }catch(e){} }
+  cloudSchedule(); /* birleştirmeden sonra yalnızca yerelde olanlar gönderilir */
+  if(CLOUD.status!=='err') cloudStatus('ok');
+}
+function cloudOnUser(u){
+  if(CLOUD.unsub){ CLOUD.unsub(); CLOUD.unsub=null; }
+  CLOUD.user=u||null; CLOUD.on=!!u; CLOUD.choice=null;
+  if(u){ CLOUD.known=cloudLoadKnown(u.uid); cloudStatus('sync'); CLOUD.unsub=CLOUD.api.listen(u.uid,(changes,first)=>cloudApply(changes,first),e=>cloudStatus('err',e)); }
+  else cloudStatus('');
+  cloudPaintBtn();
+}
+async function cloudInit(){
+  if(!CLOUD_CFG||CLOUD.api) return;
+  $('#cloudBox').hidden=false;
+  try{
+    const B='https://www.gstatic.com/firebasejs/'+FB_V+'/';
+    const [A,Au,F]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js')]);
+    const app=A.getApps().length?A.getApp():A.initializeApp(CLOUD_CFG), auth=Au.getAuth(app), db=F.getFirestore(app);
+    const COL={p:'papers',v:'vault',m:'meta'};
+    CLOUD.api={
+      signIn:()=>Au.signInWithPopup(auth,new Au.GoogleAuthProvider()),
+      signOut:()=>Au.signOut(auth),
+      listen(uid,cb,onErr){
+        const subs=Object.entries(COL).map(([pre,col])=>{ let first=true;
+          return F.onSnapshot(F.collection(db,'users',uid,col),snap=>{
+            const ch=snap.docChanges().filter(c=>c.type!=='removed'&&!c.doc.metadata.hasPendingWrites).map(c=>Object.assign({key:pre+'/'+c.doc.id},c.doc.data()));
+            const f=first; first=false; if(ch.length||f) cb(ch,f);
+          },onErr); });
+        return ()=>subs.forEach(u=>u());
+      },
+      async write(uid,writes){
+        for(let i=0;i<writes.length;i+=400){ const b=F.writeBatch(db);
+          writes.slice(i,i+400).forEach(([key,data])=>b.set(F.doc(db,'users',uid,COL[key[0]],key.slice(2)),data)); await b.commit(); }
+      }
+    };
+    Au.onAuthStateChanged(auth,cloudOnUser);
+  }catch(e){ cloudStatus('err',e); $('#cloudSt').textContent='Bulut eşitleme yüklenemedi (ağ ya da Firebase ayarı): '+((e&&e.message)||e); }
+}
+$('#cloudBtn').onclick=async()=>{
+  if(!CLOUD.api) return toast('Bulut eşitleme hazırlanıyor, birkaç saniye sonra yeniden dene');
+  if(CLOUD.user){ if(!confirm('Çıkış yapılsın mı? Bu cihazdaki veriler kalır, yalnızca eşitleme durur.')) return; await cloudPush(); await CLOUD.api.signOut(); toast('Çıkış yapıldı'); return; }
+  try{ await CLOUD.api.signIn(); toast('Giriş yapıldı; veriler eşitleniyor'); }catch(e){ if(e&&e.code!=='auth/popup-closed-by-user') toast('Giriş yapılamadı: '+((e&&e.code)||e)); }
+};
+$('#cloudNow').onclick=()=>{ clearTimeout(CLOUD.pushT); cloudPush(); };
+/* VibePsych (üst pencere) kendi anahtarlarını yazınca: aynı kökteki diğer belgeye storage olayı gelir */
+window.addEventListener('storage',e=>{ if(e.key==='vibepsych_vault'||Object.values(VIBE_SYNC).includes(e.key)) cloudSchedule(); });
+setInterval(()=>{ if(!CLOUD.on) return; const h=cloudHash(JSON.stringify(vibeMeta())+localStorage.getItem('vibepsych_vault')); if(h!==CLOUD.vibeH) cloudSchedule(); },5000);
+cloudInit();
+
 /* ---------- Başlat ---------- */
 function syncFromStorage(focusId){
   try{
@@ -3398,6 +3554,7 @@ mirrorGet().then(j=>{
   STORE.full=true; updBackupSt(); renderFolderFilter(); updateSw(); applyTheme(); goScreen(SCREENS.includes(S.ui.screen)?S.ui.screen:'okuma');
   toastLong('Son değişikliklerin tarayıcı deposuna yazılamamıştı; notların yedek veritabanından geri yüklendi. Veri > Tam yedek indir ile yedek al.');
 });
+window.__cloud={CLOUD,cloudApply,cloudPush,cloudLocal,cloudOnUser,signIn:()=>CLOUD.api&&CLOUD.api.signIn()};
 window.__atlas={S,SIM,M,R,SR,IDX,goScreen,fitMap,zoomAt,setSpace,setFolder,openFolders,vis,buildVault,syncVault,VAULT,fold,needleOf,syncFromStorage,activateFromVibe,suspendForVibe};
 })();
 </script>

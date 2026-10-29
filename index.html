@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide sürümü sabitlendi: @latest, GitHub Pages üzerinde habersiz kırılmalara yol açabilir -->
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="firebase-config.js"></script>
   <link rel="stylesheet" href="vendor/fonts.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -506,7 +507,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=22" />
+  <link rel="prefetch" href="atlas.html?v=23" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -586,6 +587,13 @@
             <span id="vaultCountBadge" class="text-[11px] font-semibold title-ergonomic">0</span>
           </button>
 
+          <button
+            onclick="cloudSignInOut()"
+            id="cloudAuthBtn"
+            title="Google ile giriş yap: notların ve listelerin cihazlar arasında eşitlensin"
+            class="hidden p-1.5 sm:px-2.5 sm:py-2 rounded-[10px] glass-pill hover:text-white transition items-center gap-1.5 text-[12px]">
+            <i data-lucide="log-in" class="w-4 h-4"></i><span class="hidden sm:inline">Giriş</span>
+          </button>
           <button 
             onclick="toggleThemeMode()" 
             id="themeToggleBtn"
@@ -1534,6 +1542,8 @@
     function initVibePsych() {
       paintTAOnly();
       updateSearchLogCount();
+      paintCloudBtn();
+      initCloudAuth();
       setTimeout(() => checkFollowedSearches(), 4000);
       if (isWarmMode) {
         document.body.classList.add('warm-mode');
@@ -3089,7 +3099,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=22';
+              frame.src = 'atlas.html?v=23';
               showVibeFromAtlas();
               return;
             }
@@ -3100,7 +3110,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=22';
+        frame.src = 'atlas.html?v=23';
       }
     }
 
@@ -3174,8 +3184,71 @@ ${art.abstractText}
       window.focus();
     }
 
+    // BULUT GİRİŞİ (Firebase Auth). Eşitlemenin kendisi Okuma Atlası çerçevesinde çalışır; oturum aynı kökte paylaşılır.
+    const FB_CFG = window.VIBE_FIREBASE_CONFIG || null;
+    let fbAuth = null, fbUser = null;
+
+    async function initCloudAuth() {
+      if (!FB_CFG) return;
+      try {
+        const B = 'https://www.gstatic.com/firebasejs/10.12.2/';
+        const [A, Au] = await Promise.all([import(B + 'firebase-app.js'), import(B + 'firebase-auth.js')]);
+        const app = A.getApps().length ? A.getApp() : A.initializeApp(FB_CFG);
+        fbAuth = { auth: Au.getAuth(app), Au };
+        Au.onAuthStateChanged(fbAuth.auth, u => { fbUser = u || null; paintCloudBtn(); });
+        paintCloudBtn();
+      } catch (e) {
+        console.warn('Firebase yüklenemedi', e);
+      }
+    }
+
+    function paintCloudBtn() {
+      const b = document.getElementById('cloudAuthBtn');
+      if (!b) return;
+      b.classList.toggle('hidden', !FB_CFG);
+      b.classList.toggle('inline-flex', !!FB_CFG);
+      if (fbUser) {
+        const name = fbUser.displayName || fbUser.email || 'Hesap';
+        b.innerHTML = `${ic('cloud', 'w-4 h-4 text-[var(--neon-emerald)]')}<span class="hidden sm:inline max-w-[9rem] truncate">${escapeHtml(name.split(' ')[0])}</span>`;
+        b.title = `${fbUser.email || name} ile giriş yapıldı; veriler eşitleniyor. Çıkış için tıkla.`;
+        b.setAttribute('aria-label', 'Hesap: ' + (fbUser.email || name) + '. Çıkış yap');
+      } else {
+        b.innerHTML = `${ic('log-in', 'w-4 h-4')}<span class="hidden sm:inline">Giriş</span>`;
+        b.title = 'Google ile giriş yap: notların ve listelerin cihazlar arasında eşitlensin';
+        b.setAttribute('aria-label', 'Google ile giriş yap');
+      }
+      refreshIcons();
+    }
+
+    async function cloudSignInOut() {
+      if (!fbAuth) { showToast('Bulut girişi hazırlanıyor; birkaç saniye sonra yeniden dene.'); return; }
+      if (fbUser) {
+        if (!confirm(`${fbUser.email || 'Hesap'} ile giriş yapıldı.\\n\\nÇıkış yapılsın mı? Bu cihazdaki veriler kalır, yalnızca eşitleme durur.`)) return;
+        await fbAuth.Au.signOut(fbAuth.auth);
+        showToast('Çıkış yapıldı.');
+        return;
+      }
+      try {
+        await fbAuth.Au.signInWithPopup(fbAuth.auth, new fbAuth.Au.GoogleAuthProvider());
+        showToast('Giriş yapıldı; veriler eşitleniyor.');
+        ensureAtlasFrameLoaded();
+      } catch (e) {
+        if (e?.code !== 'auth/popup-closed-by-user') showToast('Giriş yapılamadı: ' + (e?.code || e?.message || e));
+      }
+    }
+
     window.__vibeShell = {
       showVibe: showVibeFromAtlas,
+      // Bulut eşitlemesi localStorage'a yazdıktan sonra çağrılır
+      reloadFromStorage: () => {
+        favJournals = loadJSON('vibepsych_fav_journals', favJournals);
+        vaultList = loadJSON('vibepsych_vault', vaultList);
+        customCollections = loadJSON('vibepsych_collections', customCollections);
+        updateCounters();
+        renderJournalStrip();
+        if (isVaultMode) { renderVaultCollectionsBar(); renderVaultStream(); } else renderFilteredCards();
+        updateSearchLogCount();
+      },
       onAtlasSave: () => {
         customCollections = loadJSON('vibepsych_collections', customCollections);
         updateCounters();
