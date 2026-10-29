@@ -570,6 +570,8 @@ body.splitting #pdfScroll{pointer-events:none}
 }
 /* Kütüphane: tüm makalelerin süzülebilir listesi */
 .libwrap.scr .listonly,.libwrap:not(.scr) .scronly{display:none!important}
+.implog{display:flex;flex-direction:column;gap:6px;max-height:160px;overflow:auto}
+.implogrow{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);padding:6px 8px;border:1px solid var(--line);border-radius:10px}
 .prisma{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;margin:0 0 8px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .pr-step{display:flex;flex-direction:column;gap:1px;min-width:92px}
 .pr-step b{font:600 20px var(--font-display);color:var(--fg)}
@@ -740,6 +742,7 @@ body.splitting #pdfScroll{pointer-events:none}
             <button data-st="all" aria-pressed="true">Hepsi</button><button data-st="okunacak" aria-pressed="false">Okunacak</button><button data-st="okunuyor" aria-pressed="false">Okunuyor</button><button data-st="bitti" aria-pressed="false">Bitti</button>
           </div>
           <select class="fsel libsel listonly" id="libYr" aria-label="Yıl"></select>
+          <button class="btn sm" id="libImport" type="button" title="Veritabanı dışa aktarımını (RIS, BibTeX, PubMed) yükle; yinelenenler ayıklanır"><svg class="ico" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>İçe aktar</button>
           <select class="fsel libsel listonly" id="libSort" aria-label="Sıralama">
             <option value="added">Son eklenen</option><option value="year">Yıl (yeni önce)</option><option value="author">Yazar (A-Z)</option><option value="title">Başlık (A-Z)</option><option value="progress">Okuma ilerlemesi</option>
           </select>
@@ -817,6 +820,22 @@ body.splitting #pdfScroll{pointer-events:none}
   </div>
 </dialog>
 
+<dialog id="dlgImp">
+  <div class="dlg">
+    <h2>Kayıt içe aktar</h2>
+    <p style="margin:0;color:var(--muted);font-size:13px">PsycINFO, PubMed, Scopus, Web of Science gibi veritabanlarından dışa aktardığın dosyayı yükle. Aynı makale (DOI ya da başlık eşleşmesi) bir kez eklenir; yinelenenler PRISMA akışına sayılır.</p>
+    <div class="field"><label for="impFile">Dosya <small>(RIS .ris, BibTeX .bib, PubMed/MEDLINE .nbib .txt)</small></label><input type="file" id="impFile" accept=".ris,.bib,.nbib,.txt,.enw" class="in"><small id="impInfo"></small></div>
+    <div class="row2">
+      <div class="field"><label for="impSrc">Kaynak veritabanı</label><input class="in" id="impSrc" list="impSrcList" placeholder="ör. PsycINFO" autocomplete="off">
+        <datalist id="impSrcList"><option value="PsycINFO"><option value="PubMed"><option value="Scopus"><option value="Web of Science"><option value="ERIC"><option value="EBSCOhost"><option value="ProQuest"><option value="Google Scholar"><option value="TR Dizin"><option value="DergiPark"><option value="Cochrane Library"><option value="Embase"></datalist></div>
+      <div class="field"><label for="impFolder">Derleme klasörü</label><select class="in" id="impFolder"></select><input class="in" id="impNewFolder" placeholder="Yeni klasör adı" hidden></div>
+    </div>
+    <label class="chk" style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted)"><input type="checkbox" id="impMove" checked> Kütüphanede başka klasörde duran eşleşmeleri bu klasöre taşı (taşınmazsa taramaya girmez)</label>
+    <div id="impLog"></div>
+    <div class="err" id="impErr" hidden></div>
+    <div class="actions"><span class="grow"></span><button class="btn" type="button" id="impCancel">Kapat</button><button class="btn primary" type="button" id="impOk" disabled>İçe aktar</button></div>
+  </div>
+</dialog>
 <dialog id="dlgData">
   <div class="dlg">
     <h2>Veri</h2>
@@ -825,6 +844,9 @@ body.splitting #pdfScroll{pointer-events:none}
       <div class="bkrow"><button class="btn primary" id="dFull">Tam yedek indir (PDF dahil)</button><small id="dBackupSt"></small></div>
       <small>Tek .json dosyası: notlar, vurgular, bağlantılar, PDF'ler ve alan görüntüleri. Geri yüklemek için aşağıdan dosyayı seç.</small>
       <small class="warn" id="dStoreSt" hidden>Tarayıcı deposu doldu: veriler yedek veritabanında tutuluyor ve VibePsych'ten yeni makale eklenemiyor. Tam yedek al; PDF'siz kullanılmayan makaleleri silmek yer açar.</small>
+    </div>
+    <div class="field"><label>Kayıt içe aktar <small>(sistematik derleme)</small></label>
+      <div class="chips"><button class="btn" id="dImpRec">RIS / BibTeX / PubMed dosyası yükle</button></div>
     </div>
     <div class="field"><label>Kaynakça dışa aktar <small>(görünen klasördeki makaleler)</small></label>
       <div class="chips"><button class="btn" id="dBib">BibTeX (.bib)</button><button class="btn" id="dRis">RIS (.ris)</button></div>
@@ -970,7 +992,7 @@ function shortLabel(p){ const s=surname(p); return s?(s+(p.year?' '+p.year:'')):
 function toastUndo(m,fn){ const t=document.createElement('div'); t.className='toast undo'; t.setAttribute('role','status'); t.innerHTML='<span></span><button type="button">Geri al</button>'; t.firstChild.textContent=m; document.body.append(t);
   const kill=()=>t.remove(), tm=setTimeout(kill,6000); t.querySelector('button').onclick=()=>{ clearTimeout(tm); kill(); fn(); }; }
 function toast(m){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.body.append(t); setTimeout(()=>t.remove(),2400); }
-function toastLong(m){ const t=document.createElement('div'); t.className='toast warn'; t.setAttribute('role','alert'); t.textContent=m; document.body.append(t); setTimeout(()=>t.remove(),9000); }
+function toastLong(m,warn){ const t=document.createElement('div'); t.className='toast'+(warn===false?'':' warn'); t.setAttribute('role','alert'); t.textContent=m; document.body.append(t); setTimeout(()=>t.remove(),9000); }
 function autosize(el){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
 function copy(text,ok){ const fb=()=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.append(ta); ta.select(); try{document.execCommand('copy');toast(ok||'Kopyalandı');}catch(e){toast('Kopyalanamadı');} ta.remove(); };
   try{ navigator.clipboard.writeText(text).then(()=>toast(ok||'Kopyalandı'),fb); }catch(e){ fb(); } }
@@ -1122,13 +1144,20 @@ function prisma(){
   const taOut=d('ta').filter(p=>p.scr.ta==='out'), taIn=d('ta').filter(p=>p.scr.ta==='in');
   const ftOut=taIn.filter(p=>p.scr.ft==='out'), ftIn=taIn.filter(p=>p.scr.ft==='in');
   const why=list=>{ const m={}; list.forEach(p=>{ const k=(p.scr.ftWhy||p.scr.taWhy)||'Gerekçe belirtilmedi'; m[k]=(m[k]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
-  return {n:b.length,taDone:d('ta').length,taOut:taOut.length,taMaybe:b.filter(p=>(p.scr||{}).ta==='maybe').length,taIn:taIn.length,ftDone:taIn.filter(p=>p.scr.ft).length,ftOut:ftOut.length,ftWhy:why(ftOut),ftIn:ftIn.length};
+  const fsel=S.ui.folder, logs=(S.imports||[]).filter(i=>!fsel||(fsel===NO_FOLDER?!i.folder:i.folder===fsel));
+  const sum=k=>logs.reduce((a,i)=>a+(+i[k]||0),0), bySrc={}; logs.forEach(i=>{ bySrc[i.source]=(bySrc[i.source]||0)+(+i.n||0); });
+  const ident={has:logs.length>0,n:sum('n'),dup:sum('dup'),notMoved:sum('other'),skipped:sum('skipped'),src:Object.entries(bySrc),other:Math.max(0,b.length-sum('added')-sum('moved'))};
+  return {ident,n:b.length,taDone:d('ta').length,taOut:taOut.length,taMaybe:b.filter(p=>(p.scr||{}).ta==='maybe').length,taIn:taIn.length,ftDone:taIn.filter(p=>p.scr.ft).length,ftOut:ftOut.length,ftWhy:why(ftOut),ftIn:ftIn.length};
 }
 function prismaText(x){
-  return ['PRISMA akış sayıları (Okuma Atlası, '+today()+')',
+  const I=x.ident;
+  return ['PRISMA akış sayıları (Okuma Atlası, '+today()+')'].concat(I.has?[
+    'Veritabanlarından bulunan kayıt: '+I.n+' ('+I.src.map(([k,v])=>k+' '+v).join('; ')+')',
+    'Taramadan önce çıkarılan: yinelenen '+I.dup+(I.notMoved?', kütüphanede başka klasörde '+I.notMoved:'')+(I.skipped?', başlıksız '+I.skipped:''),
+    'Diğer yollarla eklenen (VibePsych, elle, atıf taraması): '+I.other]:[]).concat([
     'Taranan kayıt: '+x.n,'Başlık/özet aşamasında hariç: '+x.taOut+(x.taMaybe?' (belirsiz: '+x.taMaybe+')':''),
     'Tam metni değerlendirilen: '+x.taIn,'Tam metin aşamasında hariç: '+x.ftOut+(x.ftWhy.length?'\n'+x.ftWhy.map(([k,v])=>'  - '+k+': '+v).join('\n'):''),
-    'Derlemeye dahil edilen: '+x.ftIn].join('\n');
+    'Derlemeye dahil edilen: '+x.ftIn]).join('\n');
 }
 function renderScreen(){
   const L=libState(), stage=L.stage==='ft'?'ft':'ta', key=stage, why=stage+'Why';
@@ -1144,7 +1173,9 @@ function renderScreen(){
   const order=new Map(S.papers.map((p,i)=>[p.id,i])); list.sort((a,b)=>order.get(a.id)-order.get(b.id));
   const x=prisma();
   $('#libMeta').innerHTML='<span>'+(stage==='ta'?'Başlık/özet':'Tam metin')+': '+pool.filter(p=>(p.scr||{})[key]).length+' / '+pool.length+' karar verildi</span><span class="grow"></span><span>Kısayol: D dahil · B belirsiz · H hariç</span>';
-  const box='<div class="prisma">'
+  const I=x.ident, idBox=I.has?'<div class="pr-step"><b>'+I.n+'</b><span>bulunan kayıt</span><small>'+esc(I.src.map(([k,v])=>k+' '+v).join(' · '))+'</small></div><i class="pr-arr"></i>'
+    +'<div class="pr-step"><b>'+I.dup+'</b><span>yinelenen çıkarıldı</span><small>'+(I.notMoved?I.notMoved+' başka klasörde':'')+(I.notMoved&&I.other?' · ':'')+(I.other?I.other+' diğer yollarla eklendi':'')+'</small></div><i class="pr-arr"></i>':'';
+  const box='<div class="prisma">'+idBox
     +'<div class="pr-step"><b>'+x.n+'</b><span>taranan kayıt</span></div><i class="pr-arr"></i>'
     +'<div class="pr-step"><b>'+x.taIn+'</b><span>tam metne geçti</span><small>'+x.taOut+' hariç'+(x.taMaybe?' · '+x.taMaybe+' belirsiz':'')+'</small></div><i class="pr-arr"></i>'
     +'<div class="pr-step"><b>'+x.ftIn+'</b><span>dahil edildi</span><small>'+x.ftOut+' tam metinde hariç</small></div>'
@@ -1286,12 +1317,12 @@ $$('.tab').forEach(t=>t.onclick=()=>goScreen(t.dataset.screen));
 
 /* ---------- Makale işlemleri ---------- */
 function freePos(){ const l=vis(); if(!l.length) return {x:0,y:0}; const cx=l.reduce((a,p)=>a+p.x,0)/l.length, cy=l.reduce((a,p)=>a+p.y,0)/l.length; return {x:cx+(Math.random()-.5)*200,y:cy+(Math.random()-.5)*160}; }
-function addPaper(o){
+function addPaper(o,quiet){
   const pos=freePos();
   const defFolder=(S.ui.folder&&S.ui.folder!=='__none__')?S.ui.folder:'';
   const p=Object.assign({id:uid(),title:'',authors:'',year:'',journal:'',doi:'',question:'',method:'',sample:'',measures:'',finding:'',limits:'',relation:'',tags:[],themes:{},hl:[],hasPdf:false,space:S.ui.space,folder:defFolder,status:'',summary:'',surprise:'',x:pos.x,y:pos.y},o||{});
   if(p.folder) ensureFolder(p.folder);
-  S.papers.push(p); save(); renderFolderFilter(); return p;
+  S.papers.push(p); if(!quiet){ save(); renderFolderFilter(); } return p;
 }
 function removePaper(id){
   idxDrop(id);
@@ -2348,7 +2379,7 @@ document.addEventListener('keydown',e=>{
   const tag=(e.target.tagName||'').toLowerCase(); if(['input','textarea','select'].includes(tag)||e.target.isContentEditable) return;
   if(!$('#view-map').hidden){ if(e.key==='+'||e.key==='=') zoomMap(1.25); if(e.key==='-') zoomMap(.8); if(e.key==='0') fitMap(); if(e.key==='Escape') clearSel(); }
 });
-['dlgPal','dlgAdd','dlgFolders','dlgLink','dlgData'].forEach(id=>{ const d=$('#'+id); d.addEventListener('click',e=>{ if(e.target===d) d.close(); }); });
+['dlgPal','dlgAdd','dlgFolders','dlgLink','dlgData','dlgImp'].forEach(id=>{ const d=$('#'+id); d.addEventListener('click',e=>{ if(e.target===d) d.close(); }); });
 
 /* ---------- Bağlantı diyaloğu ---------- */
 const LK={id:null,type:null};
@@ -2694,6 +2725,159 @@ $('#dJson').onclick=()=>copy(exportJson(),'JSON kopyalandı');
 if(window.claude){ $('#dJsonDl').hidden=true; $('#dlHint').hidden=true; }
 $('#dJsonDl').onclick=()=>{ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([exportJson()],{type:'application/json'})); a.download='okuma-atlasi-yedek.json'; document.body.append(a); a.click(); a.remove(); toast('İndirme başlatıldı'); }catch(e){ toast('İndirme engellendi, kopyalamayı dene'); } };
 $('#dMd').onclick=()=>{ const names=baseNames(); copy(S.papers.map(p=>paperMd(p,names)).join('\n\n---\n\n')+'\n\n---\n\n'+linksMd(names),'Markdown kopyalandı'); };
+/* ---------- Veritabanı kayıtlarını içe aktarma (RIS / BibTeX / PubMed-MEDLINE) ---------- */
+function impAuthor(a){
+  a=String(a||'').replace(/\s+/g,' ').trim(); if(!a) return '';
+  let last, first;
+  if(a.includes(',')){ const i=a.indexOf(','); last=a.slice(0,i).trim(); first=a.slice(i+1).trim(); }
+  else if(/^\S+(?: \S+)* [A-Z]{1,3}$/.test(a)){ const i=a.lastIndexOf(' '); last=a.slice(0,i); first=a.slice(i+1).split('').join(' '); } /* MEDLINE AU: "Smith JA" */
+  else { const t=a.split(' '); last=t.pop(); first=t.join(' '); }
+  const ini=String(first||'').split(/[\s.]+/).filter(Boolean).map(x=>x.split('-').map(y=>y?y[0].toLocaleUpperCase('tr-TR')+'.':'').join('-')).join(' ');
+  return last+(ini?', '+ini:'');
+}
+const impDoi=s=>{ const m=String(s||'').match(/10\.\d{4,9}\/[^\s"<>]+/); return m?m[0].replace(/[.,;)\]]+$/,''):''; };
+const impPage=s=>(String(s||'').match(/^\s*(\d+)/)||['',''])[1];
+function parseRis(t){
+  const recs=[]; let cur=null, last=null;
+  t.split(/\r?\n/).forEach(line=>{
+    const m=/^([A-Z][A-Z0-9])  -(?: (.*))?$/.exec(line);
+    if(!m){ if(cur&&last&&line.trim()){ const a=cur[last]; a[a.length-1]+=' '+line.trim(); } return; }
+    const tag=m[1], val=(m[2]||'').trim();
+    if(tag==='TY'){ cur={}; last=null; return; }
+    if(!cur) return;
+    if(tag==='ER'){ recs.push(cur); cur=null; last=null; return; }
+    (cur[tag]=cur[tag]||[]).push(val); last=tag;
+  });
+  if(cur) recs.push(cur);
+  return recs.map(r=>{ const g=(...k)=>{ for(const x of k) if(r[x]&&r[x][0]) return r[x][0]; return ''; };
+    return {title:g('TI','T1','CT','BT'),authors:[...(r.AU||[]),...(r.A1||[])].map(impAuthor).filter(Boolean).join('; '),year:(g('PY','Y1','DA').match(/\d{4}/)||[''])[0],
+      journal:g('T2','JO','JF','JA','J2'),doi:impDoi(g('DO')||(r.UR||[]).concat(r.L3||[]).join(' ')),abstract:g('AB','N2'),fpage:impPage(g('SP')),db:g('DB','DP')}; });
+}
+function parseMedline(t){
+  const recs=[]; let cur=null, last=null;
+  t.split(/\r?\n/).forEach(line=>{
+    if(!line.trim()){ return; }
+    const m=/^([A-Z]{2,4})\s*- (.*)$/.exec(line);
+    if(m){ if(m[1]==='PMID'){ cur={}; recs.push(cur); } if(!cur) return; (cur[m[1]]=cur[m[1]]||[]).push(m[2].trim()); last=m[1]; return; }
+    if(cur&&last&&/^\s{2,}/.test(line)){ const a=cur[last]; a[a.length-1]+=' '+line.trim(); }
+  });
+  return recs.map(r=>{ const g=k=>r[k]&&r[k][0]||'';
+    const doi=[...(r.LID||[]),...(r.AID||[])].find(x=>/\[doi\]/.test(x));
+    return {title:g('TI').replace(/\.$/,''),authors:(r.FAU||r.AU||[]).map(impAuthor).filter(Boolean).join('; '),year:(g('DP').match(/\d{4}/)||[''])[0],journal:g('JT')||g('TA'),doi:impDoi(doi||''),abstract:g('AB'),fpage:impPage(g('PG')),db:'PubMed'}; });
+}
+const TEX_ACC={'"':'̈',"'":'́','`':'̀','^':'̂','~':'̃','=':'̄','.':'̇','u':'̆','v':'̌','c':'̧','H':'̋','k':'̨'};
+function texClean(v){
+  return String(v||'')
+    .replace(/\\([\"'`^~=.])\s*\{?\s*\\?([A-Za-z])\s*\}?|\\([uvcHk])\s*(?:\{\s*\\?([A-Za-z])\s*\}|\s([A-Za-z]))/g,(m,a1,c1,a2,c2,c3)=>{ const a=a1||a2, ch=c1||c2||c3; return a==='.'&&ch==='I'?'İ':ch+TEX_ACC[a]; })
+    .replace(/\{\\i\}|\\i\b/g,'ı').replace(/\\ss\b/g,'ß').replace(/\\o\b/g,'ø').replace(/\\&/g,'&').replace(/\\%/g,'%').replace(/\\_/g,'_').replace(/--/g,'–')
+    .replace(/\\[a-zA-Z]+\s*/g,'').replace(/[{}]/g,'').replace(/\s+/g,' ').trim().normalize('NFC');
+}
+function parseBib(t){
+  const recs=[]; let i=0;
+  while((i=t.indexOf('@',i))>=0){
+    const m=/^@\s*(\w+)\s*([{(])/.exec(t.slice(i)); if(!m){ i++; continue; }
+    const type=m[1].toLowerCase(), open=m[2], close=open==='{'?'}':')'; let k=i+m[0].length, depth=1, start=k;
+    while(k<t.length&&depth>0){ const c=t[k]; if(c===open) depth++; else if(c===close) depth--; k++; }
+    const body=t.slice(start,k-1); i=k;
+    if(type==='comment'||type==='string'||type==='preamble') continue;
+    const f={}; let pos=body.indexOf(','); if(pos<0) continue; pos++;
+    while(pos<body.length){
+      while(pos<body.length&&/[\s,]/.test(body[pos])) pos++;
+      const eq=body.indexOf('=',pos); if(eq<0) break;
+      const name=body.slice(pos,eq).trim().toLowerCase(); pos=eq+1;
+      while(pos<body.length&&/\s/.test(body[pos])) pos++;
+      let val='';
+      const readPart=()=>{ let v='';
+        if(body[pos]==='{'){ let d=1, q=pos+1; while(q<body.length&&d>0){ if(body[q]==='{') d++; else if(body[q]==='}') d--; q++; } v=body.slice(pos+1,q-1); pos=q; }
+        else if(body[pos]==='"'){ let d=0, q=pos+1; while(q<body.length&&!(body[q]==='"'&&d===0&&body[q-1]!=='\\')){ if(body[q]==='{') d++; else if(body[q]==='}') d--; q++; } v=body.slice(pos+1,q); pos=q+1; }
+        else { let q=pos; while(q<body.length&&!/[,#\s]/.test(body[q])) q++; v=body.slice(pos,q); pos=q; }
+        return v; };
+      val=readPart();
+      while(true){ let q=pos; while(q<body.length&&/\s/.test(body[q])) q++; if(body[q]!=='#') break; pos=q+1; while(pos<body.length&&/\s/.test(body[pos])) pos++; val+=readPart(); }
+      if(name) f[name]=val;
+    }
+    const au=String(f.author||'').split(/\s+and\s+/i).map(texClean).filter(Boolean);
+    recs.push({title:texClean(f.title),authors:au.map(impAuthor).filter(Boolean).join('; '),year:((f.year||f.date||'').match(/\d{4}/)||[''])[0],
+      journal:texClean(f.journal||f.journaltitle||f.booktitle||''),doi:impDoi(f.doi||f.url||''),abstract:texClean(f.abstract||''),fpage:impPage(f.pages),db:''});
+  }
+  return recs;
+}
+function parseRecords(txt){
+  const t=String(txt||'').replace(/^﻿/,'');
+  if(/^\s*@\s*\w+\s*[{(]/m.test(t)) return {fmt:'BibTeX',recs:parseBib(t)};
+  if(/^PMID- /m.test(t)) return {fmt:'PubMed (MEDLINE)',recs:parseMedline(t)};
+  if(/^TY  -/m.test(t)) return {fmt:'RIS',recs:parseRis(t)};
+  return {fmt:'',recs:[]};
+}
+const impTitleKey=t=>String(t||'').toLocaleLowerCase('tr-TR').normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,160);
+const impDoiKey=d=>String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').toLowerCase();
+/* recs -> derleme klasörü. Eşleşme: DOI, yoksa başlık (+ yıllar çelişmiyorsa). */
+function importRecords(recs,{source,folder,move,file}){
+  const byDoi=new Map(), byTitle=new Map();
+  const index=p=>{ const d=impDoiKey(p.doi); if(d&&!byDoi.has(d)) byDoi.set(d,p); const k=impTitleKey(p.title); if(k.length>=12){ if(!byTitle.has(k)) byTitle.set(k,[]); byTitle.get(k).push(p); } };
+  S.papers.forEach(index);
+  const find=r=>{ const d=impDoiKey(r.doi); if(d&&byDoi.has(d)) return byDoi.get(d); const k=impTitleKey(r.title); if(k.length<12) return null; const c=(byTitle.get(k)||[]).find(p=>!p.year||!r.year||String(p.year)===String(r.year)||(!impDoiKey(p.doi)||!d)); return c||null; };
+  const fill=(p,r)=>{ ['doi','abstract','journal','year','fpage','authors'].forEach(k=>{ if(!p[k]&&r[k]) p[k]=r[k]; }); if(source){ p.src=Array.isArray(p.src)?p.src:[]; if(!p.src.includes(source)) p.src.push(source); } };
+  if(folder) ensureFolder(folder);
+  const res={added:0,dup:0,moved:0,other:0,skipped:0};
+  recs.forEach(r=>{
+    if(!r.title&&!r.doi){ res.skipped++; return; }
+    const ex=find(r);
+    if(ex){
+      if((ex.folder||'')===folder){ res.dup++; fill(ex,r); return; }
+      if(move){ ex.folder=folder; res.moved++; fill(ex,r); return; }
+      res.other++; return;
+    }
+    const p=addPaper({title:r.title||'(başlıksız kayıt)',authors:r.authors,year:r.year,journal:r.journal,doi:r.doi,abstract:r.abstract,fpage:r.fpage,folder,src:source?[source]:[]},true);
+    index(p); res.added++;
+  });
+  S.imports=Array.isArray(S.imports)?S.imports:[];
+  S.imports.push(Object.assign({id:uid(),at:Date.now(),source:source||'Belirtilmedi',file:file||'',folder,n:recs.length},res));
+  save(); renderFolderFilter();
+  return res;
+}
+let impParsed=null;
+function impFolderOpts(){
+  const cur=S.ui.folder&&S.ui.folder!==NO_FOLDER?S.ui.folder:'';
+  $('#impFolder').innerHTML=S.folders.map(f=>'<option'+(f===cur?' selected':'')+'>'+esc(f)+'</option>').join('')+'<option value="__new__">Yeni klasör…</option>';
+  $('#impNewFolder').hidden=true;
+}
+function impLogHtml(){
+  const f=$('#impFolder').value, list=(S.imports||[]).filter(i=>i.folder===f);
+  if(!list.length) return '';
+  return '<div class="field"><label>Bu klasörün içe aktarım kaydı</label><div class="implog">'+list.map(i=>'<div class="implogrow"><span><b>'+esc(i.source)+'</b> · '+new Date(i.at).toLocaleDateString('tr-TR')+' · '+i.n+' kayıt, '+i.added+' eklendi, '+i.dup+' yinelenen'+(i.moved?', '+i.moved+' taşındı':'')+'</span><button class="btn sm" type="button" data-implog-del="'+esc(i.id)+'" title="Yalnızca kaydı siler; makaleler kalır">Kaydı sil</button></div>').join('')+'</div></div>';
+}
+function openImp(){
+  impParsed=null; $('#impFile').value=''; $('#impInfo').textContent=''; $('#impErr').hidden=true; $('#impOk').disabled=true; $('#impSrc').value=''; $('#impNewFolder').value='';
+  impFolderOpts(); $('#impLog').innerHTML=impLogHtml(); if($('#dlgData').open) $('#dlgData').close(); $('#dlgImp').showModal();
+}
+$('#impFolder').onchange=()=>{ const nw=$('#impFolder').value==='__new__'; $('#impNewFolder').hidden=!nw; if(nw) $('#impNewFolder').focus(); $('#impLog').innerHTML=nw?'':impLogHtml(); };
+$('#impLog').addEventListener('click',e=>{ const b=e.target.closest('[data-implog-del]'); if(!b) return; S.imports=(S.imports||[]).filter(i=>i.id!==b.dataset.implogDel); save(); $('#impLog').innerHTML=impLogHtml(); if(S.ui.screen==='kutuphane') renderLib(); });
+$('#impFile').onchange=async()=>{
+  const f=$('#impFile').files[0]; impParsed=null; $('#impOk').disabled=true; $('#impErr').hidden=true; if(!f) return;
+  const r=parseRecords(await f.text());
+  if(!r.recs.length){ $('#impInfo').textContent=''; const er=$('#impErr'); er.hidden=false; er.textContent='Dosyada kayıt bulunamadı. RIS, BibTeX ya da PubMed (MEDLINE) biçiminde dışa aktar.'; return; }
+  impParsed=Object.assign(r,{file:f.name});
+  const db=(r.recs.find(x=>x.db)||{}).db||'';
+  if(!$('#impSrc').value.trim()){ const g=/scopus/i.test(db)?'Scopus':/web of science|wos|clarivate/i.test(db+f.name)?'Web of Science':/psycinfo|apa psyc/i.test(db+f.name)?'PsycINFO':/pubmed|medline/i.test(db+r.fmt)?'PubMed':/eric/i.test(db)?'ERIC':db; $('#impSrc').value=g; }
+  const nd=r.recs.filter(x=>x.doi).length, na=r.recs.filter(x=>x.abstract).length;
+  $('#impInfo').textContent=r.fmt+': '+r.recs.length+' kayıt okundu · '+nd+' DOI · '+na+' özet';
+  $('#impOk').disabled=false;
+};
+$('#impOk').onclick=()=>{
+  if(!impParsed) return;
+  let folder=$('#impFolder').value; if(folder==='__new__'){ folder=$('#impNewFolder').value.trim(); if(!folder){ $('#impNewFolder').focus(); return; } }
+  const source=$('#impSrc').value.trim();
+  if(!source){ $('#impSrc').focus(); const er=$('#impErr'); er.hidden=false; er.textContent='Kaynak veritabanını yaz; PRISMA akışında kaynak başına sayı için gerekli.'; return; }
+  const res=importRecords(impParsed.recs,{source,folder,move:$('#impMove').checked,file:impParsed.file});
+  $('#dlgImp').close();
+  S.ui.folder=folder; const L=libState(); L.mode='scr'; L.stage='ta'; L.dec='todo'; save(); renderFolderFilter(); goScreen('kutuphane'); updateSw();
+  toastLong(impParsed.recs.length+' kayıt: '+res.added+' eklendi, '+res.dup+' yinelenen'+(res.moved?', '+res.moved+' başka klasörden taşındı':'')+(res.other?', '+res.other+' başka klasörde olduğu için eklenmedi':'')+(res.skipped?', '+res.skipped+' başlıksız kayıt atlandı':'')+'.',false);
+  impParsed=null;
+};
+$('#impCancel').onclick=()=>$('#dlgImp').close();
+$('#libImport').onclick=openImp; $('#dImpRec').onclick=openImp;
+
 async function importData(txt){
   let d; try{ d=JSON.parse(txt); }catch(e){ return toast('JSON okunamadı'); }
   if(!d||!Array.isArray(d.papers)) return toast('Bu bir Okuma Atlası yedeği değil');

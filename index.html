@@ -503,7 +503,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=17" />
+  <link rel="prefetch" href="atlas.html?v=18" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -744,6 +744,17 @@
               <span>PDF</span>
             </button>
 
+            <!-- Arama alanı: başlık + özet -->
+            <button
+              id="taOnlyBtn"
+              onclick="toggleTAOnly()"
+              aria-pressed="false"
+              title="Açıkken arama terimleri yalnızca başlık ve özette aranır (sistematik derlemede standart). Kapalıyken tam metin de taranır ve çok daha fazla sonuç gelir."
+              class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition">
+              <i data-lucide="text-search" class="w-3.5 h-3.5"></i>
+              <span>Başlık/Özet</span>
+            </button>
+
             <!-- Compact List View Toggle -->
             <button 
               id="compactModeBtn" 
@@ -789,7 +800,33 @@
     <!-- Active Filter Breadcrumbs & Telemetry -->
     <div id="statusToolbar" class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono px-0.5">
       <div id="activePillsContainer" class="flex flex-wrap items-center gap-1.5"></div>
-      <div id="resultsTelemetryText" class="text-[11px] text-slate-500 ml-auto tabular-nums"></div>
+      <div class="ml-auto flex items-center gap-2">
+        <div id="resultsTelemetryText" class="text-[11px] text-slate-500 tabular-nums"></div>
+        <button id="saveSearchBtn" onclick="saveCurrentSearch()" class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 text-[11px]" title="Sorguyu, süzgeçleri, tarihi ve sonuç sayısını arama kaydına ekle (PRISMA-S raporu için)">
+          <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Aramayı kaydet</span>
+        </button>
+        <button onclick="openSearchLog()" class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 text-[11px]" title="Kaydedilmiş aramalar">
+          <i data-lucide="history" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Arama kaydı</span><span id="searchLogCount" class="num"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ARAMA KAYDI (PRISMA-S) -->
+    <div id="searchLogModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this)closeSearchLog()">
+      <div class="luxury-panel rounded-t-3xl sm:rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-white/[0.12]" role="dialog" aria-modal="true" aria-labelledby="searchLogTitle">
+        <div class="p-4 sm:p-5 border-b border-white/[0.07] flex items-start justify-between gap-3">
+          <div>
+            <h3 id="searchLogTitle" class="font-serif text-lg title-ergonomic">Arama kaydı</h3>
+            <p class="text-[12px] text-[var(--text-muted)] mt-0.5">Derlemenin yöntem bölümü için: tam sorgu, arama alanı, süzgeçler, tarih ve sonuç sayısı (PRISMA-S).</p>
+          </div>
+          <button onclick="closeSearchLog()" class="p-2 rounded-lg glass-pill hover:text-white" aria-label="Kapat"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div id="searchLogList" class="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1"></div>
+        <div class="p-3.5 sm:p-4 border-t border-white/[0.07] flex flex-wrap gap-2 justify-end">
+          <button onclick="copySearchLog()" class="btn-primary px-3 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="copy" class="w-3.5 h-3.5"></i>Yöntem metni olarak kopyala</button>
+          <button onclick="downloadSearchLogCsv()" class="btn-secondary px-3 py-2 rounded-xl text-xs flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i>CSV indir</button>
+        </div>
+      </div>
     </div>
 
     <!-- CUSTOM RESEARCH COLLECTIONS / FOLDERS BAR (Visible in Kasam Mode) -->
@@ -1426,6 +1463,11 @@
     let capFutureDates = false;
     let onlyQ1 = true;
     let onlyOA = false;
+    // Arama alanı: true = yalnızca başlık + özet (title_and_abstract.search), false = başlık, özet ve tam metin (search=)
+    let searchTAOnly = loadJSON('vibepsych_ta_only', false) === true;
+    // Son başarılı ana sorgu (arama kaydı için)
+    let lastQuery = null;
+    const SEARCH_LOG_KEY = 'vibepsych_search_log';
     let isCompactView = false;
     let isVaultMode = false;
 
@@ -1463,6 +1505,8 @@
 
     // 4. INITIALIZATION
     function initVibePsych() {
+      paintTAOnly();
+      updateSearchLogCount();
       if (isWarmMode) {
         document.body.classList.add('warm-mode');
         document.getElementById('themeToggleBtn').className = 'p-1.5 sm:p-2 rounded-xl neon-primary-active transition';
@@ -1546,6 +1590,7 @@
         }
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (e.key === 'Escape') {
+          closeSearchLog();
           closeInspector();
           setJournalMenu(false);
           closeDirectoryModal();
@@ -1613,6 +1658,7 @@
       const parts = [yr];
       if (onlyQ1) parts.push('Q1');
       if (onlyOA) parts.push('PDF');
+      if (searchTAOnly) parts.push('Başlık/Özet');
       if (activeDomain && !activeDomain.isGlobal && activeDomain.name) parts.push(activeDomain.name.split('/')[0].trim());
       el.textContent = parts.join(' · ');
     }
@@ -1969,6 +2015,22 @@
       resetAndFetch();
     }
 
+    function toggleTAOnly() {
+      searchTAOnly = !searchTAOnly;
+      try { localStorage.setItem('vibepsych_ta_only', JSON.stringify(searchTAOnly)); } catch (e) {}
+      paintTAOnly();
+      if (document.getElementById('searchInput').value.trim() || document.getElementById('methodSelect').value !== 'ALL') resetAndFetch();
+    }
+
+    function paintTAOnly() {
+      const b = document.getElementById('taOnlyBtn');
+      if (!b) return;
+      b.className = searchTAOnly
+        ? 'px-2 py-1 rounded-lg neon-primary-active flex items-center gap-1 transition'
+        : 'px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 transition';
+      b.setAttribute('aria-pressed', String(searchTAOnly));
+    }
+
     function toggleCompactView() {
       isCompactView = !isCompactView;
       document.getElementById('compactModeBtn').className = isCompactView
@@ -2183,7 +2245,7 @@
         filters.push(`author.id:${activeAuthorFilter.id}`);
       } else if (activeSnowball) {
         const shortId = activeSnowball.workId.replace('https://openalex.org/', '');
-        filters.push(activeSnowball.mode === 'cites' ? `cites:${shortId}` : `related_to:${shortId}`);
+        filters.push(activeSnowball.mode === 'cites' ? `cites:${shortId}` : activeSnowball.mode === 'refs' ? `cited_by:${shortId}` : `related_to:${shortId}`);
       } else if (fallbackLevel === 'psych') {
         filters.push(`topics.subfield.id:${PSYCH_SUBFIELDS}`);
         scope = 'psych';
@@ -2238,8 +2300,10 @@
       if (!appendMode) currentPageSize = (onlyQ1 && scope !== 'pool') ? 50 : 25;
       const pageSize = currentPageSize;
 
+      // Başlık/özet modu: süzgeç değerinde virgül ve | ayraç sayıldığından boşluğa çevrilir
+      if (willSendSearch && searchTAOnly) filters.push(`title_and_abstract.search:${finalSearchString.replace(/[,|]/g, ' ')}`);
       let apiUrl = `https://api.openalex.org/works?filter=${encodeURIComponent(filters.join(','))}&sort=${encodeURIComponent(sortVal)}&per-page=${pageSize}&page=${currentPage}`;
-      if (willSendSearch) {
+      if (willSendSearch && !searchTAOnly) {
         apiUrl += `&search=${encodeURIComponent(finalSearchString)}`;
       }
 
@@ -2271,6 +2335,7 @@
         }
 
         totalWorksCount = data.meta?.count ?? works.length;
+        if (!appendMode) lastQuery = { apiUrl, rawQ, effectiveQ: finalSearchString, scope, fallbackLevel, count: totalWorksCount, sent: willSendSearch };
         if (!appendMode) fallbackActive = fallbackLevel;
 
         const missingIds = [...new Set(
@@ -2424,6 +2489,7 @@
         qClass,
         isQ1,
         citations: w.cited_by_count || 0,
+        refCount: w.referenced_works_count || 0,
         isOA: w.open_access?.is_oa || false,
         retracted: !!w.is_retracted,
         oaUrl: w.open_access?.oa_url || w.doi || '#',
@@ -2514,13 +2580,13 @@
       if (activeSnowball) {
         const yl = yearFilterLabel();
         const yrPart = yl ? ` · yalnızca ${escapeHtml(yl)} <button onclick="setYearFilter(${jsArg('all')})" class="underline underline-offset-2 hover:text-white" title="Kartopunda yıl süzgecini kaldır">Tüm yıllar</button>` : '';
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${activeSnowball.mode === 'cites' ? 'Atıf Yapanlar' : 'Benzerler'}${yrPart}</span>${pillCloseBtn('clearSnowball()')}</span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-violet-active text-[11px] flex items-center gap-1.5"><span>${snowballLabel(activeSnowball.mode)}${yrPart}</span>${pillCloseBtn('clearSnowball()')}</span>`);
       }
       if (rawQ) {
         const lbl = transQ !== rawQ
           ? `"${escapeHtml(rawQ)}" ${ic('arrow-right', 'w-3 h-3 inline-block align-[-2px]')} ${escapeHtml(transQ)}`
           : `"${escapeHtml(rawQ)}"`;
-        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Arama: ${lbl}</span>${pillCloseBtn('clearSearch()')}</span>`);
+        pills.push(`<span class="px-2.5 py-1 rounded-lg neon-primary-active text-[11px] flex items-center gap-1.5"><span>Arama${searchTAOnly ? ' (başlık/özet)' : ''}: ${lbl}</span>${pillCloseBtn('clearSearch()')}</span>`);
       }
 
       box.innerHTML = pills.join('');
@@ -2945,7 +3011,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=17';
+              frame.src = 'atlas.html?v=18';
               showVibeFromAtlas();
               return;
             }
@@ -2956,7 +3022,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=17';
+        frame.src = 'atlas.html?v=18';
       }
     }
 
@@ -3419,6 +3485,10 @@ ${art.abstractText}
                 <i data-lucide="git-branch" class="w-3.5 h-3.5"></i>
                 <span>Atıf Yapanlar (${art.citations})</span>
               </button>
+              <button onclick="triggerSnowball(${jsArg(art.id)}, 'refs', ${jsArg(art.title)})" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5" title="Bu makalenin kaynakçasındaki çalışmalar (geriye doğru kartopu)">
+                <i data-lucide="book-open" class="w-3.5 h-3.5 text-[var(--neon-primary)]"></i>
+                <span>Kaynakçası (${art.refCount})</span>
+              </button>
               <button onclick="triggerSnowball(${jsArg(art.id)}, 'related', ${jsArg(art.title)})" class="px-3 py-2 rounded-xl glass-pill hover:text-white flex items-center gap-1.5">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[var(--neon-primary)]"></i>
                 <span>Benzer Çalışmalar</span>
@@ -3659,6 +3729,120 @@ ${art.abstractText}
       resetAndFetch();
     }
 
+    // ARAMA KAYDI (PRISMA-S): sorgu + süzgeçler + tarih + sonuç sayısı, localStorage'da
+    function getSearchLog() {
+      const v = loadJSON(SEARCH_LOG_KEY, []);
+      return Array.isArray(v) ? v : [];
+    }
+
+    function setSearchLog(list) {
+      try { localStorage.setItem(SEARCH_LOG_KEY, JSON.stringify(list)); } catch (e) { showToast('Arama kaydı saklanamadı: tarayıcı deposu dolu.'); }
+      updateSearchLogCount();
+    }
+
+    function updateSearchLogCount() {
+      const el = document.getElementById('searchLogCount');
+      if (el) { const n = getSearchLog().length; el.textContent = n ? ` ${n}` : ''; }
+    }
+
+    function describeCurrentFilters(q) {
+      const out = ['Yayın türü: makale ve derleme'];
+      const yl = yearFilterLabel();
+      out.push('Yıl: ' + (yl || 'sınırsız') + (capFutureDates ? ' (bugünden ileri tarihli kayıtlar hariç)' : ''));
+      if (activeAuthorFilter) out.push('Yazar: ' + activeAuthorFilter.name);
+      else if (activeSnowball) out.push(snowballLabel(activeSnowball.mode) + ': ' + (activeSnowball.title || activeSnowball.workId));
+      else if (q.fallbackLevel === 'psych' || q.scope === 'psych') out.push('Kapsam: OpenAlex psikoloji, sinirbilim ve psikiyatri alt alanları');
+      else if (q.fallbackLevel === 'all') out.push('Kapsam: tüm disiplinler');
+      else if (activeJournal) out.push('Dergi: ' + activeJournal.name + (activeJournal.issn ? ' (ISSN ' + activeJournal.issn + ')' : ''));
+      else if (isFavJournalsStream) out.push('Dergiler: favori dergiler (' + favJournals.map(j => j.name).join('; ') + ')');
+      else if (activeDomain && activeDomain.journals) out.push('Dergiler: ' + activeDomain.name + ' havuzu (' + activeDomain.journals.length + ' dergi)');
+      const mk = document.getElementById('methodSelect');
+      if (mk.value !== 'ALL') out.push('Yöntem: ' + mk.options[mk.selectedIndex].text + ' — ' + API_METHOD_QUERIES[mk.value]);
+      if (onlyOA) out.push('Yalnızca açık erişim');
+      if (onlyQ1) out.push('Sadece Q1 (uygulama içi süzgeç; sayıya yansımaz)');
+      return out;
+    }
+
+    function saveCurrentSearch() {
+      if (isVaultMode || !lastQuery) { showToast('Kaydedilecek bir arama yok; önce bir sorgu çalıştır.'); return; }
+      const q = lastQuery;
+      const entry = {
+        id: Date.now().toString(36),
+        at: new Date().toISOString(),
+        query: q.rawQ || '',
+        sent: q.sent ? q.effectiveQ : '',
+        field: q.sent ? (searchTAOnly ? 'başlık ve özet' : 'başlık, özet ve tam metin') : '',
+        filters: describeCurrentFilters(q),
+        count: q.count,
+        url: q.apiUrl.replace(/[?&]api_key=[^&]*/, '')
+      };
+      const list = getSearchLog();
+      list.unshift(entry);
+      setSearchLog(list.slice(0, 200));
+      showToast(`Arama kaydedildi: ${q.count.toLocaleString('tr-TR')} kayıt.`);
+    }
+
+    function searchLogText(e) {
+      const d = new Date(e.at);
+      return [
+        `Veritabanı: OpenAlex (https://api.openalex.org), arama tarihi: ${d.toLocaleDateString('tr-TR')} ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`,
+        e.sent ? `Sorgu: ${e.sent}${e.query && e.query !== e.sent ? ` (yazılan: ${e.query})` : ''}` : 'Sorgu: yok (yalnızca süzgeçler)',
+        e.field ? `Arama alanı: ${e.field}` : '',
+        `Süzgeçler: ${e.filters.join('; ')}`,
+        `Sonuç: ${Number(e.count).toLocaleString('tr-TR')} kayıt`,
+        `API isteği: ${e.url}`
+      ].filter(Boolean).join('\n');
+    }
+
+    function openSearchLog() {
+      const list = getSearchLog();
+      const box = document.getElementById('searchLogList');
+      box.innerHTML = list.length ? list.map(e => `
+        <article class="rounded-xl border border-white/[0.08] p-3 space-y-1.5 text-[12.5px]">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <div class="font-medium title-ergonomic break-words">${escapeHtml(e.sent || 'Sorgusuz süzgeç araması')}</div>
+              <div class="text-[11px] text-[var(--text-muted)] num">${escapeHtml(new Date(e.at).toLocaleString('tr-TR'))} · ${escapeHtml(e.field || 'süzgeç')} · ${Number(e.count).toLocaleString('tr-TR')} kayıt</div>
+            </div>
+            <button onclick="deleteSearchLogEntry(${jsArg(e.id)})" class="p-1.5 rounded-lg glass-pill hover:text-white shrink-0" aria-label="Kaydı sil">${ic('trash-2', 'w-3.5 h-3.5')}</button>
+          </div>
+          <div class="text-[11.5px] text-[var(--text-muted)]">${e.filters.map(escapeHtml).join(' · ')}</div>
+        </article>`).join('')
+        : `<div class="text-center text-[13px] text-[var(--text-muted)] py-8">Henüz kayıtlı arama yok. Bir sorgu çalıştırıp "Aramayı kaydet"e bas.</div>`;
+      document.getElementById('searchLogModal').classList.remove('hidden');
+      refreshIcons();
+    }
+
+    function closeSearchLog() {
+      document.getElementById('searchLogModal').classList.add('hidden');
+    }
+
+    function deleteSearchLogEntry(id) {
+      setSearchLog(getSearchLog().filter(e => e.id !== id));
+      openSearchLog();
+    }
+
+    function copySearchLog() {
+      const list = getSearchLog();
+      if (!list.length) { showToast('Arama kaydı boş.'); return; }
+      const txt = list.slice().reverse().map((e, i) => `Arama ${i + 1}\n${searchLogText(e)}`).join('\n\n');
+      navigator.clipboard.writeText(txt).then(() => showToast('Arama kaydı kopyalandı.'), () => showToast('Kopyalanamadı.'));
+    }
+
+    function downloadSearchLogCsv() {
+      const list = getSearchLog();
+      if (!list.length) { showToast('Arama kaydı boş.'); return; }
+      const cell = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+      const rows = [['Tarih', 'Sorgu', 'Yazılan', 'Arama alanı', 'Süzgeçler', 'Sonuç', 'API isteği']]
+        .concat(list.slice().reverse().map(e => [e.at, e.sent, e.query, e.field, e.filters.join('; '), e.count, e.url]));
+      const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'vibepsych-arama-kaydi.csv';
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+
     function triggerSnowball(workId, mode, title) {
       closeInspector();
       isVaultMode = false;
@@ -3667,6 +3851,10 @@ ${art.abstractText}
       const yl = yearFilterLabel();
       if (yl) showToast(`Kartopu yıl süzgecine uyar: yalnızca ${yl} yayınları gösteriliyor. Eskileri için "Tüm yıllar"ı seç.`);
       resetAndFetch();
+    }
+
+    function snowballLabel(mode) {
+      return mode === 'cites' ? 'Atıf Yapanlar' : mode === 'refs' ? 'Kaynakçası' : 'Benzerler';
     }
 
     // Etkin yıl süzgecinin kısa adı ("Tümü" ise boş)
