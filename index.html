@@ -553,7 +553,7 @@
     #mobSheetBody #filterPanel { display: block; }
     #mobSheetBody #filterPanel > div:first-child { border-top: 0; padding-top: 0; }
     @media (prefers-reduced-motion: reduce) {
-      .mob-sheet, .sheet-backdrop, .mob-nav-ico { transition: none; }
+      .mob-sheet, .sheet-backdrop, .mob-nav-ico, #appHeader { transition: none !important; }
     }
 
     /* Mobil dokunma hedefleri (>=40px) ve okunabilir yazı boyu */
@@ -585,6 +585,9 @@
       #articlesContainer button[aria-label^="Dergiyi"] { min-width: 38px; min-height: 38px; display: inline-grid; place-items: center; }
       #articlesContainer .btn-icon { min-width: 44px; min-height: 44px; }
       #toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+      #appHeader { transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+      #appHeader.hdr-hidden { transform: translateY(calc(-100% - 2px)); }
+      .art-card .ghost-actions .btn-primary, .art-card .ghost-actions .btn-secondary { min-height: 44px; }
       /* Alan seçici popover'ı tetikleyiciye değil başlığa hizalanır; aksi halde sağdan taşıyordu */
       #disciplineDropdownWrapper {
         position: static;
@@ -621,7 +624,7 @@
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
   <!-- ZERO-NOISE STICKY COMMAND HEADER -->
-  <header class="sticky top-0 z-30 luxury-header px-3 sm:px-4 py-2.5">
+  <header id="appHeader" class="sticky top-0 z-30 luxury-header px-3 sm:px-4 py-2.5">
     <div class="max-w-5xl mx-auto space-y-2">
       
       <!-- ROW 1: Shared Top-Left Mode Switcher, Unified Search Bar & Utility Controls -->
@@ -1726,8 +1729,17 @@
         } else if (y < lastScrollY - 14 || y < 100) {
           rail.classList.remove('collapsed-nav');
         }
+        // Telefonda başlık aşağı kaydırınca gizlenir, yukarı kaydırınca geri gelir (arama yazılırken ve panel açıkken sabit)
+        if (isMobileViewport()) {
+          const hdr = document.getElementById('appHeader');
+          const busy = document.activeElement === document.getElementById('searchInput') || sheetKind
+            || !document.getElementById('autocompleteMenu').classList.contains('hidden');
+          if (y > 140 && y > lastScrollY + 6 && !busy) hdr.classList.add('hdr-hidden');
+          else if (y < lastScrollY - 6 || y < 80) hdr.classList.remove('hdr-hidden');
+        }
         lastScrollY = y;
       }, { passive: true });
+      document.getElementById('searchInput').addEventListener('focus', () => document.getElementById('appHeader').classList.remove('hdr-hidden'));
 
       window.addEventListener('keydown', (e) => {
         if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'a') {
@@ -3047,62 +3059,64 @@
         }
 
         return `
-          <article class="luxury-card ${isSeen ? 'seen-article' : ''} rounded-2xl p-4 sm:p-5 space-y-3">
+          <article class="luxury-card art-card ${isSeen ? 'seen-article' : ''} rounded-2xl p-3.5 sm:p-5 space-y-2.5 sm:space-y-3">
             
             <!-- KÜNYE SATIRI: rozet · dergi · favori · h-indeks ............ tarih -->
-            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-[11px]">
-              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                <span class="px-2 py-0.5 rounded-md font-semibold tracking-wide ${art.qClass}">${art.quartile}</span>
-                ${art.isPreprint ? `<span class="badge-preprint px-2 py-0.5 rounded-md font-semibold" title="Hakem değerlendirmesinden geçmemiş ön baskı">Preprint</span>` : ''}
-                ${art.retracted ? `<span class="badge-retracted px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1" title="Bu makale dergi tarafından geri çekilmiş (retracted). Bulgularına dayanma; atıf yapacaksan geri çekildiğini belirt.">${ic('triangle-alert', 'w-3 h-3')}<span>Geri çekildi</span></span>` : ''}
+            <div class="flex flex-nowrap sm:flex-wrap items-center justify-between gap-x-2 sm:gap-x-3 gap-y-1.5 text-[11px]">
+              <div class="flex flex-nowrap sm:flex-wrap items-center gap-x-2 gap-y-1 min-w-0 flex-1 sm:flex-initial">
+                <span class="px-2 py-0.5 rounded-md font-semibold tracking-wide whitespace-nowrap shrink-0 ${art.qClass}">${art.quartile}</span>
+                ${art.isPreprint ? `<span class="badge-preprint px-2 py-0.5 rounded-md font-semibold whitespace-nowrap shrink-0" title="Hakem değerlendirmesinden geçmemiş ön baskı">Preprint</span>` : ''}
+                ${art.retracted ? `<span class="badge-retracted px-2 py-0.5 rounded-md font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0" title="Bu makale dergi tarafından geri çekilmiş (retracted). Bulgularına dayanma; atıf yapacaksan geri çekildiğini belirt.">${ic('triangle-alert', 'w-3 h-3')}<span>Geri çekildi</span></span>` : ''}
                 <button 
                   onclick="filterByCardJournal(${jsArg(art.journalName)}, ${jsArg(art.issn)})"
                   title="Bu dergideki makaleleri göster"
-                  class="title-ergonomic hover:text-[var(--neon-primary)] font-medium transition text-left">
+                  class="title-ergonomic hover:text-[var(--neon-primary)] font-medium transition text-left truncate min-w-0">
                   ${escapeHtml(art.journalName)}
                 </button>
                 <button 
                   onclick="toggleFavoriteJournal(${jsArg(art.issn)}, ${jsArg(art.journalName)}, event)"
                   aria-label="${isFavVenue ? 'Dergiyi favorilerden çıkar' : 'Dergiyi favorilere ekle'}: ${escapeHtml(art.journalName)}"
                   aria-pressed="${isFavVenue ? 'true' : 'false'}"
-                  class="-ml-1 p-1 rounded hover:bg-white/[0.06] transition">
+                  class="-ml-1 p-1 rounded hover:bg-white/[0.06] transition shrink-0">
                   <i data-lucide="heart" class="w-3.5 h-3.5 ${isFavVenue ? 'text-[#D2042D] fill-[#D2042D]' : 'text-slate-500 hover:text-[#D2042D]'}"></i>
                 </button>
-                ${art.hIndex ? `<span class="text-[var(--text-muted)]" title="Derginin h-indeksi">h <span class="num">${art.hIndex}</span></span>` : ''}
+                ${art.hIndex ? `<span class="hidden sm:inline text-[var(--text-muted)]" title="Derginin h-indeksi">h <span class="num">${art.hIndex}</span></span>` : ''}
               </div>
-              <div class="flex items-center gap-2 text-[var(--text-muted)]">
-                ${isSeen ? `<span class="inline-flex items-center gap-1">${ic('check', 'w-3 h-3')}<span>İncelendi</span></span>` : ''}
-                <time class="num" datetime="${escapeHtml(art.pubDate)}">${escapeHtml(art.pubDate)}</time>
+              <div class="flex items-center gap-2 text-[var(--text-muted)] shrink-0">
+                ${isSeen ? `<span class="inline-flex items-center gap-1" title="İncelendi">${ic('check', 'w-3 h-3')}<span class="hidden sm:inline">İncelendi</span></span>` : ''}
+                <time class="num" datetime="${escapeHtml(art.pubDate)}"><span class="sm:hidden">${escapeHtml(shortPubDate(art.pubDate))}</span><span class="hidden sm:inline">${escapeHtml(art.pubDate)}</span></time>
               </div>
             </div>
 
             <!-- EDITORIAL SERIF TITLE & AUTHORS -->
             <div class="space-y-1">
-              <h2 onclick="openInspector(${jsArg(art.id)})" class="font-serif text-lg sm:text-xl font-medium title-ergonomic hover:text-[var(--neon-primary)] transition cursor-pointer leading-[1.32] tracking-[-0.01em]">
+              <h2 onclick="openInspector(${jsArg(art.id)})" class="font-serif text-[17px] sm:text-xl font-medium title-ergonomic hover:text-[var(--neon-primary)] transition cursor-pointer leading-[1.3] sm:leading-[1.32] tracking-[-0.01em]">
                 ${titleHL.html}
               </h2>
               <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
-                ${art.authorObjs.map(au => `
-                  <button onclick="pivotByAuthor(${jsArg(au.id)}, ${jsArg(au.name)})" class="hover:text-[var(--neon-primary)] hover:underline transition">
+                ${art.authorObjs.map((au, i) => `
+                  ${i > 0 ? '<span class="hidden sm:inline text-slate-600">•</span>' : ''}
+                  <button onclick="pivotByAuthor(${jsArg(au.id)}, ${jsArg(au.name)})" class="${i > 0 ? 'hidden sm:inline ' : ''}hover:text-[var(--neon-primary)] hover:underline transition">
                     ${escapeHtml(au.name)}
                   </button>
-                `).join('<span class="text-slate-600">•</span>')}
-                ${art.totalAuthors > 4 ? `<span class="text-slate-500 font-mono text-[11px]">+${art.totalAuthors - 4}</span>` : ''}
+                `).join('')}
+                ${art.totalAuthors > 1 ? `<span class="sm:hidden text-slate-500 text-[11px]">+${art.totalAuthors - 1}</span>` : ''}
+                ${art.totalAuthors > 4 ? `<span class="hidden sm:inline text-slate-500 font-mono text-[11px]">+${art.totalAuthors - 4}</span>` : ''}
                 ${art.citations > 0 ? `<span class="text-slate-600">·</span><span class="text-[var(--text-muted)]"><span class="num">${art.citations}</span> atıf</span>` : ''}
                 ${art.top10 ? `<span class="badge-top px-1.5 py-0.5 rounded-md" title="Atıf sayısı, aynı yıl ve alanda yayımlanan çalışmaların ilk %${art.top1 ? 1 : 10}'luk diliminde (OpenAlex alan-normalize persentil). Ham atıf sayısı makalenin yaşına göre yanıltıcı olabilir; bu ölçüt yaşı ve alanı hesaba katar.">Alanında ilk %${art.top1 ? 1 : 10}</span>` : ''}
               </div>
             </div>
 
             <!-- ERGONOMIC ABSTRACT PREVIEW -->
-            <p onclick="openInspector(${jsArg(art.id)})" class="text-[13.5px] body-ergonomic ${hits > 0 ? 'line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
+            <p onclick="openInspector(${jsArg(art.id)})" class="text-[13.5px] body-ergonomic ${hits > 0 ? 'line-clamp-3 sm:line-clamp-4' : 'line-clamp-2'} cursor-pointer hover:text-slate-200 transition">
               ${absHL.html}
             </p>
 
             <!-- GHOST ACTION BAR -->
-            <div class="ghost-actions flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-mono">
-              <div class="flex flex-wrap items-center gap-1.5">
-                ${art.methods.map(m => `<span class="px-2 py-0.5 rounded-md glass-pill">${escapeHtml(m)}</span>`).join('')}
-                ${art.isOA ? `<span class="px-2 py-0.5 rounded-md badge-q1-elite">Açık Erişim PDF</span>` : ''}
+            <div class="ghost-actions flex flex-wrap items-center justify-between gap-2 pt-0.5 sm:pt-1 text-[11px] font-mono">
+              <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                ${art.methods.map(m => `<span class="hidden sm:inline px-2 py-0.5 rounded-md glass-pill">${escapeHtml(m)}</span>`).join('')}
+                ${art.isOA ? `<span class="px-2 py-0.5 rounded-md badge-q1-elite"><span class="sm:hidden">Açık erişim</span><span class="hidden sm:inline">Açık Erişim PDF</span></span>` : ''}
                 ${isVaultMode && savedObj ? `
                   <select onchange="changeArticleFolder(${jsArg(art.id)}, this.value)" aria-label="Klasör" class="themed-select rounded-md px-2 py-0.5 text-[10px]">
                     ${customCollections.map(c => `<option value="${escapeHtml(c)}" ${(savedObj.folder || 'Genel Okumalar') === c ? 'selected' : ''}>Klasör: ${escapeHtml(c)}</option>`).join('')}
@@ -4522,6 +4536,14 @@ ${art.abstractText}
       const yl = yearFilterLabel();
       if (yl) showToast(`Kartopu yıl süzgecine uyar: yalnızca ${yl} yayınları gösteriliyor. Eskileri için "Tüm yıllar"ı seç.`);
       resetAndFetch();
+    }
+
+    // Telefonda kart tarihi: bu yıl "27 Eki", önceki yıllar yalnızca yıl
+    const TR_MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    function shortPubDate(iso) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+      if (!m) return String(iso || '');
+      return +m[1] === CURRENT_YEAR ? `${+m[3]} ${TR_MONTHS[+m[2] - 1]}` : m[1];
     }
 
     function snowballLabel(mode) {
