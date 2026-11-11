@@ -636,6 +636,22 @@ body.splitting #pdfScroll{pointer-events:none}
 .scrwhy select{max-width:320px}
 .scrfoot{display:flex;justify-content:flex-end}
 .scrrow.conf{box-shadow:inset 0 0 0 1px #ffb454}
+.termbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+.termbar .tsum{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.termbar .tsum mark{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}
+.termedit{flex:1 1 100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.termedit label{display:flex;flex-direction:column;gap:4px}
+.termedit small{grid-column:1/-1;color:var(--faint)}
+mark.tinc,mark.texc{border-radius:4px;padding:0 2px;color:var(--fg)}
+mark.tinc{background:color-mix(in srgb,var(--ok) 28%,transparent)}
+mark.texc{background:color-mix(in srgb,var(--danger) 30%,transparent)}
+.thit{display:inline-block;margin-left:8px;padding:0 6px;border-radius:999px;font:600 11px var(--font-ui);vertical-align:2px}
+.thit.inc{background:color-mix(in srgb,var(--ok) 22%,transparent);color:var(--ok)}
+.thit.exc{background:color-mix(in srgb,var(--danger) 22%,transparent);color:var(--danger)}
+#dlgPrisma{width:min(920px,calc(100vw - 24px))}
+.prwrap{background:#fff;border-radius:10px;padding:8px;overflow:auto;max-height:62vh}
+.prwrap img{display:block;width:100%;height:auto;min-width:560px}
+@media (max-width:820px){ .termedit{grid-template-columns:1fr} }
 .rvbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;margin:0 0 10px;border:1px solid var(--line);border-radius:12px;font-size:12.5px;color:var(--muted)}
 .rvbar b{color:var(--fg)}
 .rvk.muted{color:var(--faint)}
@@ -869,6 +885,14 @@ body.splitting #pdfScroll{pointer-events:none}
   </div>
 </dialog>
 
+<dialog id="dlgPrisma">
+  <div class="dlg" style="max-width:none">
+    <h2>PRISMA 2020 akış şeması</h2>
+    <p style="margin:0;color:var(--muted);font-size:13px">Sayılar görünen klasörün içe aktarım kaydından ve tarama kararlarından gelir; kararlar değişince yeniden indir. Dil: <b id="prLang"></b> (Veri &gt; Atıf dili).</p>
+    <div class="prwrap"><img id="prImg" alt="PRISMA akış şeması önizlemesi"></div>
+    <div class="actions"><span class="grow"></span><button class="btn" type="button" onclick="document.getElementById('dlgPrisma').close()">Kapat</button><button class="btn" type="button" id="prSvg">SVG indir</button><button class="btn primary" type="button" id="prPng">PNG indir</button></div>
+  </div>
+</dialog>
 <dialog id="dlgImp">
   <div class="dlg">
     <h2>Kayıt içe aktar</h2>
@@ -1224,6 +1248,7 @@ function prismaText(x){
 }
 function renderScreen(){
   const L=libState(), stage=L.stage==='ft'?'ft':'ta', key=stage, why=stage+'Why';
+  const TR=termRegex(scrTerms());
   $$('#libStage button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage===stage)));
   $$('#libDec button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.dec===L.dec)));
   const q=L.q.trim().toLocaleLowerCase('tr-TR'), pool=scrPool(stage);
@@ -1243,17 +1268,17 @@ function renderScreen(){
     +'<div class="pr-step"><b>'+x.n+'</b><span>taranan kayıt</span></div><i class="pr-arr"></i>'
     +'<div class="pr-step"><b>'+x.taIn+'</b><span>tam metne geçti</span><small>'+x.taOut+' hariç'+(x.taMaybe?' · '+x.taMaybe+' belirsiz':'')+'</small></div><i class="pr-arr"></i>'
     +'<div class="pr-step"><b>'+x.ftIn+'</b><span>dahil edildi</span><small>'+x.ftOut+' tam metinde hariç</small></div>'
-    +'<span class="grow"></span><div class="pr-acts"><button class="btn sm" data-scr-copy>PRISMA sayılarını kopyala</button><button class="btn sm" data-scr-csv>Kararları CSV indir</button></div></div>'
-    +rvBar(stage);
+    +'<span class="grow"></span><div class="pr-acts"><button class="btn sm primary" data-scr-chart>PRISMA şeması</button><button class="btn sm" data-scr-copy>PRISMA sayılarını kopyala</button><button class="btn sm" data-scr-csv>Kararları CSV indir</button></div></div>'
+    +rvBar(stage)+termBar();
   if(!pool.length){ $('#libBody').innerHTML=box+'<div class="libempty"><b>'+(stage==='ft'?'Tam metne geçen kayıt yok':'Bu klasörde kayıt yok')+'</b><span>'+(stage==='ft'?'Önce başlık/özet aşamasında “Dahil” kararı ver.':'Derleme kayıtlarını bir klasörde topla; tarama görünen klasörde yapılır.')+'</span></div>'; return; }
   if(!list.length){ $('#libBody').innerHTML=box+'<div class="libempty"><b>'+(L.dec==='todo'?'Bu aşamada bekleyen kayıt kalmadı':L.dec==='conf'?'Uzlaşılmamış uyuşmazlık yok':'Eşleşen kayıt yok')+'</b><span>'+(L.dec==='conf'?'İkinci hakemin karar dosyasını içe aktardığında iki kararın farklı olduğu kayıtlar burada listelenir.':'Üstten başka bir karar süzgeci seç.')+'</span></div>'; return; }
   $('#libBody').innerHTML=box+list.map(p=>{
     const s=p.scr||{}, v=s[key]||'';
     return '<article class="scrrow'+(v?' dec-'+v:'')+(rvConflict(p,key)?' conf':'')+'" tabindex="0" data-scr="'+esc(p.id)+'">'
-      +'<div class="scrhead"><div class="libmain"><div class="libttl">'+esc(p.title||'Adsız makale')+'</div>'
+      +'<div class="scrhead"><div class="libmain"><div class="libttl">'+hlTerms(p.title||'Adsız makale',TR)+termHits(p,TR)+'</div>'
       +'<div class="libsub">'+(p.retracted?'<span class="chip retr">Geri çekildi</span>':'')+'<span>'+esc(shortLabel(p))+'</span>'+(p.journal?'<span class="jr">'+esc(p.journal)+'</span>':'')+(stage==='ft'?'<span class="'+(p.hasPdf?'':'warnt')+'">'+(p.hasPdf?'PDF var':'PDF yok')+'</span>':'')+'</div></div>'
       +'<div class="scrbtns" role="group" aria-label="Karar">'+Object.entries(SCR_DEC).map(([k,n])=>'<button class="scrb sb-'+k+'" data-dec="'+k+'" aria-pressed="'+(v===k)+'">'+n+'</button>').join('')+'</div></div>'
-      +(stage==='ta'?(p.abstract?'<p class="scrabs">'+esc(p.abstract)+'</p>':'<p class="scrabs none">Özet yok. Başlığa göre karar ver ya da makaleyi açıp oku.</p>'):'')
+      +(stage==='ta'?(p.abstract?'<p class="scrabs">'+hlTerms(p.abstract,TR)+'</p>':'<p class="scrabs none">Özet yok. Başlığa göre karar ver ya da makaleyi açıp oku.</p>'):'')
       +rvLine(p,key)
       +(v==='out'?'<div class="scrwhy"><select class="libsel" data-why="'+esc(p.id)+'" aria-label="Hariç tutma gerekçesi"><option value="">Gerekçe seç</option>'+SCR_REASONS.map(r=>'<option'+(s[why]===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></div>':'')
       +'<div class="scrfoot"><button class="btn sm" data-scr-open="'+esc(p.id)+'">Okuma\'da aç</button></div>'
@@ -1286,6 +1311,95 @@ const rvInd=(p,k)=>((p.scrInd||{})[k])||((!p.scr2||!p.scr2[k])?((p.scr||{})[k]||
 const rvName2=()=>{ const p=vis().find(x=>x.scr2&&x.scr2.by); return p?p.scr2.by:''; };
 function rvConflict(p,k){ const a=rvInd(p,k), b=p.scr2&&p.scr2[k]; return !!(a&&b&&a!==b&&!((p.scrRes||{})[k])); }
 /* Kappa ikili hesaplanır: Dahil ve Belirsiz = "dahil", Hariç = "hariç" (başlık/özet taramasında yaygın, temkinli yaklaşım). */
+/* ---------- Taramada dahil/hariç terim vurgusu ----------
+   Terimler virgül ya da satırla ayrılır; sonda * kök araması yapar (adolesc* -> adolescent, adolescence). Büyük/küçük harf ve Türkçe aksan duyarsız.
+   Terimler klasöre göre saklanır (S.ui.scrTerms[klasör]). */
+function scrTerms(){ const f=S.ui.folder||'*'; const all=S.ui.scrTerms||{}; return all[f]||{inc:'',exc:''}; }
+function setScrTerms(o){ const f=S.ui.folder||'*'; S.ui.scrTerms=Object.assign({},S.ui.scrTerms||{},{[f]:Object.assign({},scrTerms(),o)}); save(); }
+function termRegex(o){
+  const part=s=>String(s||'').split(/[,\n;]+/).map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/[.+?^${}()|[\]\\]/g,'\\$&').replace(/\\?\*/g,'[\\p{L}\\p{N}]*').replace(/\s+/g,'\\s+'));
+  const mk=a=>a.length?new RegExp('(?<![\\p{L}\\p{N}])(?:'+a.join('|')+')(?![\\p{L}\\p{N}])','giu'):null;
+  return {inc:mk(part(o&&o.inc)),exc:mk(part(o&&o.exc))};
+}
+/* Ham metni kaçışlı HTML'e çevirir, eşleşmeleri <mark> ile sarar (hariç tutma terimi öncelikli) */
+function hlTerms(text,R){
+  text=String(text==null?'':text); if(!R||(!R.inc&&!R.exc)) return esc(text);
+  const hits=[];
+  [['exc',R.exc],['inc',R.inc]].forEach(([k,re])=>{ if(!re) return; re.lastIndex=0; let m; while((m=re.exec(text))){ if(!m[0]){ re.lastIndex++; continue; } hits.push({s:m.index,e:m.index+m[0].length,k}); } });
+  hits.sort((a,b)=>a.s-b.s||(a.k==='exc'?-1:1));
+  let out='', pos=0; hits.forEach(h=>{ if(h.s<pos) return; out+=esc(text.slice(pos,h.s))+'<mark class="t'+h.k+'">'+esc(text.slice(h.s,h.e))+'</mark>'; pos=h.e; });
+  return out+esc(text.slice(pos));
+}
+function termCount(text,re){ if(!re) return 0; re.lastIndex=0; return (String(text||'').match(re)||[]).length; }
+function termHits(p,R){
+  if(!R||(!R.inc&&!R.exc)) return '';
+  const t=(p.title||'')+' '+(p.abstract||''), i=termCount(t,R.inc), x=termCount(t,R.exc);
+  return (i?'<span class="thit inc" title="Dahil terimi eşleşmesi">+'+i+'</span>':'')+(x?'<span class="thit exc" title="Hariç terimi eşleşmesi">−'+x+'</span>':'');
+}
+function termBar(){
+  const o=scrTerms(), open=!!S.ui.termOpen, has=!!(o.inc||o.exc);
+  return '<div class="termbar"><button class="lnk" type="button" data-term-toggle>'+(open?'Vurgu terimlerini gizle':'Vurgu terimleri')+'</button>'
+    +(has&&!open?'<span class="tsum">'+(o.inc?'<mark class="tinc">'+esc(o.inc.slice(0,60))+'</mark>':'')+(o.exc?'<mark class="texc">'+esc(o.exc.slice(0,60))+'</mark>':'')+'</span>':'')
+    +(open?'<div class="termedit"><label>Dahil (yeşil)<textarea class="in" rows="2" data-term="inc" placeholder="adolesc*, randomized, anxiety">'+esc(o.inc)+'</textarea></label>'
+      +'<label>Hariç (kırmızı)<textarea class="in" rows="2" data-term="exc" placeholder="rat*, mice, animal model">'+esc(o.exc)+'</textarea></label>'
+      +'<small>Virgülle ayır; sonda * kök araması yapar. Bu klasöre kaydedilir.</small></div>':'')+'</div>';
+}
+
+/* ---------- PRISMA 2020 akış şeması (SVG / PNG) ----------
+   Yayın biçimi: beyaz zemin, siyah çizgi, sistem yazı tipi. Dil atıf diliyle aynı (Veri > Atıf dili). */
+function prismaSvg(x,lang){
+  const en=lang==='en', I=x.ident||{has:false}, W=860, BW=380, RX=470, RW=360, LX=60, FS=14, LH=19;
+  const T=en?{id:'Identification',sc:'Screening',inc:'Included',db:'Records identified from databases',oth:'Records identified from other sources',rm:'Records removed before screening:',dup:'Duplicate records',nm:'Already in another folder',sk:'Records without a title',scr:'Records screened',ex:'Records excluded',pend:'Awaiting decision',as:'Reports assessed for eligibility',rex:'Reports excluded:',incl:'Studies included in review',nr:'Not specified',src:'Records identified'}
+    :{id:'Tanımlama',sc:'Tarama',inc:'Dahil etme',db:'Veritabanlarından bulunan kayıtlar',oth:'Diğer yollarla bulunan kayıtlar',rm:'Taramadan önce çıkarılan kayıtlar:',dup:'Yinelenen kayıtlar',nm:'Başka klasörde kalan',sk:'Başlıksız kayıtlar',scr:'Taranan kayıtlar',ex:'Hariç tutulan kayıtlar',pend:'Karar bekleyen',as:'Uygunluk için değerlendirilen tam metinler',rex:'Hariç tutulan tam metinler:',incl:'Derlemeye dahil edilen çalışmalar',nr:'Belirtilmedi',src:'Bulunan kayıtlar'};
+  const n=v=>'(n = '+(+v||0).toLocaleString(en?'en-US':'tr-TR')+')';
+  const wrap=(s,max)=>{ const out=[]; let line=''; String(s).split(/\s+/).forEach(w=>{ if((line+' '+w).trim().length>max&&line){ out.push(line); line=w; } else line=(line+' '+w).trim(); }); if(line) out.push(line); return out; };
+  const boxLines=items=>items.flatMap(it=>wrap(it.t,it.max||50).map((l,i)=>({t:l,b:it.b&&i===0,ind:it.ind})));
+  const svgEsc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let y=30, out=[];
+  const box=(x0,y0,w,lines,minH)=>{ const h=Math.max(lines.length*LH+22,minH||0); /* aşama etiketi dikey sığsın */ out.push('<rect x="'+x0+'" y="'+y0+'" width="'+w+'" height="'+h+'" rx="4" fill="#fff" stroke="#111" stroke-width="1.4"/>');
+    lines.forEach((l,i)=>out.push('<text x="'+(x0+14+(l.ind?14:0))+'" y="'+(y0+18+i*LH+FS-3)+'"'+(l.b?' font-weight="600"':'')+'>'+svgEsc(l.t)+'</text>')); return h; };
+  const arrow=(x1,y1,x2,y2)=>out.push('<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#111" stroke-width="1.4" marker-end="url(#ah)"/>');
+  const phases=[];
+  /* Tanımlama */
+  const idL=[];
+  if(I.has){ idL.push({t:T.db+' '+n(I.n),b:true}); I.src.forEach(([k,v])=>idL.push({t:k+' '+n(v),ind:true})); if(I.other) idL.push({t:T.oth+' '+n(I.other),b:true}); }
+  else idL.push({t:T.src+' '+n(x.n),b:true},{t:'('+T.nr+')',ind:true});
+  const rmL=[{t:T.rm,b:true}]; if(I.has){ rmL.push({t:T.dup+' '+n(I.dup),ind:true}); if(I.notMoved) rmL.push({t:T.nm+' '+n(I.notMoved),ind:true}); if(I.skipped) rmL.push({t:T.sk+' '+n(I.skipped),ind:true}); } else rmL.push({t:T.dup+' '+n(0),ind:true});
+  const y0=y, h1=box(LX,y,BW,boxLines(idL),96), h1r=box(RX,y,RW,boxLines(rmL.map(l=>Object.assign({max:44},l))),96);
+  const r1=Math.max(h1,h1r); arrow(LX+BW,y+Math.min(h1,h1r)/2,RX-2,y+Math.min(h1,h1r)/2); phases.push([T.id,y0,y+r1]);
+  arrow(LX+BW/2,y+h1,LX+BW/2,y+r1+38); y+=r1+40;
+  /* Tarama */
+  const y1=y;
+  const h2=box(LX,y,BW,boxLines([{t:T.scr+' '+n(x.n),b:true}]));
+  const exL=[{t:T.ex+' '+n(x.taOut),b:true}]; if(x.taMaybe) exL.push({t:T.pend+' '+n(x.taMaybe),ind:true});
+  const pendTa=Math.max(0,x.n-x.taDone); if(pendTa&&!x.taMaybe) exL.push({t:T.pend+' '+n(pendTa),ind:true});
+  const h2r=box(RX,y,RW,boxLines(exL)); arrow(LX+BW,y+h2/2,RX-2,y+h2/2);
+  arrow(LX+BW/2,y+h2,LX+BW/2,y+Math.max(h2,h2r)+38); y+=Math.max(h2,h2r)+40;
+  const h3=box(LX,y,BW,boxLines([{t:T.as+' '+n(x.taIn),b:true}]));
+  const rexL=[{t:T.rex+' '+n(x.ftOut),b:true}].concat((x.ftWhy||[]).map(([k,v])=>({t:k+' '+n(v),ind:true,max:44})));
+  const h3r=box(RX,y,RW,boxLines(rexL)); arrow(LX+BW,y+h3/2,RX-2,y+h3/2);
+  phases.push([T.sc,y1,y+Math.max(h3,h3r)]);
+  arrow(LX+BW/2,y+h3,LX+BW/2,y+Math.max(h3,h3r)+38); y+=Math.max(h3,h3r)+40;
+  /* Dahil */
+  const y2=y, h4=box(LX,y,BW,boxLines([{t:T.incl+' '+n(x.ftIn),b:true}]),96); phases.push([T.inc,y2,y+h4]); y+=h4+30;
+  phases.forEach(([lab,a,b])=>{ out.push('<rect x="12" y="'+a+'" width="30" height="'+(b-a)+'" rx="4" fill="#dfe6f5" stroke="#111" stroke-width="1"/>');
+    out.push('<text transform="translate(31 '+((a+b)/2)+') rotate(-90)" text-anchor="middle" font-weight="600">'+svgEsc(lab)+'</text>'); });
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+y+'" viewBox="0 0 '+W+' '+y+'" font-family="Arial, Helvetica, sans-serif" font-size="'+FS+'" fill="#111">'
+    +'<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#111"/></marker></defs>'
+    +'<rect width="100%" height="100%" fill="#fff"/>'+out.join('')+'</svg>';
+}
+function openPrismaChart(){
+  const svg=prismaSvg(prisma(),citeLang()), url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  $('#prImg').src=url; $('#prLang').textContent=citeLang()==='en'?'İngilizce':'Türkçe'; $('#dlgPrisma').showModal();
+}
+function downloadPrisma(kind){
+  const svg=prismaSvg(prisma(),citeLang()), name='prisma-akis-'+today();
+  if(kind==='svg'){ if(dlFile(name+'.svg',svg,'image/svg+xml')) toast('PRISMA şeması (SVG) indirildi'); return; }
+  const im=new Image(); im.onload=()=>{ const k=2, c=document.createElement('canvas'); c.width=im.width*k; c.height=im.height*k; const g=c.getContext('2d'); g.scale(k,k); g.drawImage(im,0,0);
+    c.toBlob(b=>{ if(!b) return toast('PNG oluşturulamadı'); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name+'.png'; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast('PRISMA şeması (PNG) indirildi'); },'image/png'); };
+  im.onerror=()=>toast('PNG oluşturulamadı'); im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+
 /* İkili Cohen kappa: a, b = iki hakemin kararları ('in' | 'maybe' | 'out'); Dahil ve Belirsiz bir arada sayılır */
 function kappa2(a,b){
   const n=a.length; if(!n) return {n:0};
@@ -1375,6 +1489,7 @@ function rvResolve(id,take){
   if(take){ s[key]=p.scr2[key]; if(s[key]==='out') s[key+'Why']=p.scr2[key+'Why']||s[key+'Why']||''; else delete s[key+'Why']; if(key==='ta'&&s.ta!=='in'){ delete s.ft; delete s.ftWhy; } }
   (p.scrRes=p.scrRes||{})[key]=true; save(); renderScreen();
 }
+$('#libBody').addEventListener('change',e=>{ const ta=e.target.closest('[data-term]'); if(!ta) return; setScrTerms({[ta.dataset.term]:ta.value}); renderScreen(); });
 $('#rvFile').onchange=()=>{ const f=$('#rvFile').files[0]; $('#rvFile').value=''; if(f) rvImport(f); };
 
 /* ---------- Kütüphane ---------- */
@@ -1445,6 +1560,9 @@ $('#libBody').addEventListener('click',e=>{
     const d=e.target.closest('[data-dec]'), row=e.target.closest('[data-scr]');
     if(d&&row){ scrDecide(row.dataset.scr,d.dataset.dec,true); return; }
     const o=e.target.closest('[data-scr-open]'); if(o){ libOpen(o.dataset.scrOpen); return; }
+    if(e.target.closest('[data-scr-chart]')){ openPrismaChart(); return; }
+    if(e.target.closest('[data-term-toggle]')){ S.ui.termOpen=!S.ui.termOpen; save(); renderScreen(); if(S.ui.termOpen){ const ta=$('#libBody [data-term="inc"]'); if(ta) ta.focus(); } return; }
+    if(e.target.closest('[data-term]')) return;
     if(e.target.closest('[data-scr-copy]')){ copy(prismaText(prisma()),'PRISMA sayıları kopyalandı'); return; }
     if(e.target.closest('[data-scr-csv]')){ scrCsv(); return; }
     const kp=e.target.closest('[data-rv-keep]'), tk=e.target.closest('[data-rv-take]');
@@ -2701,7 +2819,7 @@ document.addEventListener('keydown',e=>{
   const tag=(e.target.tagName||'').toLowerCase(); if(['input','textarea','select'].includes(tag)||e.target.isContentEditable) return;
   if(!$('#view-map').hidden){ if(e.key==='+'||e.key==='=') zoomMap(1.25); if(e.key==='-') zoomMap(.8); if(e.key==='0') fitMap(); if(e.key==='Escape') clearSel(); }
 });
-['dlgPal','dlgAdd','dlgFolders','dlgLink','dlgData','dlgImp'].forEach(id=>{ const d=$('#'+id); d.addEventListener('click',e=>{ if(e.target===d) d.close(); }); });
+['dlgPal','dlgAdd','dlgFolders','dlgLink','dlgData','dlgImp','dlgPrisma'].forEach(id=>{ const d=$('#'+id); d.addEventListener('click',e=>{ if(e.target===d) d.close(); }); });
 
 /* ---------- Bağlantı diyaloğu ---------- */
 const LK={id:null,type:null};
@@ -3198,7 +3316,8 @@ $('#impOk').onclick=()=>{
   impParsed=null;
 };
 $('#impCancel').onclick=()=>$('#dlgImp').close();
-$('#libImport').onclick=openImp; $('#dImpRec').onclick=openImp;
+$('#libImport').onclick=openImp;
+$('#prSvg').onclick=()=>downloadPrisma('svg'); $('#prPng').onclick=()=>downloadPrisma('png'); $('#dImpRec').onclick=openImp;
 
 async function importData(txt){
   let d; try{ d=JSON.parse(txt); }catch(e){ return toast('JSON okunamadı'); }

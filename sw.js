@@ -1,7 +1,7 @@
 // VibePsych + Okuma Atlası hizmet çalışanı: uygulama internetsiz açılabilsin, ana ekrana kurulabilsin.
 // Sayfalar (HTML) her zaman önce ağdan istenir (güncellemeler hemen gelsin); ağ yoksa son kopya açılır.
 // Kütüphaneler ve fontlar önbellekten verilir, arkada yenilenir. Veri API'leri (OpenAlex, Crossref, Firebase) hiç önbelleğe alınmaz.
-const VERSION = 'vp-2026-11-11-1';
+const VERSION = 'vp-2026-11-11-2';
 const SHELL = [
   './', './index.html', './atlas.html', './firebase-config.js', './manifest.webmanifest', './icon.svg',
   './vendor/pdf.min.js', './vendor/pdf.worker.min.js', './vendor/fonts.css'

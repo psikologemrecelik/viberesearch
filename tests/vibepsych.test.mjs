@@ -34,7 +34,7 @@ function load(src, names, extra = {}) {
 }
 
 const A = load(ATLAS, ['impAuthor', 'impDoi', 'impPage', 'parseRis', 'parseMedline', 'TEX_ACC', 'texClean', 'parseBib', 'parseRecords',
-  'num', 'esConv', 'kappa2', 'cloudHash', 'impTitleKey', 'impDoiKey']);
+  'num', 'esConv', 'kappa2', 'cloudHash', 'impTitleKey', 'impDoiKey', 'esc', 'termRegex', 'hlTerms', 'termCount', 'prismaSvg']);
 const CURRENT_YEAR = new Date().getFullYear();
 const V = load(INDEX, ['TR_MONTHS', 'shortPubDate', 'APA_PROPER', 'apaSentenceCase'], { CURRENT_YEAR });
 
@@ -152,4 +152,24 @@ test('kart için kısa tarih', () => {
   assert.equal(V.shortPubDate(`${CURRENT_YEAR}-10-27`), '27 Eki');
   assert.equal(V.shortPubDate('2019-03-01'), '2019');
   assert.equal(V.shortPubDate('x'), 'x');
+});
+
+// ---------- Tarama terim vurgusu ve PRISMA şeması ----------
+test('dahil/hariç terim vurgusu: kök araması, kelime sınırı, kaçış', () => {
+  const R = A.termRegex({ inc: 'adolesc*, anxiety', exc: 'rat*' });
+  const h = A.hlTerms('Anxiety in adolescents & rats <b>', R);
+  assert.equal(h, '<mark class="tinc">Anxiety</mark> in <mark class="tinc">adolescents</mark> &amp; <mark class="texc">rats</mark> &lt;b&gt;');
+  assert.equal(A.termCount('separate pirates', A.termRegex({ inc: 'rat' }).inc), 0);
+  assert.equal(A.hlTerms('a.b (c)', A.termRegex({ inc: 'a.b' })), '<mark class="tinc">a.b</mark> (c)');
+  assert.equal(A.hlTerms('x', A.termRegex({})), 'x');
+});
+
+test('PRISMA şeması sayıları ve dili içerir', () => {
+  const x = { n: 4, taDone: 4, taOut: 2, taMaybe: 0, taIn: 2, ftDone: 2, ftOut: 1, ftWhy: [['Konu dışı', 1]], ftIn: 1,
+    ident: { has: true, n: 7, dup: 3, notMoved: 0, skipped: 0, other: 0, src: [['Scopus', 3], ['PsycINFO', 2], ['PubMed', 2]] } };
+  const tr = A.prismaSvg(x, 'tr'), en = A.prismaSvg(x, 'en');
+  assert.ok(tr.startsWith('<svg') && tr.endsWith('</svg>'));
+  for (const s of ['Veritabanlarından bulunan kayıtlar (n = 7)', 'Yinelenen kayıtlar (n = 3)', 'Taranan kayıtlar (n = 4)', 'Konu dışı (n = 1)', 'Derlemeye dahil edilen']) assert.ok(tr.includes(s), s);
+  assert.ok(en.includes('Records identified from databases (n = 7)') && en.includes('Studies included in review (n = 1)'));
+  assert.ok(!A.prismaSvg(Object.assign({}, x, { ident: { has: false } }), 'tr').includes('NaN'));
 });
