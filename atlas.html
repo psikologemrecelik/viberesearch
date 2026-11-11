@@ -3,6 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Okuma Atlası</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#090b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="vendor/fonts.css">
 <style>
@@ -78,6 +84,7 @@ main{flex:1;min-height:0;position:relative}
 /* Okuma */
 .pdfpane{flex:1 1 0;display:flex;flex-direction:column}
 .pdfbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pdfbar .rowbreak{display:none}
 .papersw{display:flex;align-items:center;gap:8px;max-width:min(420px,100%);padding:5px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:500;min-width:0}
 .papersw span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pgind{font:500 12px var(--font-mono);color:var(--muted);min-width:64px;text-align:center;padding:3px 6px;border-radius:8px}
@@ -399,6 +406,11 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
 .rtepop i.none{background:linear-gradient(135deg,transparent 45%,var(--danger) 45%,var(--danger) 55%,transparent 55%)!important}
 .rte{min-height:max(52vh,380px);padding:16px 18px 40px;outline:none;font-size:15px;line-height:1.7;color:var(--fg);word-wrap:break-word;cursor:text}
 .rte p{margin:0 0 8px}
+.rte table{border-collapse:collapse;margin:8px 0 12px;display:block;overflow-x:auto;max-width:100%}
+.rte th,.rte td{border:1px solid var(--line);padding:6px 10px;min-width:80px;vertical-align:top;text-align:left}
+.rte th{background:var(--surface-2);font-weight:600}
+.rte img{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}
+.rte img.missing{min-height:60px;border:1px dashed var(--line);padding:18px;color:var(--faint);font-size:12.5px}
 .rte h1,.rte h2,.rte h3{font-family:var(--font-display);letter-spacing:-.01em;line-height:1.3;margin:16px 0 6px}
 .rte h1{font-size:24px}.rte h2{font-size:19px}.rte h3{font-size:16.5px}
 .rte>:first-child{margin-top:0}
@@ -433,7 +445,14 @@ mark.m{background:rgb(255 209 102/.38);color:inherit;border-radius:3px;padding:0
   .papersw{font-size:13px;padding:5px 9px}
   #notePane .btn.sm,.delpaper{min-height:36px}
   #toneSeg{display:none}
-  .papersw{max-width:100%;flex:1 1 100%}
+  /* Telefonda PDF çubuğu iki düzenli satır: [makale | PDF/Notlar] ve [araç ... yakınlaştırma] */
+  .papersw{order:1;flex:1 1 0;min-width:0;max-width:none}
+  #mobSeg{order:2}
+  .pdfbar .rowbreak{display:block;order:3;flex-basis:100%;height:0}
+  #toolSeg{order:4}
+  #pens{order:5}
+  .pdfbar .grow{display:block;order:6;flex:1}
+  #zOut{order:7} #pgInd{order:8} #zIn{order:9}
   .hcard .kpick{opacity:1}
   .hcard .tonote{opacity:1}
   .fold>summary{min-height:36px}
@@ -722,7 +741,7 @@ body.splitting #pdfScroll{pointer-events:none}
           <span class="grow"></span>
           <div class="seg mobsw" id="mobSeg"><button data-m="pdf" aria-pressed="true">PDF</button><button data-m="notes" aria-pressed="false">Notlar</button></div>
           <div class="seg" id="toneSeg" title="PDF tonu"><button data-tone="dark" aria-pressed="true">Koyu PDF</button><button data-tone="orig" aria-pressed="false">Orijinal</button></div>
-          <button class="btn sm" id="zOut" aria-label="Uzaklaştır">−</button><button class="pgind" id="pgInd" title="Sayfaya git" aria-label="Sayfaya git">–</button><button class="btn sm" id="zIn" aria-label="Yakınlaştır">+</button>
+          <span class="rowbreak" aria-hidden="true"></span><button class="btn sm" id="zOut" aria-label="Uzaklaştır">−</button><button class="pgind" id="pgInd" title="Sayfaya git" aria-label="Sayfaya git">–</button><button class="btn sm" id="zIn" aria-label="Yakınlaştır">+</button>
         </div>
         <div class="stage"><div class="pdfscroll" id="pdfScroll">
           <div id="pages"></div>
@@ -871,6 +890,7 @@ body.splitting #pdfScroll{pointer-events:none}
     <h2>Veri</h2>
     <div class="bkbox" id="cloudBox" hidden>
       <div class="bkrow"><b style="font-size:14px">Bulut eşitleme</b><span class="grow"></span><button class="btn" id="cloudNow" hidden>Şimdi eşitle</button><button class="btn primary" id="cloudBtn">Google ile giriş yap</button></div>
+      <div class="bkrow" id="cloudWipeRow" hidden><span class="grow"></span><button class="btn danger" type="button" id="cloudWipe">Çıkış yap ve bu cihazdan sil</button></div>
       <small id="cloudSt">Giriş yapınca notların, vurguların, klasörlerin ve VibePsych verilerin Google hesabına eşitlenir; telefonda ve başka bilgisayarda aynı veriler açılır. PDF'ler her cihazda yerel kalır.</small>
     </div>
     <p style="margin:0;color:var(--muted)">Notların ve PDF'lerin yalnızca bu tarayıcıda durur. Tarayıcı verisini silersen ya da başka cihaza geçersen kaybolur; haftada bir tam yedek al.</p>
@@ -879,6 +899,7 @@ body.splitting #pdfScroll{pointer-events:none}
       <small>Tek .json dosyası: notlar, vurgular, bağlantılar, PDF'ler ve alan görüntüleri. Geri yüklemek için aşağıdan dosyayı seç.</small>
       <small class="warn" id="dStoreSt" hidden>Tarayıcı deposu doldu: veriler yedek veritabanında tutuluyor ve VibePsych'ten yeni makale eklenemiyor. Tam yedek al; PDF'siz kullanılmayan makaleleri silmek yer açar.</small>
     </div>
+    <div id="dOver" hidden></div>
     <div class="field"><label>Kayıt içe aktar <small>(sistematik derleme)</small></label>
       <div class="chips"><button class="btn" id="dImpRec">RIS / BibTeX / PubMed dosyası yükle</button></div>
     </div>
@@ -1025,7 +1046,7 @@ function syncVibeCols(){
     if(merged.length) localStorage.setItem('vibepsych_collections',JSON.stringify(merged));
   }catch(e){}
 }
-function save(){ clearTimeout(saveT); saveT=setTimeout(()=>{ try{ writeState(); syncVibeCols(); if(typeof cloudSchedule==='function') cloudSchedule(); if(window.parent&&window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.onAtlasSave) window.parent.__vibeShell.onAtlasSave(); }catch(e){} if(DESK) scheduleVault(); },250); }
+function save(){ if(window.__wiping) return; clearTimeout(saveT); saveT=setTimeout(()=>{ try{ writeState(); syncVibeCols(); if(typeof cloudSchedule==='function') cloudSchedule(); if(window.parent&&window.parent!==window&&window.parent.__vibeShell&&window.parent.__vibeShell.onAtlasSave) window.parent.__vibeShell.onAtlasSave(); }catch(e){} if(DESK) scheduleVault(); },250); }
 const P=()=>S.papers.find(p=>p.id===S.ui.paperId);
 const byId=id=>S.papers.find(p=>p.id===id);
 const typeOf=id=>S.types.find(t=>t.id===id)||{id,name:id,color:'var(--accent)'};
@@ -1265,13 +1286,18 @@ const rvInd=(p,k)=>((p.scrInd||{})[k])||((!p.scr2||!p.scr2[k])?((p.scr||{})[k]||
 const rvName2=()=>{ const p=vis().find(x=>x.scr2&&x.scr2.by); return p?p.scr2.by:''; };
 function rvConflict(p,k){ const a=rvInd(p,k), b=p.scr2&&p.scr2[k]; return !!(a&&b&&a!==b&&!((p.scrRes||{})[k])); }
 /* Kappa ikili hesaplanır: Dahil ve Belirsiz = "dahil", Hariç = "hariç" (başlık/özet taramasında yaygın, temkinli yaklaşım). */
+/* İkili Cohen kappa: a, b = iki hakemin kararları ('in' | 'maybe' | 'out'); Dahil ve Belirsiz bir arada sayılır */
+function kappa2(a,b){
+  const n=a.length; if(!n) return {n:0};
+  const inc=v=>v!=='out'; let ag=0, ex=0, a1=0, b1=0;
+  a.forEach((x,i)=>{ const y=b[i]; if(inc(x)===inc(y)) ag++; if(x===y) ex++; if(inc(x)) a1++; if(inc(y)) b1++; });
+  const po=ag/n, pa=a1/n, pb=b1/n, pe=pa*pb+(1-pa)*(1-pb);
+  return {n,po,exact:ex/n,k:pe>=1?(po>=1?1:0):(po-pe)/(1-pe)};
+}
 function rvStats(k){
   const pairs=scrPool(k).filter(p=>p.scr2&&p.scr2[k]&&rvInd(p,k));
-  const n=pairs.length; if(!n) return {n:0};
-  const inc=v=>v!=='out'; let ag=0, ex=0, a1=0, b1=0;
-  pairs.forEach(p=>{ const a=rvInd(p,k), b=p.scr2[k]; if(inc(a)===inc(b)) ag++; if(a===b) ex++; if(inc(a)) a1++; if(inc(b)) b1++; });
-  const po=ag/n, pa=a1/n, pb=b1/n, pe=pa*pb+(1-pa)*(1-pb);
-  return {n,po,exact:ex/n,k:pe>=1?(po>=1?1:0):(po-pe)/(1-pe),conf:pairs.filter(p=>rvConflict(p,k)).length};
+  if(!pairs.length) return {n:0};
+  return Object.assign(kappa2(pairs.map(p=>rvInd(p,k)),pairs.map(p=>p.scr2[k])),{conf:pairs.filter(p=>rvConflict(p,k)).length});
 }
 const fmtK=k=>(Math.round(k*100)/100).toFixed(2).replace('.',',');
 const kLabel=k=>k<0?'uyumsuz':k<=.2?'hafif':k<=.4?'makul':k<=.6?'orta':k<=.8?'önemli':'neredeyse mükemmel'; /* Landis ve Koch (1977) */
@@ -1473,7 +1499,7 @@ function addPaper(o,quiet){
 }
 function removePaper(id){
   idxDrop(id);
-  const rp=byId(id); if(rp) rp.hl.forEach(h=>{ if(h.type==='area') imgDel(h.id); });
+  const rp=byId(id); if(rp){ rp.hl.forEach(h=>{ if(h.type==='area') imgDel(h.id); }); noteImgIds(rp.notesHtml).forEach(imgDel); }
   pdfDel(id); S.papers=S.papers.filter(p=>p.id!==id); S.links=S.links.filter(l=>l.from!==id&&l.to!==id);
   if(S.ui.paperId===id){ const f=vis()[0]; S.ui.paperId=f?f.id:null; } save(); renderFolderFilter();
 }
@@ -1490,6 +1516,7 @@ function showDrop(on,title,msg){ $('#drop').hidden=!on; if(on){ $('#dropT').text
     const p=P(), doi=p&&String(p.doi||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
     $('#btnOaPdf').hidden=!!msg||!p||!(p.oaPdf||doi);
     $('#lnkDoi').hidden=!!msg||!doi; if(doi) $('#lnkDoi').href='https://doi.org/'+doi;
+    if(!msg&&p) autoOaPdf(p);
     const ttl=p&&String(p.title||'').trim(), showS=!msg&&!!ttl;
     ['#lnkScholar','#lnkRg','#btnAskAuthor'].forEach(id=>$(id).hidden=!showS);
     if(showS){ $('#lnkScholar').href='https://scholar.google.com/scholar?q='+encodeURIComponent('"'+ttl+'"'); $('#lnkRg').href='https://www.researchgate.net/search/publication?q='+encodeURIComponent(ttl); } }
@@ -1613,6 +1640,21 @@ async function findOaPdf(p){
   if(u){ p.oaPdf=u; save(); }
   return u;
 }
+/* Açık erişim PDF'ini indirip makaleye bağlar. Yayıncı tarayıcıdan indirmeye (CORS) izin vermezse hata fırlatır. */
+async function downloadOaPdf(p,url){
+  const r=await fetch(url,{mode:'cors',redirect:'follow'}); if(!r.ok) throw new Error('HTTP '+r.status);
+  const buf=await r.arrayBuffer(); const head=new TextDecoder().decode(new Uint8Array(buf.slice(0,5)));
+  if(head!=='%PDF-') throw new Error('pdf değil');
+  const ok=await pdfPut(p.id,buf); p.hasPdf=true; idxDrop(p.id); save();
+  return ok;
+}
+/* Yeni cihaz / bulut eşitlemesi: PDF'i olmayan makalede bilinen açık erişim adresi varsa bir kez sessizce denenir (OpenAlex'e istek atılmaz) */
+const OA_TRIED=new Set();
+async function autoOaPdf(p){
+  if(!p||p.hasPdf||!p.oaPdf||OA_TRIED.has(p.id)||!navigator.onLine) return;
+  OA_TRIED.add(p.id);
+  try{ const ok=await downloadOaPdf(p,p.oaPdf); if(P()===p){ toast(ok?'Açık erişim PDF kendiliğinden getirildi':'Açık erişim PDF bu oturumda açık'); openPdf(); } }catch(e){}
+}
 $('#btnOaPdf').onclick=async()=>{
   const p=P(); if(!p) return; const b=$('#btnOaPdf'), old=b.textContent; b.disabled=true; b.textContent='Aranıyor…';
   let url='';
@@ -1620,11 +1662,8 @@ $('#btnOaPdf').onclick=async()=>{
     url=await findOaPdf(p);
     if(!url){ toast('Bu makale için açık erişim PDF bulunamadı'); return; }
     b.textContent='İndiriliyor…';
-    const r=await fetch(url,{mode:'cors',redirect:'follow'}); if(!r.ok) throw new Error('HTTP '+r.status);
-    const buf=await r.arrayBuffer(); const head=new TextDecoder().decode(new Uint8Array(buf.slice(0,5)));
-    if(head!=='%PDF-') throw new Error('pdf değil');
     if(P()!==p) return;
-    const ok=await pdfPut(p.id,buf); p.hasPdf=true; idxDrop(p.id); save();
+    const ok=await downloadOaPdf(p,url);
     toast(ok?'Açık erişim PDF eklendi':'PDF bu oturumda açık, kalıcı kaydedilemedi'); openPdf();
   }catch(e){
     if(e&&e.message==='kota'){ toast('OpenAlex günlük kotası dolu; VibePsych\'ta API anahtarı ekleyebilirsin'); }
@@ -1979,12 +2018,27 @@ const ICO={
   al:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg>',
   ac:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg>',
   ar:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg>',
-  aj:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>'
+  aj:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>',
+  table:'<svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M10 4v16"/></svg>',
+  img:'<svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>'
 };
 /* Güvenlik: yapıştırma, içe aktarılan yedek ve kayıtlı içerik bu süzgeçten geçer; yalnızca biçim etiketleri ve renk / boyut stilleri kalır */
-const RTE_TAGS={P:'P',DIV:'P',BR:'BR',B:'B',STRONG:'B',I:'I',EM:'I',U:'U',S:'S',STRIKE:'S',DEL:'S',MARK:'SPAN',SPAN:'SPAN',FONT:'SPAN',H1:'H1',H2:'H2',H3:'H3',H4:'H3',H5:'H3',H6:'H3',UL:'UL',OL:'OL',LI:'LI',BLOCKQUOTE:'BLOCKQUOTE',A:'A',HR:'HR'};
+const RTE_TAGS={P:'P',DIV:'P',BR:'BR',B:'B',STRONG:'B',I:'I',EM:'I',U:'U',S:'S',STRIKE:'S',DEL:'S',MARK:'SPAN',SPAN:'SPAN',FONT:'SPAN',H1:'H1',H2:'H2',H3:'H3',H4:'H3',H5:'H3',H6:'H3',UL:'UL',OL:'OL',LI:'LI',BLOCKQUOTE:'BLOCKQUOTE',A:'A',HR:'HR',TABLE:'TABLE',THEAD:'TBODY',TBODY:'TBODY',TR:'TR',TD:'TD',TH:'TH',IMG:'IMG'};
 const COLOR_OK=v=>/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|transparent|inherit)$/i.test(String(v||'').trim());
 const SIZE_OK=v=>/^\d{1,2}(\.\d+)?px$/.test(String(v||'').trim());
+/* Notlardaki görseller: en uzun kenar 1400 px JPEG'e küçültülür, cihazdaki görüntü deposunda (img) tutulur.
+   Not HTML'inde yalnızca <img data-img="kimlik"> kalır; bu yüzden bulut belgesi şişmez, Obsidian klasörüne Görseller/kimlik.jpg yazılır. */
+function noteImgIds(html){ return [...String(html||'').matchAll(/data-img="([a-z0-9_-]{4,40})"/gi)].map(m=>m[1]); }
+function rteHydrateImgs(root){ $$('img[data-img]',root).forEach(async im=>{ if(im.getAttribute('src')) return; const u=await imgGet(im.dataset.img); if(u) im.src=u; else { im.alt='Görsel bu cihazda yok'; im.classList.add('missing'); } }); }
+function shrinkImage(file,max){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onerror=()=>rej(fr.error); fr.onload=()=>{ const im=new Image(); im.onerror=()=>rej(new Error('görsel okunamadı')); im.onload=()=>{
+  const k=Math.min(1,max/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+  const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',.85)); }; im.src=fr.result; }; fr.readAsDataURL(file); }); }
+async function rteInsertImage(file){
+  if(!file||!/^image\//.test(file.type)) return toast('Bir görsel dosyası seç');
+  try{ const url=await shrinkImage(file,1400), id='n'+uid()+uid(); await imgPut(id,url);
+    rteRestore(); rteExec('insertHTML','<img data-img="'+id+'" src="'+url+'" alt=""><p><br></p>'); toast('Görsel eklendi (bu cihazda saklanır)'); }
+  catch(e){ toast('Görsel eklenemedi'); }
+}
 function rteClean(html){
   const t=document.createElement('template'); t.innerHTML=String(html||'');
   const walk=node=>{ [...node.childNodes].forEach(n=>{
@@ -1998,6 +2052,7 @@ function rteClean(html){
     if(n.tagName==='MARK'&&!bg) bg='rgba(250, 204, 21, 0.38)';
     const href=n.tagName==='A'?n.getAttribute('href'):null, wl=n.tagName==='A'?n.getAttribute('data-wl'):null;
     const checked=n.tagName==='LI'?n.getAttribute('data-checked'):null, cl=n.tagName==='UL'&&n.classList.contains('cl');
+    const dimg=n.tagName==='IMG'?n.getAttribute('data-img'):null; /* görsel: yalnızca cihazdaki görüntünün kimliği saklanır, src saklanmaz */
     let el=n; if(tag!==n.tagName){ el=document.createElement(tag); el.append(...n.childNodes); n.replaceWith(el); }
     [...el.attributes].forEach(a=>el.removeAttribute(a.name));
     if(tag==='SPAN'){ /* Yapıştırılan CSS biçimlerini etikete çevir */
@@ -2008,6 +2063,7 @@ function rteClean(html){
       else if(href&&/^(https?:|mailto:)/i.test(href.trim())){ el.setAttribute('href',href.trim()); el.setAttribute('target','_blank'); el.setAttribute('rel','noopener noreferrer'); }
       else { walk(el); el.replaceWith(...el.childNodes); return; } }
     if(tag==='UL'&&cl) el.className='cl';
+    if(tag==='IMG'){ if(dimg&&/^[a-z0-9_-]{4,40}$/i.test(dimg)) el.setAttribute('data-img',dimg); else { el.remove(); return; } }
     if(/^(P|H1|H2|H3|LI|BLOCKQUOTE)$/.test(tag)&&/^(center|right|justify)$/.test(align)) el.setAttribute('style','text-align:'+align);
     if(tag==='LI'&&checked!==null) el.setAttribute('data-checked',checked==='true'?'true':'false');
     walk(el);
@@ -2022,6 +2078,7 @@ function htmlToMd(html){
     if(c.nodeType===3) return c.nodeValue.replace(/ /g,' ').replace(/​/g,'');
     if(c.nodeType!==1) return '';
     const x=inl(c), tg=c.tagName;
+    if(tg==='IMG'){ const id=c.getAttribute('data-img'); return id?'![['+id+'.jpg]]':''; }
     if(!x.trim()&&tg!=='BR') return x;
     if(tg==='BR') return '\n';
     const wr=(a,b)=>{ const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(x); return m[1]+a+m[2]+b+m[3]; };
@@ -2036,7 +2093,10 @@ function htmlToMd(html){
     const pad='  '.repeat(d), mk=el.tagName==='OL'?(++i)+'. ':el.classList.contains('cl')?'- ['+(li.getAttribute('data-checked')==='true'?'x':' ')+'] ':'- ';
     const sub=[...li.children].filter(c=>/^(UL|OL)$/.test(c.tagName)).map(c=>list(c,d+1)).join('');
     return pad+mk+inl(li).replace(/\n/g,' ').trim()+'\n'+sub; }).join(''); };
-  const BLOCK=/^(P|H[1-3]|UL|OL|BLOCKQUOTE|HR|DIV|LI)$/;
+  const BLOCK=/^(P|H[1-3]|UL|OL|BLOCKQUOTE|HR|DIV|LI|TABLE)$/;
+  const table=el=>{ const rows=[...el.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>inl(td).replace(/\n/g,' ').replace(/\|/g,'\\|').trim()));
+    if(!rows.length) return ''; const w=Math.max(...rows.map(r=>r.length)); const line=r=>'| '+Array.from({length:w},(_,i)=>r[i]||'').join(' | ')+' |';
+    return [line(rows[0]),'|'+Array.from({length:w},()=>' --- |').join(''),...rows.slice(1).map(line)].join('\n')+'\n\n'; };
   const blocks=n=>{ /* kökteki ardışık satır içi düğümler (paragrafsız metin) tek paragraf sayılır */
     const out=[]; let run=null;
     [...n.childNodes].forEach(c=>{ if(c.nodeType===1&&BLOCK.test(c.tagName)){ run=null; out.push(c); } else { if(!run){ run=document.createElement('p'); out.push(run); } run.append(c.cloneNode(true)); } });
@@ -2047,6 +2107,7 @@ function htmlToMd(html){
     if(tg==='UL'||tg==='OL') return list(c,0)+'\n';
     if(tg==='BLOCKQUOTE') return blocks(c).trim().split('\n').map(l=>'> '+l).join('\n')+'\n\n';
     if(tg==='HR') return '---\n\n';
+    if(tg==='TABLE') return table(c);
     if(tg==='P'){ const x=inl(c).trim(); return x?x+'\n\n':''; }
     const x=inl(c).trim(); return x?x+'\n\n':''; }).join(''); };
   return blocks(t.content).replace(/\n{3,}/g,'\n\n').trim();
@@ -2081,6 +2142,7 @@ function rteToolbar(){
     +'<span class="rsep"></span><span class="rtedd">'+b('color','<span class="cA">A<i id="rteColorBar" style="background:'+RTE.lastColor+'"></i></span>','Yazı rengi')+b('colorMenu',ICO.caret,'Yazı rengi seç',' class="ddc"')+sw('color',RTE_COLORS)+'</span>'
     +'<span class="rtedd">'+b('hl','<span class="hlA" id="rteHlBar" style="background:'+RTE.lastHl+'">V</span>','Vurgula (Ctrl+Shift+H)')+b('hlMenu',ICO.caret,'Vurgu rengi seç',' class="ddc"')+sw('hl',RTE_HL)+'</span>'
     +'<span class="rsep"></span>'+b('insertUnorderedList',ICO.ul,'Madde listesi (Ctrl+Shift+8)')+b('insertOrderedList',ICO.ol,'Numaralı liste (Ctrl+Shift+7)')+b('task',ICO.task,'Görev listesi (Ctrl+Enter işaretler)')
+    +'<span class="rsep"></span>'+b('table',ICO.table,'Tablo ekle')+b('image',ICO.img,'Görsel ekle')
     +'<span class="rsep"></span>'+b('link',ICO.link,'Bağlantı (Ctrl+K)')+b('wiki','[[ ]]','Başka makaleye bağlantı')+b('removeFormat',ICO.clear,'Biçimi temizle')
     +'<span class="rsep"></span>'+b('undo',ICO.undo,'Geri al (Ctrl+Z)')+b('redo',ICO.redo,'Yinele (Ctrl+Y)')
     +'</div>';
@@ -2248,7 +2310,7 @@ function renderNote(){
    +'<div class="row2"><select class="in" data-f="method" aria-label="Yöntem türü"><option value="">Yöntem türü</option>'+METHODS.map(m=>'<option'+(p.method===m?' selected':'')+'>'+m+'</option>').join('')+'</select><input class="in" data-f="sample" placeholder="Örneklem (n, özellik)" value="'+esc(p.sample)+'"></div>'
    +'<div class="row2"><input class="in" data-f="measures" placeholder="Ölçekler / ölçümler" value="'+esc(p.measures)+'"><input class="in" data-f="fpage" inputmode="numeric" placeholder="İlk sayfa (dergi)" title="Makalenin dergideki ilk sayfası. Alıntılarda PDF sayfası buna göre dergi sayfasına çevrilir. PDF\'in başında kapak sayfası varsa bir eksiğini yaz." aria-label="Dergideki ilk sayfa" value="'+esc(p.fpage)+'"></div></div>';
   const findSec=foldSec('find','Ana bulgu','<textarea class="find" data-f="finding" data-wc="wcf" rows="2" placeholder="Bu makale … gösteriyor.">'+esc(p.finding)+'</textarea>','',p);
-  const notesSec=foldSec('notes','Notlar','<div class="rtewrap">'+rteToolbar()+'<div class="rte" id="rte" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notlar" spellcheck="true">'+(rteClean(p.notesHtml||'')||'<p><br></p>')+'</div></div><div class="sumfoot"><span class="hint" id="wcn">'+words(p.notes)+' kelime</span><span class="cpnote" id="cpHint"></span></div>','',p);
+  const notesSec=foldSec('notes','Notlar','<div class="rtewrap">'+rteToolbar()+'<input type="file" id="rteImgPick" accept="image/*" hidden><div class="rte" id="rte" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notlar" spellcheck="true">'+(rteClean(p.notesHtml||'')||'<p><br></p>')+'</div></div><div class="sumfoot"><span class="hint" id="wcn">'+words(p.notes)+' kelime</span><span class="cpnote" id="cpHint"></span></div>','',p);
   const f=S.ui.hlFilter||'all', cnt=k=>p.hl.filter(h=>k==='all'||h.kind===k).length;
   const hlSec=foldSec('hl','PDF vurguları <small data-cnt="*"></small>','<div class="chips hlf" role="group" aria-label="Vurgu türü">'
     +[['all','Hepsi']].concat(KINDS.map(k=>[k.id,k.name])).map(([k,n])=>'<button class="chip'+(k!=='all'?' k-'+k:'')+'" data-act="hlf" data-k="'+k+'" aria-pressed="'+(f===k)+'">'+(k!=='all'?'<i class="kd"></i>':'')+esc(n)+' <small>'+cnt(k)+'</small></button>').join('')
@@ -2265,7 +2327,7 @@ function renderNote(){
    +'<div><button class="btn sm" data-act="lkadd">+ Bağlantı ekle</button></div></details>'
    +'<div style="display:flex;gap:16px;flex-wrap:wrap"><button class="delpaper" data-act="rmpdf" '+(p.hasPdf?'':'hidden')+'>PDF\'i kaldır</button><button class="delpaper" data-act="delpaper">Makaleyi sil</button></div>'
    +'</div>';
-  $$('textarea',el).forEach(autosize); renderCards(); renderTags(); copyHint(); rteBind();
+  $$('textarea',el).forEach(autosize); renderCards(); renderTags(); copyHint(); rteBind(); rteHydrateImgs(el);
 }
 function cardHtml(h){
   const kp=KINDS.map(k=>'<button class="k-'+k.id+'" data-act="kind" data-k="'+k.id+'" aria-pressed="'+(k.id===h.kind)+'" aria-label="'+k.name+'" title="'+k.name+'"></button>').join('');
@@ -2331,12 +2393,15 @@ np.addEventListener('click',e=>{
       const z=document.createTextNode('​'); n.after(z); const rg=document.createRange(); rg.setStart(z,1); rg.collapse(true); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(rg); rteChanged(); rteState(); }
     else rteExec('hiliteColor',on?'transparent':RTE.lastHl); }
   else if(cmd==='task') rteTask();
+  else if(cmd==='table'){ const row=c=>'<tr>'+[0,1,2].map(()=>'<'+c+'><br></'+c+'>').join('')+'</tr>'; rteExec('insertHTML','<table><tbody>'+row('th')+row('td')+row('td')+'</tbody></table><p><br></p>'); }
+  else if(cmd==='image'){ $('#rteImgPick').click(); }
   else if(cmd==='link') rteLink();
   else if(cmd==='wiki'){ rteEl().focus(); document.execCommand('insertText',false,'[['); wikiUpdate(); }
   else if(cmd==='undo'||cmd==='redo'){ rteEl().focus(); document.execCommand(cmd); rteChanged(); }
   else rteExec(cmd);
 });
-np.addEventListener('change',e=>{ const sel=e.target.closest('[data-rtesel]'); if(!sel) return; rteRestore();
+np.addEventListener('change',e=>{ if(e.target.id==='rteImgPick'){ const f=e.target.files[0]; e.target.value=''; if(f) rteInsertImage(f); return; }
+  const sel=e.target.closest('[data-rtesel]'); if(!sel) return; rteRestore();
   rteSetSize(sel.value);
   const ed=rteEl(); if(ed) ed.focus(); });
 
@@ -3066,7 +3131,7 @@ function parseRecords(txt){
   if(/^TY  -/m.test(t)) return {fmt:'RIS',recs:parseRis(t)};
   return {fmt:'',recs:[]};
 }
-const impTitleKey=t=>String(t||'').toLocaleLowerCase('tr-TR').normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,160);
+const impTitleKey=t=>String(t||'').toLocaleLowerCase('tr-TR').replace(/ı/g,'i').normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,160);
 const impDoiKey=d=>String(d||'').trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i,'').toLowerCase();
 /* recs -> derleme klasörü. Eşleşme: DOI, yoksa başlık (+ yıllar çelişmiyorsa). */
 function importRecords(recs,{source,folder,move,file,nolog}){
@@ -3224,7 +3289,10 @@ $('#dFull').onclick=fullBackup;
 $('#dBib').onclick=()=>exportCites('bib');
 $('#dEs').onclick=esCsv; $('#dRob').onclick=robCsv;
 $('#dCiteLang').onchange=e=>{ try{ localStorage.setItem('vibepsych_cite_lang',JSON.stringify(e.target.value==='en'?'en':'tr')); }catch(err){} toast('Atıf dili: '+(e.target.value==='en'?'İngilizce':'Türkçe')); };
-$('#btnData').addEventListener('click',()=>{ $('#dCiteLang').value=citeLang(); });
+$('#btnData').addEventListener('click',()=>{ $('#dCiteLang').value=citeLang(); renderOver(); });
+$('#dOver').addEventListener('click',e=>{ const r=e.target.closest('[data-over-res]'), d=e.target.closest('[data-over-del]');
+  if(r) overRestore(+r.dataset.overRes);
+  else if(d){ const l=overList(); l.splice(+d.dataset.overDel,1); try{ localStorage.setItem(OVER_LS,JSON.stringify(l)); }catch(err){} renderOver(); } });
 $('#dRis').onclick=()=>exportCites('ris');
 /* Açılışta: yedek gecikmişse günde en fazla bir kez hatırlat */
 setTimeout(()=>{ updBackupSt(); const d=backupAgeDays();
@@ -3285,7 +3353,7 @@ function buildVault(){
   });
   files.push({path:'Bağlantılar.md',content:linksMd(names)},{path:'Özetler.md',content:summariesMd(names)},{path:'Matris.md',content:matrixMd(names)});
   files.push({path:'OKU-BENİ.md',content:'# Okuma Atlası klasörü\n\nBu klasör Okuma Atlası uygulaması tarafından yazılır. Makale notların, özetlerin ve bağlantıların her değişiklikte buraya Markdown olarak kaydedilir.\n\n- `Makaleler/`: her makale için bir not (klasöre atanmışsa alt klasörde)\n- `Bağlantılar.md`: makaleler arası tüm bağlantılar, türüne göre\n- `Özetler.md`: kendi özetlerinin tek dosyada toplamı\n- `Matris.md`: sentez matrisi\n- `Görseller/`: PDF\'ten kestiğin alanlar\n- `.atlas/`: tam yedek (state.json), günlük yedekler ve PDF dosyaları. Silme.\n\nKlasörü Obsidian\'la da açabilirsin, bağlantılar `[[...]]` biçiminde yazılır.\n\n**Önemli:** Notları uygulamadan düzenle. Burada elle yaptığın değişikliklerin üzerine bir sonraki kayıtta yazılır.\n'});
-  return {files,pdfIds:S.papers.filter(p=>p.hasPdf).map(p=>p.id),imgIds:S.papers.flatMap(p=>p.hl.filter(h=>h.type==='area').map(h=>h.id))};
+  return {files,pdfIds:S.papers.filter(p=>p.hasPdf).map(p=>p.id),imgIds:S.papers.flatMap(p=>p.hl.filter(h=>h.type==='area').map(h=>h.id).concat(noteImgIds(p.notesHtml)))};
 }
 function vaultAttention(){ return !!(DESK&&(VAULT.pending||VAULT.err)); }
 function updVaultUi(){
@@ -3374,11 +3442,24 @@ function cloudStatus(st,err){
   el.textContent=who+' · '+(st==='sync'?'eşitleniyor…':st==='err'?'eşitleme hatası: '+CLOUD.err:CLOUD.last?'son eşitleme '+new Date(CLOUD.last).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'bağlanıyor…')+'. PDF\'ler bu cihazda kalır.';
   el.classList.toggle('warn',st==='err');
 }
-function cloudPaintBtn(){ const b=$('#cloudBtn'); if(!b) return; b.textContent=CLOUD.user?'Çıkış yap':'Google ile giriş yap'; b.classList.toggle('primary',!CLOUD.user); $('#cloudNow').hidden=!CLOUD.user; cloudStatus(CLOUD.status); }
+/* Paylaşılan bilgisayar: bekleyenleri gönder, çıkış yap, bu cihazdaki Atlas + VibePsych verisini sil (bulut kalır) */
+async function cloudSignOutWipe(){
+  if(!CLOUD.user) return false;
+  if(!confirm('Çıkış yapılıp bu cihazdaki bütün veriler silinecek: makaleler, notlar, PDF\'ler, Kasam, favoriler, arama kaydı.\n\nBuluttaki veriler kalır; aynı hesapla tekrar giriş yapınca geri gelir (PDF\'ler hariç).\n\nBu işlem geri alınamaz. Devam edilsin mi?')) return false;
+  try{ clearTimeout(CLOUD.pushT); await cloudPush(); }catch(e){}
+  if(CLOUD.status==='err'&&!confirm('Son değişiklikler buluta gönderilemedi. Yine de silinsin mi?')) return false;
+  try{ await CLOUD.api.signOut(); }catch(e){}
+  clearTimeout(saveT); window.__wiping=true;
+  try{ Object.keys(localStorage).filter(k=>/^(okuma-atlasi|vibepsych_)/.test(k)&&k!=='vibepsych_theme').forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  await Promise.all(['okuma-atlasi','okuma-atlasi-state'].map(n=>new Promise(r=>{ try{ const q=indexedDB.deleteDatabase(n); q.onsuccess=q.onerror=q.onblocked=()=>r(); }catch(e){ r(); } })));
+  (window.top||window).location.reload(); return true;
+}
+function cloudPaintBtn(){ const b=$('#cloudBtn'); if(!b) return; const wr=$('#cloudWipeRow'); if(wr) wr.hidden=!CLOUD.user; b.textContent=CLOUD.user?'Çıkış yap':'Google ile giriş yap'; b.classList.toggle('primary',!CLOUD.user); $('#cloudNow').hidden=!CLOUD.user; cloudStatus(CLOUD.status); }
 function cloudSchedule(){ if(!CLOUD.on||CLOUD.applying) return; clearTimeout(CLOUD.pushT); CLOUD.pushT=setTimeout(cloudPush,2500); }
 async function cloudPush(){
   if(!CLOUD.on) return;
-  const loc=cloudLocal(), now=Date.now(), writes=[], prev={};
+  const maxU=Object.values(CLOUD.known).reduce((a,v)=>Math.max(a,(v&&v.u)||0),0);
+  const loc=cloudLocal(), now=Math.max(Date.now(),maxU+1), writes=[], prev={}; /* saati geri cihazların yazdıkları da okunsun */
   loc.forEach((v,key)=>{ const h=cloudHash(v.json), k=CLOUD.known[key]; if(!k||k.h!==h){ prev[key]=k; writes.push([key,{id:v.id,u:now,d:v.json}]); CLOUD.known[key]={h,u:now}; } });
   Object.keys(CLOUD.known).forEach(key=>{ if(key[0]!=='m'&&!loc.has(key)&&CLOUD.known[key].h!=='DEL'){ prev[key]=CLOUD.known[key]; writes.push([key,{id:key.slice(2),u:now,del:true}]); CLOUD.known[key]={h:'DEL',u:now}; } });
   CLOUD.vibeH=cloudHash(JSON.stringify(vibeMeta())+localStorage.getItem('vibepsych_vault'));
@@ -3394,6 +3475,23 @@ function cloudRerender(){
   else if(S.ui.screen==='harita') renderMap(); else if(S.ui.screen==='kutuphane') renderLib(); else if(S.ui.screen==='matris') renderMatrix(); else if(S.ui.screen==='ara') runSearch();
 }
 const unionBy=(a,b,k)=>{ const m=new Map(); (a||[]).forEach(x=>m.set(k(x),x)); (b||[]).forEach(x=>{ if(!m.has(k(x))) m.set(k(x),x); }); return [...m.values()]; };
+/* Başka cihazdan gelen sürümün ezdiği, henüz gönderilmemiş yerel sürümler (son 30). Veri penceresinden geri yüklenir. */
+const OVER_LS='okuma-atlasi-overwritten';
+function overList(){ const v=lsJSON(OVER_LS,[]); return Array.isArray(v)?v:[]; }
+function overSave(p,json){ const l=overList(); l.unshift({id:p.id,title:p.title||'Adsız makale',at:Date.now(),json}); try{ localStorage.setItem(OVER_LS,JSON.stringify(l.slice(0,30))); }catch(e){} }
+function renderOver(){
+  const box=$('#dOver'); if(!box) return; const l=overList();
+  box.hidden=!l.length;
+  box.innerHTML=l.length?'<div class="field"><label>Üzerine yazılan sürümler <small>(başka cihazdaki düzenleme bu cihazdakini ezdi)</small></label><div class="implog">'+l.map((o,i)=>'<div class="implogrow"><span><b>'+esc(o.title)+'</b> · '+new Date(o.at).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'})+'</span><span style="display:flex;gap:6px"><button class="btn sm" type="button" data-over-res="'+i+'">Geri yükle</button><button class="btn sm" type="button" data-over-del="'+i+'">Sil</button></span></div>').join('')+'</div></div>':'';
+}
+function overRestore(i){
+  const l=overList(), o=l[i]; if(!o) return; let np; try{ np=JSON.parse(o.json); }catch(e){ return; }
+  const cur=byId(o.id); np.hl=np.hl||[]; np.tags=np.tags||[]; np.themes=np.themes||{}; np.hasPdf=cur?!!cur.hasPdf:false;
+  if(np.notesV===3&&typeof np.notesHtml==='string') np.notes=htmlToMd(np.notesHtml);
+  if(cur) S.papers[S.papers.indexOf(cur)]=np; else S.papers.push(np);
+  l.splice(i,1); try{ localStorage.setItem(OVER_LS,JSON.stringify(l)); }catch(e){}
+  save(); cloudRerender(); renderOver(); toast('Önceki sürüm geri yüklendi; buluta da yazılacak');
+}
 /* Uzaktan gelen belgeleri uygula. first = bu dinleyicinin ilk teslimi (ilk eşitlemede birleştirme). */
 function cloudApply(changes,first){
   const firstSync=first&&!Object.keys(CLOUD.known).some(k=>k[0]==='p'||k[0]==='v');
@@ -3411,6 +3509,7 @@ function cloudApply(changes,first){
       if(firstSync&&CLOUD.choice==='local'&&c.key[0]!=='m'&&cloudLocal().has(c.key)){ CLOUD.known[c.key]={h:'?',u:c.u}; continue; } /* yerel kalsın: bir sonraki gönderimde üzerine yazılır */
       if(c.key[0]==='p'){
         const cur=byId(c.id);
+        if(cur&&!c.del){ const lj=pCloudJson(cur), lh=cloudHash(lj); if(lh!==h&&(!k||k.h!==lh)) overSave(cur,lj); } /* gönderilmemiş yerel değişiklik ezilecek */
         if(c.del){ if(cur) removePaper(c.id); }
         else{ let np; try{ np=JSON.parse(c.d); }catch(e){ continue; }
           np.hl=np.hl||[]; np.tags=np.tags||[]; np.themes=np.themes||{}; np.hasPdf=cur?!!cur.hasPdf:false;
@@ -3448,7 +3547,17 @@ function cloudApply(changes,first){
 function cloudOnUser(u){
   if(CLOUD.unsub){ CLOUD.unsub(); CLOUD.unsub=null; }
   CLOUD.user=u||null; CLOUD.on=!!u; CLOUD.choice=null;
-  if(u){ CLOUD.known=cloudLoadKnown(u.uid); cloudStatus('sync'); CLOUD.unsub=CLOUD.api.listen(u.uid,(changes,first)=>cloudApply(changes,first),e=>cloudStatus('err',e)); }
+  if(u){
+    /* Hesap değişikliği: bu cihazdaki veri başka bir hesapla eşitlenmişse habersiz karışmasın */
+    const prev=lsJSON(CLOUD_LS,{});
+    if(prev&&prev.uid&&prev.uid!==u.uid&&S.papers.length&&!confirm('Bu cihazdaki veriler daha önce başka bir Google hesabıyla eşitlenmişti.\n\nŞimdi giriş yapılan hesabın (' +(u.email||'yeni hesap')+') bulutuna da eklensin mi?\n\nİptal: giriş geri alınır, iki hesabın verisi karışmaz.')){
+      CLOUD.user=null; CLOUD.on=false; cloudPaintBtn(); try{ CLOUD.api.signOut(); }catch(e){} toast('Giriş geri alındı; veriler karışmadı'); return;
+    }
+    CLOUD.known=cloudLoadKnown(u.uid); cloudStatus('sync');
+    const since={}; Object.entries(CLOUD.known).forEach(([k,v])=>{ const p=k[0]; if(v&&v.u>(since[p]||0)) since[p]=v.u; });
+    CLOUD.unsub=CLOUD.api.listen(u.uid,(changes,first)=>cloudApply(changes,first),e=>cloudStatus('err',e),since);
+    if(CLOUD_LS) try{ localStorage.setItem(CLOUD_LS,JSON.stringify({uid:u.uid,k:CLOUD.known})); }catch(e){}
+  }
   else cloudStatus('');
   cloudPaintBtn();
 }
@@ -3463,9 +3572,11 @@ async function cloudInit(){
     CLOUD.api={
       signIn:()=>Au.signInWithPopup(auth,new Au.GoogleAuthProvider()),
       signOut:()=>Au.signOut(auth),
-      listen(uid,cb,onErr){
+      listen(uid,cb,onErr,since){
+        /* Yalnızca bilinen en yeni u'dan sonrakiler okunur: her açılışta bütün belgeleri okumak ücretsiz kotayı tüketirdi */
         const subs=Object.entries(COL).map(([pre,col])=>{ let first=true;
-          return F.onSnapshot(F.collection(db,'users',uid,col),snap=>{
+          const s=(since&&since[pre])||0, ref=F.collection(db,'users',uid,col);
+          return F.onSnapshot(s?F.query(ref,F.where('u','>',s)):ref,snap=>{
             const ch=snap.docChanges().filter(c=>c.type!=='removed'&&!c.doc.metadata.hasPendingWrites).map(c=>Object.assign({key:pre+'/'+c.doc.id},c.doc.data()));
             const f=first; first=false; if(ch.length||f) cb(ch,f);
           },onErr); });
@@ -3485,10 +3596,12 @@ $('#cloudBtn').onclick=async()=>{
   try{ await CLOUD.api.signIn(); toast('Giriş yapıldı; veriler eşitleniyor'); }catch(e){ if(e&&e.code!=='auth/popup-closed-by-user') toast('Giriş yapılamadı: '+((e&&e.code)||e)); }
 };
 $('#cloudNow').onclick=()=>{ clearTimeout(CLOUD.pushT); cloudPush(); };
+$('#cloudWipe').onclick=()=>cloudSignOutWipe();
 /* VibePsych (üst pencere) kendi anahtarlarını yazınca: aynı kökteki diğer belgeye storage olayı gelir */
 window.addEventListener('storage',e=>{ if(e.key==='vibepsych_vault'||Object.values(VIBE_SYNC).includes(e.key)) cloudSchedule(); });
 setInterval(()=>{ if(!CLOUD.on) return; const h=cloudHash(JSON.stringify(vibeMeta())+localStorage.getItem('vibepsych_vault')); if(h!==CLOUD.vibeH) cloudSchedule(); },5000);
 cloudInit();
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&window.top===window){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 
 /* ---------- Başlat ---------- */
 function syncFromStorage(focusId){
@@ -3560,7 +3673,7 @@ mirrorGet().then(j=>{
   STORE.full=true; updBackupSt(); renderFolderFilter(); updateSw(); applyTheme(); goScreen(SCREENS.includes(S.ui.screen)?S.ui.screen:'okuma');
   toastLong('Son değişikliklerin tarayıcı deposuna yazılamamıştı; notların yedek veritabanından geri yüklendi. Veri > Tam yedek indir ile yedek al.');
 });
-window.__cloud={CLOUD,cloudApply,cloudPush,cloudLocal,cloudOnUser,signIn:()=>CLOUD.api&&CLOUD.api.signIn()};
+window.__cloud={CLOUD,cloudApply,cloudPush,cloudLocal,cloudOnUser,cloudSignOutWipe,overList,signIn:()=>CLOUD.api&&CLOUD.api.signIn()};
 window.__atlas={S,SIM,M,R,SR,IDX,goScreen,fitMap,zoomAt,setSpace,setFolder,openFolders,vis,buildVault,syncVault,VAULT,fold,needleOf,syncFromStorage,activateFromVibe,suspendForVibe};
 })();
 </script>

@@ -1,0 +1,15 @@
+{
+  "name": "VibePsych · Okuma Atlası",
+  "short_name": "VibePsych",
+  "description": "Psikoloji literatür keşfi, okuma, not ve sistematik derleme",
+  "lang": "tr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#090b12",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

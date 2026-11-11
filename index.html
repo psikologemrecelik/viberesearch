@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>VibePsych</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="theme-color" content="#090b12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide sürümü sabitlendi: @latest, GitHub Pages üzerinde habersiz kırılmalara yol açabilir -->
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -533,6 +539,9 @@
     .sheet-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 2px 16px 14px; }
     .sheet-foot { padding: 10px 16px 12px; border-top: 1px solid var(--line-color); }
     .sheet-foot:empty { display: none; }
+    .help-step { padding: 12px 14px; border-radius: 14px; background: var(--bg-surface); border: 1px solid var(--line-color); }
+    .help-step b { display: block; color: var(--text-title); font-weight: 600; margin-bottom: 3px; }
+    .help-step em { font-style: normal; color: var(--text-title); }
     .sheet-sec { font: 600 11px var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 14px 2px 6px; }
     .sheet-row {
       width: 100%;
@@ -586,6 +595,23 @@
       #articlesContainer .btn-icon { min-width: 44px; min-height: 44px; }
       #toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
       #appHeader { transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+      /* Makale detayında eylemler altta sabit, tek satır ve yatay kaydırılabilir */
+      #inspectorActions {
+        position: sticky;
+        bottom: -20px;
+        z-index: 2;
+        margin: 0 -20px -20px;
+        padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+      #inspectorActions::-webkit-scrollbar { display: none; }
+      #inspectorActions > * { flex: none; min-height: 44px; }
+      #inspectorActions a.ml-auto { margin-left: 0; }
       #appHeader.hdr-hidden { transform: translateY(calc(-100% - 2px)); }
       .art-card .ghost-actions .btn-primary, .art-card .ghost-actions .btn-secondary { min-height: 44px; }
       /* Alan seçici popover'ı tetikleyiciye değil başlığa hizalanır; aksi halde sağdan taşıyordu */
@@ -619,7 +645,7 @@
       }
     }
   </style>
-  <link rel="prefetch" href="atlas.html?v=25" />
+  <link rel="prefetch" href="atlas.html?v=26" />
 </head>
 <body class="min-h-screen font-sans antialiased pb-24 md:pb-12">
 
@@ -706,6 +732,10 @@
             <span id="vaultCountBadge" class="text-[11px] font-semibold title-ergonomic">0</span>
           </button>
 
+          <button onclick="openHelp()" title="Nasıl kullanılır" aria-label="Nasıl kullanılır"
+            class="hidden sm:grid p-1.5 sm:p-2 rounded-[10px] glass-pill hover:text-white transition place-items-center">
+            <i data-lucide="circle-help" class="w-4 h-4"></i>
+          </button>
           <button
             onclick="cloudSignInOut()"
             id="cloudAuthBtn"
@@ -949,6 +979,37 @@
         <button onclick="openSearchLog()" class="px-2 py-1 rounded-lg glass-pill hover:text-white flex items-center gap-1 text-[11px]" title="Kaydedilmiş aramalar">
           <i data-lucide="history" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Arama kaydı</span><span id="searchLogCount" class="num"></span>
         </button>
+      </div>
+    </div>
+
+    <!-- NASIL KULLANILIR + GİZLİLİK -->
+    <div id="helpModal" class="fixed inset-0 z-[75] hidden bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this)closeHelp()">
+      <div class="luxury-panel rounded-t-3xl sm:rounded-2xl max-w-2xl w-full max-h-[88dvh] flex flex-col shadow-2xl border border-white/[0.12]" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <div class="p-4 sm:p-5 border-b border-white/[0.07] flex items-start justify-between gap-3">
+          <div>
+            <h3 id="helpTitle" class="font-serif text-lg title-ergonomic">Nasıl kullanılır</h3>
+            <p class="text-[12.5px] text-[var(--text-muted)] mt-0.5">Keşiften sentez ve yayına: yedi adımda VibePsych ve Okuma Atlası.</p>
+          </div>
+          <button onclick="closeHelp()" class="p-2 rounded-lg glass-pill hover:text-white" aria-label="Kapat"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div id="helpBody" class="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1 text-[13.5px] leading-relaxed text-[var(--text-body)]">
+          <section class="help-step"><b>1. Keşfet</b><p>Bir alan ya da dergi seç, arama kutusuna Türkçe veya İngilizce yaz. Derleme yapıyorsan Filtreler'de <em>Başlık/Özet</em>'i aç; terimler yalnızca başlık ve özette aranır. Makale detayında <em>Atıf Yapanlar</em> ve <em>Kaynakçası</em> ile kartopu yap.</p></section>
+          <section class="help-step"><b>2. Kaydet ve izle</b><p>Yer imi Kasam'a ekler; <em>Atlas'a Al</em> okumaya gönderir. Bir sorguyu <em>Aramayı kaydet</em> ile kaydedip arama kaydında <em>Takip et</em> dersen yeni yayınlar her gün sayılır.</p></section>
+          <section class="help-step"><b>3. Oku ve not al</b><p>Okuma Atlası'nda PDF'i bırak ya da <em>Açık erişim PDF'ini getir</em> de. Seçtiğin metni vurgula, <em>Alıntı kopyala</em> derginin sayfa numarasıyla APA metin içi atıf verir. Notlar, Word gibi biçimlenir; tablo ve görsel eklenebilir.</p></section>
+          <section class="help-step"><b>4. Sistematik derleme</b><p>Kütüphane > <em>İçe aktar</em> ile PsycINFO, Scopus, Web of Science ve PubMed dosyalarını yükle; yinelenenler ayıklanır. <em>Tarama</em>'da D/B/H tuşlarıyla karar ver. PRISMA sayıları kendiliğinden tutulur; <em>Hakem paketi</em> ile ikinci hakem kör tarar, kappa hesaplanır.</p></section>
+          <section class="help-step"><b>5. Sentez</b><p>Not panelinde <em>Veri çıkarımı</em> (örneklem, etki büyüklüğü) ve <em>Yanlılık riski</em> (RoB 2, JBI) bölümleri var. Veri > <em>Meta-analiz tablosu</em> ve <em>robvis CSV</em> ile dışa aktar.</p></section>
+          <section class="help-step"><b>6. Yedek ve cihazlar</b><p>Google ile giriş yaparsan notların telefon ve bilgisayar arasında eşitlenir. Ayrıca Veri > <em>Tam yedek</em> al; bir Obsidian/Drive klasörü bağlarsan her not ve PDF oraya da yazılır. Site ana ekrana uygulama olarak eklenebilir ve internetsiz açılır.</p></section>
+          <section id="help-gizlilik" class="help-step"><b>7. Verilerin nerede duruyor</b>
+            <ul class="list-disc pl-5 space-y-1 mt-1">
+              <li><strong class="title-ergonomic">Bu tarayıcıda:</strong> bütün notlar, PDF'ler ve listeler. Başka bir yere gönderilmez; tarayıcı verisini silersen gider.</li>
+              <li><strong class="title-ergonomic">Giriş yaparsan:</strong> notlar, vurgular, klasörler, tarama kararları, Kasam ve ayarlar Google'ın Firebase hizmetinde, bu sitenin projesinde, yalnızca senin hesabına ait bir bölümde tutulur. Kurallar gereği başka kullanıcılar okuyamaz; site sahibi teknik olarak proje konsolundan görebilir. PDF'ler buluta gitmez.</li>
+              <li><strong class="title-ergonomic">Aramaların:</strong> OpenAlex'e (ve künye çekerken Crossref'e) gider; bu hizmetler hesap bilgisi almaz.</li>
+              <li><strong class="title-ergonomic">Paylaşılan bilgisayarda:</strong> Hesap menüsünden <em>Çıkış yap ve bu cihazdan sil</em>. Buluttaki veriler kalır.</li>
+            </ul></section>
+        </div>
+        <div class="p-3.5 sm:p-4 border-t border-white/[0.07] flex justify-end">
+          <button onclick="closeHelp()" class="btn-primary px-4 min-h-[44px] rounded-xl text-sm font-semibold">Anladım</button>
+        </div>
       </div>
     </div>
 
@@ -1660,6 +1721,8 @@
       paintTAOnly();
       updateSearchLogCount();
       initSheetDrag();
+      document.addEventListener('keydown', trapFocus);
+      try { if (!localStorage.getItem('vibepsych_seen_help')) setTimeout(() => { if (!document.body.classList.contains('atlas-stage-open')) openHelp(); }, 1500); } catch (e) {}
       paintCloudBtn();
       initCloudAuth();
       setTimeout(() => checkFollowedSearches(), 4000);
@@ -1753,6 +1816,7 @@
         }
         const tag = document.activeElement?.tagName?.toLowerCase();
         if (e.key === 'Escape') {
+          closeHelp();
           closeSheet();
           closeAccountMenu();
           closeSearchLog();
@@ -1868,7 +1932,10 @@
       if (!fbUser) {
         return `
           <p class="text-[14px] text-[var(--text-body)] leading-relaxed">Google hesabınla giriş yapınca notların, Kasam'ın, favori dergilerin ve arama kaydın cihazlar arasında eşitlenir. PDF'ler her cihazda yerel kalır.</p>
-          <button onclick="closeSheet(); cloudSignInOut()" class="btn-primary w-full mt-4 min-h-[48px] rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2">${ic('log-in', 'w-[18px] h-[18px]')}<span>Google ile giriş yap</span></button>`;
+          <button onclick="closeSheet(); cloudSignInOut()" class="btn-primary w-full mt-4 min-h-[48px] rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2">${ic('log-in', 'w-[18px] h-[18px]')}<span>Google ile giriş yap</span></button>
+        <div class="sheet-sec">Yardım</div>
+        <button class="sheet-row" onclick="closeSheet(); openHelp()">${ic('circle-help', 'w-[18px] h-[18px]')}<span>Nasıl kullanılır</span></button>
+        <button class="sheet-row" onclick="closeSheet(); openHelp('gizlilik')">${ic('shield-check', 'w-[18px] h-[18px]')}<span>Verilerin nerede duruyor</span></button>`;
       }
       const name = fbUser.displayName || fbUser.email || 'Hesap';
       const c = atlasCloud()?.CLOUD;
@@ -1883,7 +1950,11 @@
           <span><span id="accountSyncText">${escapeHtml(accountStatusText())}</span><br>Notlar ve listeler eşitleniyor; PDF'ler bu cihazda kalır.</span>
         </div>
         <button class="sheet-row mt-2" onclick="accountSyncNow()">${ic('refresh-cw', 'w-[18px] h-[18px]')}<span>Şimdi eşitle</span></button>
-        <button class="sheet-row" onclick="closeSheet(); accountSignOut()">${ic('log-out', 'w-[18px] h-[18px]')}<span>Çıkış yap</span></button>`;
+        <button class="sheet-row" onclick="closeSheet(); accountSignOut()">${ic('log-out', 'w-[18px] h-[18px]')}<span>Çıkış yap</span></button>
+        <button class="sheet-row" onclick="closeSheet(); accountSignOutWipe()">${ic('trash-2', 'w-[18px] h-[18px] text-[#ff8a8a]')}<span>Çıkış yap ve bu cihazdan sil</span><span class="sub">paylaşılan cihaz</span></button>
+        <div class="sheet-sec">Yardım</div>
+        <button class="sheet-row" onclick="closeSheet(); openHelp()">${ic('circle-help', 'w-[18px] h-[18px]')}<span>Nasıl kullanılır</span></button>
+        <button class="sheet-row" onclick="closeSheet(); openHelp('gizlilik')">${ic('shield-check', 'w-[18px] h-[18px]')}<span>Verilerin nerede duruyor</span></button>`;
     }
 
     function sheetPickDomain(id) { closeSheet(); selectDiscipline(id); window.scrollTo({ top: 0 }); }
@@ -3394,7 +3465,7 @@ ${art.abstractText}
           const win = frame.contentWindow;
           try {
             if (win && win.location && /index\.html/i.test(win.location.pathname)) {
-              frame.src = 'atlas.html?v=25';
+              frame.src = 'atlas.html?v=26';
               showVibeFromAtlas();
               return;
             }
@@ -3405,7 +3476,7 @@ ${art.abstractText}
             try { fn(win); } catch (e) {}
           }
         });
-        frame.src = 'atlas.html?v=25';
+        frame.src = 'atlas.html?v=26';
       }
     }
 
@@ -3581,7 +3652,10 @@ ${art.abstractText}
         </div>
         <button role="menuitem" onclick="accountSyncNow()" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5">${ic('refresh-cw', 'w-4 h-4 text-[var(--text-muted)]')}<span>Şimdi eşitle</span></button>
         <div class="my-1 border-t border-white/[0.07]"></div>
-        <button role="menuitem" onclick="accountSignOut()" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5">${ic('log-out', 'w-4 h-4 text-[var(--text-muted)]')}<span>Çıkış yap</span></button>`;
+        <button role="menuitem" onclick="accountSignOut()" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5">${ic('log-out', 'w-4 h-4 text-[var(--text-muted)]')}<span>Çıkış yap</span></button>
+        <button role="menuitem" onclick="closeAccountMenu(); accountSignOutWipe()" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5" title="Paylaşılan bilgisayarda: buluttaki veriler kalır, bu cihazdakiler silinir">${ic('trash-2', 'w-4 h-4 text-[#ff8a8a]')}<span>Çıkış yap ve bu cihazdan sil</span></button>
+        <div class="my-1 border-t border-white/[0.07]"></div>
+        <button role="menuitem" onclick="closeAccountMenu(); openHelp('gizlilik')" class="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/[0.05] flex items-center gap-2.5">${ic('shield-check', 'w-4 h-4 text-[var(--text-muted)]')}<span>Verilerin nerede duruyor</span></button>`;
       document.body.appendChild(m);
       btn.setAttribute('aria-expanded', 'true');
       refreshIcons();
@@ -3595,6 +3669,12 @@ ${art.abstractText}
       if (el) el.textContent = 'Eşitleniyor…';
       await cl.cloudPush();
       if (el) el.textContent = accountStatusText();
+    }
+
+    async function accountSignOutWipe() {
+      const cl = atlasCloud();
+      if (!cl || !cl.cloudSignOutWipe) { showToast('Okuma Atlası henüz yüklenmedi; birkaç saniye sonra yeniden dene.'); return; }
+      await cl.cloudSignOutWipe();
     }
 
     async function accountSignOut() {
@@ -4018,7 +4098,7 @@ ${art.abstractText}
             </div>
           </div>
 
-          <div class="pt-4 border-t border-white/[0.07] flex flex-wrap gap-2 font-mono text-xs">
+          <div id="inspectorActions" class="pt-4 border-t border-white/[0.07] flex flex-wrap gap-2 font-mono text-xs">
             <button onclick="sendToAtlas(${jsArg(art.id)}, true)" class="px-3.5 py-2 rounded-xl neon-primary-active flex items-center gap-1.5">
               <i data-lucide="book-open-check" class="w-3.5 h-3.5"></i>
               <span>Okuma Atlası'nda Aç</span>
@@ -4431,6 +4511,38 @@ ${art.abstractText}
       }
     }
 
+    // NASIL KULLANILIR: ilk ziyarette bir kez, sonra başlık / Hesap menüsünden
+    let helpReturnFocus = null;
+    function openHelp(section) {
+      helpReturnFocus = document.activeElement;
+      const m = document.getElementById('helpModal');
+      m.classList.remove('hidden');
+      refreshIcons();
+      try { localStorage.setItem('vibepsych_seen_help', '1'); } catch (e) {}
+      const target = section ? document.getElementById('help-' + section) : null;
+      if (target) target.scrollIntoView({ block: 'start' });
+      else document.getElementById('helpBody').scrollTop = 0;
+      setTimeout(() => m.querySelector('button')?.focus({ preventScroll: true }), 30);
+    }
+    function closeHelp() {
+      document.getElementById('helpModal').classList.add('hidden');
+      if (helpReturnFocus && helpReturnFocus.focus) helpReturnFocus.focus({ preventScroll: true });
+    }
+    // Açık iletişim kutusunda Tab tuşu dışarı kaçmasın (ekran okuyucu ve klavye kullanıcıları)
+    function trapFocus(e) {
+      if (e.key !== 'Tab') return;
+      const box = sheetKind ? document.getElementById('mobSheet')
+        : !document.getElementById('helpModal').classList.contains('hidden') ? document.getElementById('helpModal')
+        : !document.getElementById('searchLogModal').classList.contains('hidden') ? document.getElementById('searchLogModal') : null;
+      if (!box) return;
+      const items = [...box.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(el => !el.disabled && el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (!box.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
     function closeSearchLog() {
       document.getElementById('searchLogModal').classList.add('hidden');
     }
@@ -4772,6 +4884,8 @@ ${art.abstractText}
     }
 
     window.addEventListener('DOMContentLoaded', initVibePsych);
+    // Uygulama gibi kurulum ve internetsiz açılış (sw.js)
+    if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&window.top===window){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
   </script>
 </body>
 </html>
